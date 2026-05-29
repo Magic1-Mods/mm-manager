@@ -49,26 +49,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # Cache Android SDK components
+      # Cache Android SDK
       - name: Cache Android SDK
         uses: actions/cache@v4
         with:
           path: |
-            ~/Android/Sdk/ndk
-            ~/Android/Sdk/cmake
-            ~/Android/Sdk/build-tools
-            ~/Android/Sdk/platforms
-          key: ${{ runner.os }}-android-${{ env.ANDROID_NDK_VERSION }}
+            ~/Android/Sdk
+          key: ${{ runner.os }}-android-sdk-${{ env.ANDROID_NDK_VERSION }}
 
-      # Cache C/C++ build intermediates
+      # Cache Native Build Outputs
       - name: Cache Native Build
         uses: actions/cache@v4
         with:
           path: |
-            app/.cxx
-            app/build/intermediates
-            app/build/generated
-          key: ${{ runner.os }}-native-${{ hashFiles('**/CMakeLists.txt', '**/*.cpp', '**/*.c', '**/*.h') }}
+            **/.cxx
+            **/build/intermediates
+            **/build/generated
+          key: ${{ runner.os }}-native-${{ hashFiles('**/*.cpp', '**/*.c', '**/*.h', '**/CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-native-
 
