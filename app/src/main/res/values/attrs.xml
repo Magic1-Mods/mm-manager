@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme Attributes -->
+    <attr name="drawerBackground" format="color" />
+    <attr name="headerBackground" format="color" />
+    <attr name="iconTint" format="color" />
+    <attr name="iconTintSecondary" format="color" />
+    <attr name="textPrimary" format="color" />
+    <attr name="textSecondary" format="color" />
+    <attr name="sectionText" format="color" />
+    <attr name="dividerColor" format="color" />
+    <attr name="progressTint" format="color" />
+    <attr name="mainBackground" format="color" />
+    <attr name="toolbarBackground" format="color" />
+    <attr name="panelBg" format="color" />
+    <attr name="bottomBarBackground" format="color" />
+    <attr name="statsTextColor" format="color" />
+    <attr name="fileItemBackground" format="color" />
+    <attr name="folderItemBackground" format="color" />
+    <attr name="buttonTint" format="color" />
+</resources>

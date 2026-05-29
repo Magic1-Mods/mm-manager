@@ -1,0 +1,268 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/grey_900</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Default theme attributes -->
+        <item name="drawerBackground">@color/white</item>
+        <item name="headerBackground">@color/grey_900</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/grey_600</item>
+        <item name="textPrimary">@color/grey_900</item>
+        <item name="textSecondary">@color/grey_600</item>
+        <item name="sectionText">@color/blue_500</item>
+        <item name="dividerColor">@color/grey_300</item>
+        <item name="progressTint">@color/blue_500</item>
+        <item name="mainBackground">#f5f5f5</item>
+        <item name="toolbarBackground">@color/grey_900</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/grey_500</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">#f5f5f5</item>
+        <item name="buttonTint">@color/grey_800</item>
+    </style>
+
+    <style name="AppTheme" parent="Base.AppTheme" />
+
+    <!-- Dark Theme for system theme following -->
+    <style name="AppTheme.Dark" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        
+        <item name="drawerBackground">@color/grey_900</item>
+        <item name="headerBackground">@color/grey_900</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/grey_600</item>
+        <item name="textPrimary">@color/white</item>
+        <item name="textSecondary">@color/grey_400</item>
+        <item name="sectionText">@color/blue_400</item>
+        <item name="dividerColor">@color/grey_800</item>
+        <item name="progressTint">@color/blue_400</item>
+        <item name="mainBackground">@color/grey_900</item>
+        <item name="toolbarBackground">@color/grey_900</item>
+        <item name="panelBg">@color/grey_850</item>
+        <item name="bottomBarBackground">@color/grey_850</item>
+        <item name="statsTextColor">@color/grey_500</item>
+        <item name="fileItemBackground">@color/grey_850</item>
+        <item name="folderItemBackground">@color/grey_800</item>
+        <item name="buttonTint">@color/grey_300</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
+
+    <!-- Palette 1: Blue Theme -->
+    <style name="AppTheme.Palette1" parent="Base.AppTheme">
+        <item name="drawerBackground">@color/blue_50</item>
+        <item name="headerBackground">@color/blue_800</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/blue_200</item>
+        <item name="textPrimary">@color/blue_900</item>
+        <item name="textSecondary">@color/blue_600</item>
+        <item name="sectionText">@color/blue_600</item>
+        <item name="dividerColor">@color/blue_200</item>
+        <item name="progressTint">@color/blue_500</item>
+        <item name="mainBackground">@color/blue_50</item>
+        <item name="toolbarBackground">@color/blue_800</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/blue_600</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">@color/blue_100</item>
+        <item name="buttonTint">@color/blue_800</item>
+    </style>
+
+    <!-- Palette 2: Purple Theme -->
+    <style name="AppTheme.Palette2" parent="Base.AppTheme">
+        <item name="drawerBackground">@color/purple_50</item>
+        <item name="headerBackground">@color/purple_800</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/purple_200</item>
+        <item name="textPrimary">@color/purple_900</item>
+        <item name="textSecondary">@color/purple_600</item>
+        <item name="sectionText">@color/purple_600</item>
+        <item name="dividerColor">@color/purple_200</item>
+        <item name="progressTint">@color/purple_500</item>
+        <item name="mainBackground">@color/purple_50</item>
+        <item name="toolbarBackground">@color/purple_800</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/purple_600</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">@color/purple_100</item>
+        <item name="buttonTint">@color/purple_800</item>
+    </style>
+
+    <!-- Palette 3: Green Theme -->
+    <style name="AppTheme.Palette3" parent="Base.AppTheme">
+        <item name="drawerBackground">@color/green_50</item>
+        <item name="headerBackground">@color/green_800</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/green_200</item>
+        <item name="textPrimary">@color/green_900</item>
+        <item name="textSecondary">@color/green_600</item>
+        <item name="sectionText">@color/green_600</item>
+        <item name="dividerColor">@color/green_200</item>
+        <item name="progressTint">@color/green_500</item>
+        <item name="mainBackground">@color/green_50</item>
+        <item name="toolbarBackground">@color/green_800</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/green_600</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">@color/green_100</item>
+        <item name="buttonTint">@color/green_800</item>
+    </style>
+
+    <!-- Palette 4: Orange Theme -->
+    <style name="AppTheme.Palette4" parent="Base.AppTheme">
+        <item name="drawerBackground">#FFF3E0</item>
+        <item name="headerBackground">@color/orange_800</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/orange_200</item>
+        <item name="textPrimary">@color/orange_900</item>
+        <item name="textSecondary">@color/orange_600</item>
+        <item name="sectionText">@color/orange_600</item>
+        <item name="dividerColor">@color/orange_200</item>
+        <item name="progressTint">@color/orange_500</item>
+        <item name="mainBackground">#FFF3E0</item>
+        <item name="toolbarBackground">@color/orange_800</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/orange_600</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">#FFE0B2</item>
+        <item name="buttonTint">@color/orange_800</item>
+    </style>
+
+    <!-- Palette 5: Pink Theme -->
+    <style name="AppTheme.Palette5" parent="Base.AppTheme">
+        <item name="drawerBackground">@color/pink_50</item>
+        <item name="headerBackground">@color/pink_800</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/pink_200</item>
+        <item name="textPrimary">@color/pink_900</item>
+        <item name="textSecondary">@color/pink_600</item>
+        <item name="sectionText">@color/pink_600</item>
+        <item name="dividerColor">@color/pink_200</item>
+        <item name="progressTint">@color/pink_500</item>
+        <item name="mainBackground">@color/pink_50</item>
+        <item name="toolbarBackground">@color/pink_800</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/pink_600</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">@color/pink_100</item>
+        <item name="buttonTint">@color/pink_800</item>
+    </style>
+
+    <!-- Palette 6: Cyan Theme -->
+    <style name="AppTheme.Palette6" parent="Base.AppTheme">
+        <item name="drawerBackground">@color/cyan_50</item>
+        <item name="headerBackground">@color/cyan_800</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/cyan_200</item>
+        <item name="textPrimary">@color/cyan_900</item>
+        <item name="textSecondary">@color/cyan_600</item>
+        <item name="sectionText">@color/cyan_600</item>
+        <item name="dividerColor">@color/cyan_200</item>
+        <item name="progressTint">@color/cyan_500</item>
+        <item name="mainBackground">@color/cyan_50</item>
+        <item name="toolbarBackground">@color/cyan_800</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/cyan_600</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">@color/cyan_100</item>
+        <item name="buttonTint">@color/cyan_800</item>
+    </style>
+
+    <!-- Palette 7: Deep Purple Theme -->
+    <style name="AppTheme.Palette7" parent="Base.AppTheme">
+        <item name="drawerBackground">#EDE7F6</item>
+        <item name="headerBackground">@color/deep_purple_800</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/deep_purple_200</item>
+        <item name="textPrimary">@color/deep_purple_900</item>
+        <item name="textSecondary">@color/deep_purple_600</item>
+        <item name="sectionText">@color/deep_purple_600</item>
+        <item name="dividerColor">@color/deep_purple_200</item>
+        <item name="progressTint">@color/deep_purple_500</item>
+        <item name="mainBackground">#EDE7F6</item>
+        <item name="toolbarBackground">@color/deep_purple_800</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/deep_purple_600</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">#D1C4E9</item>
+        <item name="buttonTint">@color/deep_purple_800</item>
+    </style>
+
+    <!-- Palette 8: Red Theme -->
+    <style name="AppTheme.Palette8" parent="Base.AppTheme">
+        <item name="drawerBackground">@color/red_50</item>
+        <item name="headerBackground">@color/red_800</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/red_200</item>
+        <item name="textPrimary">@color/red_900</item>
+        <item name="textSecondary">@color/red_600</item>
+        <item name="sectionText">@color/red_600</item>
+        <item name="dividerColor">@color/red_200</item>
+        <item name="progressTint">@color/red_500</item>
+        <item name="mainBackground">@color/red_50</item>
+        <item name="toolbarBackground">@color/red_800</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/red_600</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">@color/red_100</item>
+        <item name="buttonTint">@color/red_800</item>
+    </style>
+
+    <!-- Palette 9: Indigo Theme -->
+    <style name="AppTheme.Palette9" parent="Base.AppTheme">
+        <item name="drawerBackground">#E8EAF6</item>
+        <item name="headerBackground">@color/indigo_800</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">@color/indigo_200</item>
+        <item name="textPrimary">@color/indigo_900</item>
+        <item name="textSecondary">@color/indigo_600</item>
+        <item name="sectionText">@color/indigo_600</item>
+        <item name="dividerColor">@color/indigo_200</item>
+        <item name="progressTint">@color/indigo_500</item>
+        <item name="mainBackground">#E8EAF6</item>
+        <item name="toolbarBackground">@color/indigo_800</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">@color/indigo_600</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">#C5CAE9</item>
+        <item name="buttonTint">@color/indigo_800</item>
+    </style>
+
+    <!-- Palette 10: Teal Theme -->
+    <style name="AppTheme.Palette10" parent="Base.AppTheme">
+        <item name="drawerBackground">#E0F2F1</item>
+        <item name="headerBackground">#00695C</item>
+        <item name="iconTint">@color/white</item>
+        <item name="iconTintSecondary">#80CBC4</item>
+        <item name="textPrimary">#004D40</item>
+        <item name="textSecondary">#00796B</item>
+        <item name="sectionText">#00796B</item>
+        <item name="dividerColor">#80CBC4</item>
+        <item name="progressTint">#009688</item>
+        <item name="mainBackground">#E0F2F1</item>
+        <item name="toolbarBackground">#00695C</item>
+        <item name="panelBg">@color/white</item>
+        <item name="bottomBarBackground">@color/white</item>
+        <item name="statsTextColor">#00796B</item>
+        <item name="fileItemBackground">@color/white</item>
+        <item name="folderItemBackground">#B2DFDB</item>
+        <item name="buttonTint">#00695C</item>
+    </style>
+</resources>
