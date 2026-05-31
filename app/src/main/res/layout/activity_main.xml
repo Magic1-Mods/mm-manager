@@ -184,7 +184,7 @@
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_swap"
+                android:src="@drawable/ic_transfer"
                 android:contentDescription="Swap"
                 android:scaleType="centerInside"
                 app:tint="?attr/buttonTint" />
