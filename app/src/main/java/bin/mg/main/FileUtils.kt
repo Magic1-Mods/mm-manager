@@ -22,7 +22,17 @@ object FileUtils {
         if (!directory.exists()) return items
         if (!directory.isDirectory) return items
 
-        val files = directory.listFiles() ?: return items
+        val files = directory.listFiles()
+
+        if (files == null) {
+            if (directoryPath == ROOT_PATH) {
+                val roots = listRootViaShell()
+                for (file in roots) {
+                    items.add(FileItem.fromFile(file))
+                }
+            }
+            return items
+        }
 
         files.sortWith(compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase(Locale.ROOT) })
 
@@ -31,6 +41,26 @@ object FileUtils {
         }
 
         return items
+    }
+
+    private fun listRootViaShell(): List<File> {
+        val results = mutableListOf<File>()
+        try {
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "ls /"))
+            val reader = process.inputStream.bufferedReader()
+            var line = reader.readLine()
+            while (line != null) {
+                line = line.trim()
+                if (line.isNotEmpty()) {
+                    val f = File("/$line")
+                    if (f.exists()) results.add(f)
+                }
+                line = reader.readLine()
+            }
+            process.waitFor()
+        } catch (ignored: Exception) {
+        }
+        return results
     }
 
     @JvmStatic
