@@ -16,7 +16,7 @@ class LinedEditText @JvmOverloads constructor(
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         color = Color.parseColor("#9E9E9E")
-        textSize = text.size * 0.9f
+        textSize = this@LinedEditText.textSize * 0.9f
     }
     private val bgPaint = Paint().apply {
         color = Color.parseColor("#EEEEEE")
