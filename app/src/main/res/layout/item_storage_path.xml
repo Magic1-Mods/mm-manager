@@ -12,19 +12,19 @@
     android:background="?attr/selectableItemBackground">
 
     <FrameLayout
-        android:layout_width="32dp"
-        android:layout_height="32dp">
+        android:layout_width="40dp"
+        android:layout_height="40dp">
 
         <View
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="@drawable/bg_circle_dark" />
 
         <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_sd_storage"
+            android:src="@drawable/ic_folder"
             app:tint="@color/white" />
     </FrameLayout>
 
@@ -43,15 +43,16 @@
             android:textColor="?attr/textPrimary"
             android:textSize="13sp" />
 
-        <ProgressBar
-            android:id="@+id/storage_progress"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:layout_marginTop="4dp"
-            android:max="100"
-            android:progress="0"
-            android:progressTint="?attr/progressTint" />
+        <TextView
+            android:id="@+id/storage_path"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:text="/storage/..."
+            android:textColor="?attr/textSecondary"
+            android:textSize="11sp"
+            android:maxLines="1"
+            android:ellipsize="start" />
 
         <TextView
             android:id="@+id/storage_text"

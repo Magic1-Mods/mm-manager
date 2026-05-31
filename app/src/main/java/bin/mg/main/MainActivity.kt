@@ -340,7 +340,11 @@ class MainActivity : AppCompatActivity() {
         val bgIds = intArrayOf(
             R.id.icon_root_bg,
             R.id.icon_storage_bg,
+            R.id.icon_recycle_bin_bg,
             R.id.icon_plugins_bg,
+            R.id.icon_screen_color_bg,
+            R.id.icon_signing_key_bg,
+            R.id.icon_passwords_bg,
             R.id.icon_text_editor_bg,
             R.id.icon_terminal_bg,
             R.id.icon_settings_bg,
@@ -464,17 +468,37 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.nav_plugins).setOnClickListener {
             drawerLayout?.closeDrawer(GravityCompat.START)
-            Toast.makeText(this, "Plugin Manager not implemented", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Plugin Manager", Toast.LENGTH_SHORT).show()
+        }
+
+        findViewById<View>(R.id.nav_recycle_bin).setOnClickListener {
+            drawerLayout?.closeDrawer(GravityCompat.START)
+            Toast.makeText(this, "Recycle Bin", Toast.LENGTH_SHORT).show()
+        }
+
+        findViewById<View>(R.id.nav_screen_color).setOnClickListener {
+            drawerLayout?.closeDrawer(GravityCompat.START)
+            Toast.makeText(this, "Screen Color Picker", Toast.LENGTH_SHORT).show()
+        }
+
+        findViewById<View>(R.id.nav_signing_key).setOnClickListener {
+            drawerLayout?.closeDrawer(GravityCompat.START)
+            Toast.makeText(this, "Signing Key", Toast.LENGTH_SHORT).show()
+        }
+
+        findViewById<View>(R.id.nav_passwords).setOnClickListener {
+            drawerLayout?.closeDrawer(GravityCompat.START)
+            Toast.makeText(this, "Common Passwords", Toast.LENGTH_SHORT).show()
         }
 
         findViewById<View>(R.id.nav_text_editor).setOnClickListener {
             drawerLayout?.closeDrawer(GravityCompat.START)
-            Toast.makeText(this, "Text Editor not implemented", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Text Editor", Toast.LENGTH_SHORT).show()
         }
 
         findViewById<View>(R.id.nav_terminal).setOnClickListener {
             drawerLayout?.closeDrawer(GravityCompat.START)
-            Toast.makeText(this, "Terminal not implemented", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Terminal", Toast.LENGTH_SHORT).show()
         }
 
         btnThemeToggle?.setOnClickListener { toggleTheme() }
@@ -494,12 +518,12 @@ class MainActivity : AppCompatActivity() {
             val itemView = LayoutInflater.from(this).inflate(R.layout.item_storage_path, dynamicStorageContainer, false)
 
             val nameText = itemView.findViewById<TextView>(R.id.storage_name)
-            val progressBar = itemView.findViewById<ProgressBar>(R.id.storage_progress)
+            val pathText = itemView.findViewById<TextView>(R.id.storage_path)
             val storageTextItem = itemView.findViewById<TextView>(R.id.storage_text)
 
             nameText.text = name
-            progressBar.visibility = View.VISIBLE
-            storageTextItem.visibility = View.VISIBLE
+            pathText.text = path
+            storageTextItem.text = "Calculating..."
 
             itemView.tag = path
             itemView.setOnClickListener { v ->
@@ -510,11 +534,11 @@ class MainActivity : AppCompatActivity() {
 
             dynamicStorageContainer?.addView(itemView)
 
-            updateDynamicStorageInfo(path, progressBar, storageTextItem)
+            updateDynamicStorageInfo(path, storageTextItem)
         }
     }
 
-    private fun updateDynamicStorageInfo(path: String, progressBar: ProgressBar, storageText: TextView) {
+    private fun updateDynamicStorageInfo(path: String, storageText: TextView) {
         executor.execute {
             try {
                 val storageDir = File(path)
@@ -527,13 +551,11 @@ class MainActivity : AppCompatActivity() {
                 val total = stat.blockCountLong * stat.blockSizeLong
                 val available = stat.availableBlocksLong * stat.blockSizeLong
                 val used = total - available
-                val percent = ((used * 100) / total).toInt()
 
-                val usedStr = formatSize(used)
-                val availStr = formatSize(available)
+                val usedStr = formatSizeCompact(used)
+                val availStr = formatSizeCompact(available)
 
                 mainHandler.post {
-                    progressBar.progress = percent
                     storageText.text = "$usedStr used, $availStr available"
                 }
             } catch (e: Exception) {
@@ -544,9 +566,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun showDrawerMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
-        popup.menu.add(0, 1, 0, "Follow System Theme").isCheckable = true
+        popup.menu.add(0, 1, 0, "Theme follows system").isCheckable = true
         popup.menu.findItem(1).isChecked = followSystemTheme
-        popup.menu.add(0, 2, 1, "Add Local Storage").setIcon(R.drawable.ic_local_storage)
+        popup.menu.add(0, 2, 1, "Add local storage").setIcon(R.drawable.ic_local_storage)
+        popup.menu.add(0, 3, 2, "Manage tools group").setIcon(R.drawable.ic_settings)
+        popup.menu.add(0, 4, 3, "Preferences").setIcon(R.drawable.ic_settings)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 1 -> {
@@ -562,6 +586,14 @@ class MainActivity : AppCompatActivity() {
                 }
                 2 -> {
                     openSafPicker()
+                    true
+                }
+                3 -> {
+                    Toast.makeText(this, "Manage tools group", Toast.LENGTH_SHORT).show()
+                    true
+                }
+                4 -> {
+                    Toast.makeText(this, "Preferences", Toast.LENGTH_SHORT).show()
                     true
                 }
                 else -> true
@@ -619,10 +651,40 @@ class MainActivity : AppCompatActivity() {
         val docId = treeUri.lastPathSegment ?: return null
 
         if (docId.startsWith("primary:")) {
-            return "/storage/" + docId.substring(8)
+            return "/storage/emulated/0/" + docId.substring(8)
         }
 
-        return treeUri.toString()
+        val volumeId = docId.substringBefore(":")
+        val subPath = docId.substringAfter(":", "")
+
+        val volumePath = getVolumePath(volumeId)
+        if (volumePath != null) {
+            return if (subPath.isNotEmpty()) "$volumePath/$subPath" else volumePath
+        }
+
+        return null
+    }
+
+    private fun getVolumePath(volumeId: String): String? {
+        if (volumeId == "primary") return "/storage/emulated/0"
+
+        val storageDir = File("/storage")
+        val volumes = storageDir.listFiles() ?: return null
+        for (vol in volumes) {
+            if (vol.name == volumeId || vol.name.endsWith("_$volumeId")) {
+                return vol.absolutePath
+            }
+        }
+
+        val emulatedDir = File("/storage/emulated")
+        val emulated = emulatedDir.listFiles() ?: return null
+        for (vol in emulated) {
+            if (vol.name == volumeId) {
+                return vol.absolutePath
+            }
+        }
+
+        return "/storage/$volumeId"
     }
 
     private fun toggleSection(content: LinearLayout, arrow: ImageView) {
@@ -913,10 +975,10 @@ class MainActivity : AppCompatActivity() {
                 val storageUsed = storageTotal - storageAvail
                 val storagePercent = ((storageUsed * 100) / storageTotal).toInt()
 
-                val rootUsedStr = formatSize(rootUsed)
-                val rootAvailStr = formatSize(rootAvail)
-                val storageUsedStr = formatSize(storageUsed)
-                val storageAvailStr = formatSize(storageAvail)
+                val rootUsedStr = formatSizeCompact(rootUsed)
+                val rootAvailStr = formatSizeCompact(rootAvail)
+                val storageUsedStr = formatSizeCompact(storageUsed)
+                val storageAvailStr = formatSizeCompact(storageAvail)
 
                 mainHandler.post {
                     rootProgress?.progress = rootPercent
@@ -932,6 +994,15 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun formatSizeCompact(size: Long): String {
+        var s = size
+        if (s < 0) s = 0
+        if (s < 1024) return "$s B"
+        if (s < 1024 * 1024) return String.format(Locale.getDefault(), "%.0fK", s / 1024.0)
+        if (s < 1024 * 1024 * 1024) return String.format(Locale.getDefault(), "%.2fM", s / (1024.0 * 1024))
+        return String.format(Locale.getDefault(), "%.2fG", s / (1024.0 * 1024 * 1024))
     }
 
     private fun formatSize(size: Long): String {
