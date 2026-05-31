@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace "bin.mg.main"
-    compileSdk 34
+    compileSdk 36
     
     lint {
         checkReleaseBuilds = false
@@ -29,7 +29,7 @@ android {
     defaultConfig {
         applicationId "bin.mg.main"
         minSdk 21 
-        targetSdk 34  
+        targetSdk 36  
         versionCode 1
         versionName "1.0"
         
