@@ -272,9 +272,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         val window: Window = window
-        window.statusBarColor = primaryColor
+        window.statusBarColor = currentPrimaryColor
 
-        findViewById<View?>(R.id.toolbar)?.setBackgroundColor(primaryColor)
+        findViewById<View?>(R.id.toolbar)?.setBackgroundColor(currentPrimaryColor)
         findViewById<LinearLayout?>(R.id.main_container)?.setBackgroundColor(mainBg)
         findViewById<FrameLayout?>(R.id.panel_left)?.setBackgroundColor(panelBg)
         findViewById<FrameLayout?>(R.id.panel_right)?.setBackgroundColor(panelBg)
@@ -289,9 +289,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton?>(R.id.btn_swap)?.setColorFilter(buttonTint)
         findViewById<ImageButton?>(R.id.btn_parent)?.setColorFilter(buttonTint)
 
-        if (::adapterLeft.isInitialized) adapterLeft.setThemeColor(primaryColor, isDarkMode)
-        if (::adapterRight.isInitialized) adapterRight.setThemeColor(primaryColor, isDarkMode)
-        updateDrawerColors(primaryColor, isDarkMode)
+        if (::adapterLeft.isInitialized) adapterLeft.setThemeColor(currentPrimaryColor, isDarkMode)
+        if (::adapterRight.isInitialized) adapterRight.setThemeColor(currentPrimaryColor, isDarkMode)
+        updateDrawerColors(currentPrimaryColor, isDarkMode)
     }
 
     private fun updateDrawerColors(primaryColor: Int, isDarkMode: Boolean) {
