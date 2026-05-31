@@ -37,10 +37,6 @@ class FileAdapter(private val context: Context) : RecyclerView.Adapter<ViewHolde
         clickListener = listener
     }
 
-    fun setImageThumbnailsEnabled(enabled: Boolean) {
-        isImageThumbnailsEnabled = enabled
-    }
-
     fun setHandlerRegistry(registry: FileClickHandlerRegistry) {
         handlerRegistry = registry
     }
