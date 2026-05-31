@@ -99,6 +99,7 @@ class MainActivity : AppCompatActivity() {
     private var buttonTint = 0xFF424242.toInt()
     private val customPaths = ArrayList<String>()
     private val customPathNames = HashMap<String, String>()
+    private val customPathUris = HashMap<String, String>()
     private val greyColorFilter = android.graphics.PorterDuffColorFilter(0xFF9E9E9E.toInt(), android.graphics.PorterDuff.Mode.SRC_IN)
 
     data class CustomStorageEntry(val path: String, val displayName: String)
@@ -218,10 +219,10 @@ class MainActivity : AppCompatActivity() {
                     val parts = entry.split("<::>")
                     val path = parts[0]
                     val name = if (parts.size > 1) parts[1] else ""
+                    val uri = if (parts.size > 2) parts[2] else ""
                     customPaths.add(path)
-                    if (name.isNotEmpty()) {
-                        customPathNames[path] = name
-                    }
+                    if (name.isNotEmpty()) customPathNames[path] = name
+                    if (uri.isNotEmpty()) customPathUris[path] = uri
                 }
             }
         }
@@ -233,12 +234,11 @@ class MainActivity : AppCompatActivity() {
         for (i in customPaths.indices) {
             if (i > 0) sb.append("|||")
             val path = customPaths[i]
-            val name = customPathNames[path]
-            if (name != null) {
-                sb.append(path).append("<::>").append(name)
-            } else {
-                sb.append(path)
-            }
+            val name = customPathNames[path] ?: ""
+            val uri = customPathUris[path] ?: ""
+            sb.append(path)
+            if (name.isNotEmpty()) sb.append("<::>").append(name)
+            if (uri.isNotEmpty()) sb.append("<::>").append(uri)
         }
         prefs.edit().putString(KEY_CUSTOM_PATHS, sb.toString()).apply()
     }
@@ -563,7 +563,27 @@ class MainActivity : AppCompatActivity() {
             try {
                 val storageDir = File(path)
                 if (!storageDir.exists() || !storageDir.canRead()) {
-                    mainHandler.post { storageText.text = "Cannot access" }
+                    val treeUri = findTreeUriForPath(path)
+                    if (treeUri != null) {
+                        mainHandler.post { storageText.text = "SAF backed storage" }
+                        return@execute
+                    }
+                    var statPath = path
+                    while (statPath.isNotEmpty() && !File(statPath).canRead() && statPath.contains('/')) {
+                        statPath = statPath.substring(0, statPath.lastIndexOf('/'))
+                    }
+                    if (statPath.isEmpty()) statPath = "/storage/emulated/0"
+                    if (File(statPath).canRead()) {
+                        val stat = StatFs(statPath)
+                        val total = stat.blockCountLong * stat.blockSizeLong
+                        val available = stat.availableBlocksLong * stat.blockSizeLong
+                        val used = total - available
+                        val usedStr = formatSizeCompact(used)
+                        val availStr = formatSizeCompact(available)
+                        mainHandler.post { storageText.text = "$usedStr used, $availStr available" }
+                    } else {
+                        mainHandler.post { storageText.text = "SAF backed storage" }
+                    }
                     return@execute
                 }
 
@@ -579,7 +599,7 @@ class MainActivity : AppCompatActivity() {
                     storageText.text = "$usedStr used, $availStr available"
                 }
             } catch (e: Exception) {
-                mainHandler.post { storageText.text = "Error reading" }
+                mainHandler.post { storageText.text = "SAF backed storage" }
             }
         }
     }
@@ -654,11 +674,19 @@ class MainActivity : AppCompatActivity() {
 
                 val path = getPathFromTreeUri(treeUri)
                 val displayName = getDisplayNameFromTreeUri(treeUri)
+                val uriString = treeUri?.toString() ?: ""
                 if (path != null && !customPaths.contains(path)) {
                     customPaths.add(path)
-                    if (displayName.isNotEmpty()) {
-                        customPathNames[path] = displayName
-                    }
+                    if (displayName.isNotEmpty()) customPathNames[path] = displayName
+                    if (uriString.isNotEmpty()) customPathUris[path] = uriString
+                    saveCustomPaths()
+                    populateDynamicStorage()
+                    Toast.makeText(this, "Storage added: $displayName", Toast.LENGTH_SHORT).show()
+                } else if (uriString.isNotEmpty() && !customPathUris.containsValue(uriString)) {
+                    val fallbackPath = "/storage/emulated/0/SAF_${customPaths.size}"
+                    customPaths.add(fallbackPath)
+                    if (displayName.isNotEmpty()) customPathNames[fallbackPath] = displayName
+                    customPathUris[fallbackPath] = uriString
                     saveCustomPaths()
                     populateDynamicStorage()
                     Toast.makeText(this, "Storage added: $displayName", Toast.LENGTH_SHORT).show()
@@ -737,6 +765,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return volumeId
+    }
+
+    private fun findTreeUriForPath(path: String): String? {
+        if (customPathUris.containsKey(path)) {
+            return customPathUris[path]
+        }
+        for ((savedPath, uri) in customPathUris) {
+            if (path.startsWith(savedPath) || savedPath.startsWith(path)) {
+                return uri
+            }
+        }
+        return null
     }
 
     private fun getPathFromTreeUri(treeUri: Uri?): String? {
@@ -933,7 +973,18 @@ class MainActivity : AppCompatActivity() {
         val targetPath = path
 
         executor.execute {
-            val items = FileUtils.listFiles(targetPath)
+            var items = FileUtils.listFiles(targetPath)
+
+            if (items.isEmpty() && targetPath != null) {
+                val treeUri = findTreeUriForPath(targetPath)
+                if (treeUri != null) {
+                    try {
+                        val treeUriParsed = Uri.parse(treeUri)
+                        items = ArrayList(bin.mg.main.utils.saf.SafHelper.listChildren(this@MainActivity, treeUriParsed))
+                    } catch (e: Exception) {
+                    }
+                }
+            }
 
             val parentPath = FileUtils.getParentPath(targetPath)
             if (parentPath != null) {

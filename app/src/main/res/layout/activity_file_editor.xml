@@ -1,241 +1,208 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout 
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/editor_bg">
 
+    <!-- Toolbar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="48dp"
+        android:background="@color/toolbar_bg"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="4dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="#303030"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="8dp">
+        <ImageView
+            android:id="@+id/btn_menu"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_menu"
+            android:scaleType="centerInside"
+            app:tint="@color/white" />
 
-            <ImageView
-                android:id="@+id/btn_menu"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="4dp"
-                android:src="@android:drawable/ic_menu_sort_by_size"
-                app:tint="#FFFFFF" />
+        <ImageView
+            android:id="@+id/btn_search"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_search"
+            android:scaleType="centerInside"
+            app:tint="@color/white" />
 
-            <Space
-                android:layout_width="16dp"
-                android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/btn_undo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_undo"
+            android:scaleType="centerInside"
+            app:tint="@color/white" />
 
-            <ImageView
-                android:id="@+id/btn_pin"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="6dp"
-                android:src="@android:drawable/ic_menu_today"
-                app:tint="#FFFFFF" />
+        <ImageView
+            android:id="@+id/btn_redo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_redo"
+            android:scaleType="centerInside"
+            app:tint="@color/white" />
 
-            <ImageView
-                android:id="@+id/btn_undo"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginStart="16dp"
-                android:padding="6dp"
-                android:src="@android:drawable/ic_menu_revert"
-                app:tint="#FFFFFF" />
+        <ImageView
+            android:id="@+id/btn_save"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_save"
+            android:scaleType="centerInside"
+            app:tint="@color/white" />
 
-            <ImageView
-                android:id="@+id/btn_redo"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginStart="16dp"
-                android:padding="6dp"
-                android:scaleX="-1"
-                android:src="@android:drawable/ic_menu_revert"
-                app:tint="#FFFFFF" />
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-            <ImageView
-                android:id="@+id/btn_save"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginStart="16dp"
-                android:padding="6dp"
-                android:src="@android:drawable/ic_menu_save"
-                app:tint="#FFFFFF" />
+        <ImageView
+            android:id="@+id/btn_edit_mode"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_text"
+            android:scaleType="centerInside"
+            app:tint="@color/white" />
 
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
+        <ImageView
+            android:id="@+id/btn_overflow"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_more_vert"
+            android:scaleType="centerInside"
+            app:tint="@color/white" />
+    </LinearLayout>
 
-            <ImageView
-                android:id="@+id/btn_edit_mode"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="6dp"
-                android:src="@android:drawable/ic_menu_edit"
-                app:tint="#FFFFFF" />
+    <!-- Info bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/info_bar_bg"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp">
 
-            <ImageView
-                android:id="@+id/btn_overflow"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginStart="8dp"
-                android:padding="6dp"
-                android:src="@android:drawable/ic_menu_more"
-                app:tint="#FFFFFF" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/textview_filename"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="#424242"
-            android:orientation="horizontal"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="4dp">
+            android:layout_weight="1"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:singleLine="true"
+            android:ellipsize="start" />
 
-            <TextView
-                android:id="@+id/textview_filename"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="convert.py"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
+        <TextView
+            android:id="@+id/textview_lineno_encoding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="12sp" />
+    </LinearLayout>
 
-            <TextView
-                android:id="@+id/textview_lineno_encoding"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1:1   UTF-8"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-        </LinearLayout>
+    <!-- Editor -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <bin.mg.main.ui.editor.LinedEditText
             android:id="@+id/smali_editor"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="#FFFFFF"
+            android:layout_height="match_parent"
+            android:background="@color/editor_bg"
             android:fontFamily="monospace"
             android:gravity="top|start"
             android:inputType="textMultiLine|textNoSuggestions"
             android:padding="8dp"
-            android:textColor="#212121"
-            android:textSize="13sp" />
+            android:textColor="@color/editor_text"
+            android:textSize="13sp"
+            android:scrollbars="vertical" />
 
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#FAFAFA"
-            android:scrollbars="none">
-
-            <LinearLayout
-                android:id="@+id/symbol_input"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="4dp" />
-        </HorizontalScrollView>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="300dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:background="#FFFFFF"
-        android:orientation="vertical">
-
+        <!-- Search bar (hidden by default) -->
         <LinearLayout
+            android:id="@+id/search_bar"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="#303030"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom"
+            android:background="@color/search_bar_bg"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="8dp"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/search_input"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_search_input"
+                android:hint="Search..."
+                android:textColorHint="@color/grey_500"
+                android:textColor="@color/editor_text"
+                android:textSize="14sp"
+                android:paddingHorizontal="12dp"
+                android:singleLine="true"
+                android:imeOptions="actionSearch"
+                android:inputType="text" />
 
             <TextView
-                android:layout_width="0dp"
+                android:id="@+id/search_result_count"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Text Editor"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:paddingHorizontal="8dp" />
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@android:drawable/ic_menu_edit"
-                app:tint="#FFFFFF" />
+                android:id="@+id/btn_search_prev"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="4dp"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/white" />
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="16dp"
-                android:src="@android:drawable/ic_menu_more"
-                app:tint="#FFFFFF" />
+                android:id="@+id/btn_search_next"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="4dp"
+                android:src="@drawable/ic_arrow_forward"
+                app:tint="@color/white" />
+
+            <ImageView
+                android:id="@+id/btn_search_close"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="4dp"
+                android:src="@drawable/ic_delete"
+                app:tint="@color/white" />
         </LinearLayout>
+    </FrameLayout>
+
+    <!-- Symbol bar -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/symbol_bar_bg"
+        android:scrollbars="none">
 
         <LinearLayout
-            android:id="@+id/drawer_file_list"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="#F5F5F5"
-            android:orientation="vertical">
-            
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#E3F2FD"
-                android:orientation="horizontal"
-                android:padding="12dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@android:drawable/ic_menu_edit"
-                    app:tint="#1E88E5" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/drawer_current_filename"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="convert.py"
-                        android:textColor="#1E88E5"
-                        android:textStyle="italic" />
-
-                    <TextView
-                        android:id="@+id/drawer_current_path"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="/storage/emulated/0/convert.py"
-                        android:textColor="#757575"
-                        android:textSize="10sp" />
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/btn_minimize"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="#42A5F5"
-            android:text="MINIMIZE"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-</androidx.drawerlayout.widget.DrawerLayout>
+            android:id="@+id/symbol_input"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="4dp" />
+    </HorizontalScrollView>
+</LinearLayout>
