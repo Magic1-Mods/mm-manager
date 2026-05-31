@@ -59,6 +59,7 @@ class ViewHolder(
 
         if (item.isParentDirectory()) {
             setFolderUI(fileType, true)
+            date.text = ""
         } else if (item.isDirectory) {
             setFolderUI(FileType.FOLDER, false)
             date.text = formatDate(item.lastModified)
@@ -95,7 +96,9 @@ class ViewHolder(
             icon.setImageResource(IconManager.getIconResource(fileType))
         }
 
-        date.text = formatDate(item.lastModified)
+        val dateStr = formatDate(item.lastModified)
+        val sizeStr = formatSize(item.size)
+        date.text = if (dateStr.isNotEmpty()) "$dateStr  $sizeStr" else sizeStr
 
         loadThumbnail(item, fileType)
     }

@@ -98,7 +98,10 @@ class MainActivity : AppCompatActivity() {
     private var currentPrimaryColor = 0xFF212121.toInt()
     private var buttonTint = 0xFF424242.toInt()
     private val customPaths = ArrayList<String>()
+    private val customPathNames = HashMap<String, String>()
     private val greyColorFilter = android.graphics.PorterDuffColorFilter(0xFF9E9E9E.toInt(), android.graphics.PorterDuff.Mode.SRC_IN)
+
+    data class CustomStorageEntry(val path: String, val displayName: String)
 
     private fun getPrimaryColor(): Int = PALETTES[currentPalette][0]
     private fun getSecondaryColor(): Int = PALETTES[currentPalette][1]
@@ -209,10 +212,16 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val pathsJson = prefs.getString(KEY_CUSTOM_PATHS, "")
         if (!pathsJson.isNullOrEmpty()) {
-            val paths = pathsJson.split("|||")
-            for (path in paths) {
-                if (path.isNotEmpty()) {
+            val entries = pathsJson.split("|||")
+            for (entry in entries) {
+                if (entry.isNotEmpty()) {
+                    val parts = entry.split("<::>")
+                    val path = parts[0]
+                    val name = if (parts.size > 1) parts[1] else ""
                     customPaths.add(path)
+                    if (name.isNotEmpty()) {
+                        customPathNames[path] = name
+                    }
                 }
             }
         }
@@ -223,7 +232,13 @@ class MainActivity : AppCompatActivity() {
         val sb = StringBuilder()
         for (i in customPaths.indices) {
             if (i > 0) sb.append("|||")
-            sb.append(customPaths[i])
+            val path = customPaths[i]
+            val name = customPathNames[path]
+            if (name != null) {
+                sb.append(path).append("<::>").append(name)
+            } else {
+                sb.append(path)
+            }
         }
         prefs.edit().putString(KEY_CUSTOM_PATHS, sb.toString()).apply()
     }
@@ -510,7 +525,8 @@ class MainActivity : AppCompatActivity() {
 
         for (i in customPaths.indices) {
             val path = customPaths[i]
-            val name = File(path).name.ifEmpty { path.substringAfterLast("/").ifEmpty { "Storage" } }
+            val name = customPathNames[path]
+                ?: File(path).name.ifEmpty { path.substringAfterLast("/").ifEmpty { "Storage" } }
 
             val itemView = LayoutInflater.from(this).inflate(R.layout.item_storage_path, dynamicStorageContainer, false)
 
@@ -637,11 +653,15 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val path = getPathFromTreeUri(treeUri)
+                val displayName = getDisplayNameFromTreeUri(treeUri)
                 if (path != null && !customPaths.contains(path)) {
                     customPaths.add(path)
+                    if (displayName.isNotEmpty()) {
+                        customPathNames[path] = displayName
+                    }
                     saveCustomPaths()
                     populateDynamicStorage()
-                    Toast.makeText(this, "Storage added: $path", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Storage added: $displayName", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this, "Could not access this location", Toast.LENGTH_SHORT).show()
                 }
@@ -649,17 +669,94 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun getDisplayNameFromTreeUri(treeUri: Uri?): String {
+        if (treeUri == null) return ""
+
+        val docId = treeUri.lastPathSegment ?: return ""
+
+        val decodedDocId = try {
+            java.net.URLDecoder.decode(docId, "UTF-8")
+        } catch (e: Exception) {
+            docId
+        }
+
+        if (decodedDocId.startsWith("primary:")) {
+            val subPath = decodedDocId.substringAfter(":", "")
+            if (subPath.isEmpty()) return "Internal Storage"
+            val folderName = subPath.substringAfterLast("/")
+            return folderName.ifEmpty { subPath }
+        }
+
+        val volumeId = decodedDocId.substringBefore(":")
+        val subPath = decodedDocId.substringAfter(":", "")
+
+        if (subPath.isNotEmpty()) {
+            val decodedSubPath = try {
+                java.net.URLDecoder.decode(subPath, "UTF-8")
+            } catch (e: Exception) {
+                subPath
+            }
+
+            if (decodedSubPath.contains("/data/data/") || decodedSubPath.contains("/data/user/")) {
+                val pkgName = decodedSubPath
+                    .replace("/data/data/", "")
+                    .replace("/data/user/0/", "")
+                    .substringBefore("/")
+                val appName = getAppLabel(pkgName)
+                val suffix = decodedSubPath.substringAfter("/$pkgName/").substringAfterLast("/")
+                return if (suffix.isNotEmpty()) "$appName ($suffix)" else appName
+            }
+
+            val folderName = decodedSubPath.substringAfterLast("/")
+            return folderName.ifEmpty { decodedSubPath }
+        }
+
+        return getVolumeDisplayName(volumeId)
+    }
+
+    private fun getAppLabel(packageName: String): String {
+        return try {
+            val pm = packageManager
+            val appInfo = pm.getApplicationInfo(packageName, 0)
+            pm.getApplicationLabel(appInfo).toString()
+        } catch (e: Exception) {
+            packageName
+        }
+    }
+
+    private fun getVolumeDisplayName(volumeId: String): String {
+        val searchDirs = listOf("/storage", "/mnt/media_rw")
+        for (dir in searchDirs) {
+            val f = File(dir)
+            if (!f.exists()) continue
+            val volumes = f.listFiles() ?: continue
+            for (vol in volumes) {
+                if (vol.name == volumeId || vol.name.endsWith("_$volumeId")) {
+                    return vol.name
+                }
+            }
+        }
+        return volumeId
+    }
+
     private fun getPathFromTreeUri(treeUri: Uri?): String? {
         if (treeUri == null) return null
 
         val docId = treeUri.lastPathSegment ?: return null
 
-        if (docId.startsWith("primary:")) {
-            return "/storage/emulated/0/" + docId.substring(8)
+        val decodedDocId = try {
+            java.net.URLDecoder.decode(docId, "UTF-8")
+        } catch (e: Exception) {
+            docId
         }
 
-        val volumeId = docId.substringBefore(":")
-        val subPath = docId.substringAfter(":", "")
+        if (decodedDocId.startsWith("primary:")) {
+            val subPath = decodedDocId.substringAfter(":", "")
+            return "/storage/emulated/0" + if (subPath.isNotEmpty()) "/$subPath" else ""
+        }
+
+        val volumeId = decodedDocId.substringBefore(":")
+        val subPath = decodedDocId.substringAfter(":", "")
 
         val volumePath = getVolumePath(volumeId)
         if (volumePath != null) {
