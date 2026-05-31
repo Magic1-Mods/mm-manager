@@ -40,7 +40,6 @@ object SafHelper {
                     val childPath = childUri.toString()
 
                     val item = FileItem(name, childPath, size, isDir, modified)
-                    item.isVirtual = true
                     items.add(item)
                 }
             }
