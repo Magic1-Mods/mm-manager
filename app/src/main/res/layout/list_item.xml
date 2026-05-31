@@ -1,28 +1,26 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="52dp"
+    android:layout_height="48dp"
     android:orientation="horizontal"
-    android:paddingStart="8dp"
+    android:paddingStart="10dp"
     android:paddingEnd="12dp"
     android:gravity="center_vertical"
     android:background="?attr/selectableItemBackground">
 
     <FrameLayout
         android:id="@+id/file_icon_container"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
         android:background="@drawable/bg_file">
 
         <ImageView
             android:id="@+id/file_icon"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:scaleType="centerCrop"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_folder"
-        />
+            android:scaleType="centerInside"/>
     </FrameLayout>
 
     <LinearLayout
@@ -30,26 +28,26 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:layout_marginStart="10dp"
-        android:paddingTop="2dp"
-        android:paddingBottom="2dp">
+        android:layout_marginStart="10dp">
 
         <TextView
             android:id="@+id/file_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
-            android:textSize="14sp"
-            android:singleLine="true"
-            android:ellipsize="end"/>
+            android:textSize="13sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:includeFontPadding="false"/>
 
         <TextView
             android:id="@+id/file_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/grey_600"
-            android:textSize="11sp"/>
-
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:includeFontPadding="false"/>
     </LinearLayout>
 
 </LinearLayout>
