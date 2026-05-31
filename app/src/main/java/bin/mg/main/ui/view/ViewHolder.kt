@@ -37,7 +37,6 @@ class ViewHolder(
     val iconContainer: FrameLayout = itemView.findViewById(R.id.file_icon_container)
     val icon: ImageView = itemView.findViewById(R.id.file_icon)
     val name: TextView = itemView.findViewById(R.id.file_name)
-    val size: TextView = itemView.findViewById(R.id.file_size)
     val date: TextView = itemView.findViewById(R.id.file_date)
 
     fun setThemeColor(color: Int) {
@@ -54,7 +53,6 @@ class ViewHolder(
         val textPrimary = if (isDarkMode) 0xFFFFFFFF.toInt() else 0xFF212121.toInt()
         val textSecondary = if (isDarkMode) 0xFFB0B0B0.toInt() else 0xFF757575.toInt()
         name.setTextColor(textPrimary)
-        size.setTextColor(textSecondary)
         date.setTextColor(textSecondary)
 
         val fileType = item.fileType
@@ -77,7 +75,6 @@ class ViewHolder(
 
         iconContainer.background = bg
         icon.setImageResource(R.drawable.ic_folder)
-        size.text = "Folder"
 
         if (isParent) date.text = ""
     }
@@ -98,7 +95,6 @@ class ViewHolder(
             icon.setImageResource(IconManager.getIconResource(fileType))
         }
 
-        size.text = formatSize(item.size)
         date.text = formatDate(item.lastModified)
 
         loadThumbnail(item, fileType)
