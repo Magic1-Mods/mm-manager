@@ -272,7 +272,6 @@ class MainActivity : AppCompatActivity() {
         window.statusBarColor = primaryColor
 
         findViewById<View?>(R.id.toolbar)?.setBackgroundColor(primaryColor)
-        findViewById<View?>(R.id.stats_container)?.setBackgroundColor(primaryColor)
         findViewById<LinearLayout?>(R.id.main_container)?.setBackgroundColor(mainBg)
         findViewById<FrameLayout?>(R.id.panel_left)?.setBackgroundColor(panelBg)
         findViewById<FrameLayout?>(R.id.panel_right)?.setBackgroundColor(panelBg)
@@ -391,14 +390,19 @@ class MainActivity : AppCompatActivity() {
     private fun initToolbar() {
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         drawerLayout = findViewById(R.id.drawer_layout)
         drawerToggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar,
-            R.string.app_name, R.string.app_name
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
         )
         drawerLayout?.addDrawerListener(drawerToggle!!)
         drawerToggle?.syncState()
+
+        findViewById<ImageButton>(R.id.btn_toolbar_menu).setOnClickListener {
+            showDrawerMenu(it)
+        }
     }
 
     private fun initViews() {
@@ -882,7 +886,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             val finalDisk = String.format(
-                "Disk: %.1fGB/%.1fGB",
+                "Disk: %.2fG/%.2fG",
                 available / (1024.0 * 1024 * 1024),
                 total / (1024.0 * 1024 * 1024)
             )

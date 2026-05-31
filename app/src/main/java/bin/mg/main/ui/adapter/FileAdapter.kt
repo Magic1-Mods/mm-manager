@@ -20,7 +20,7 @@ import java.util.Locale
 class FileAdapter(private val context: Context) : RecyclerView.Adapter<ViewHolder>() {
 
     private val items = mutableListOf<FileItem>()
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("yy-MM-dd HH:mm", Locale.getDefault())
     private val mainHandler = Handler(Looper.getMainLooper())
     private val fileHelper = FileSystemHelper.getInstance(context)
     private var handlerRegistry = FileClickHandlerRegistry.instance

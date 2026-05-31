@@ -43,7 +43,7 @@ class FileItem(
     }
 
     companion object {
-        const val PARENT_DIRECTORY = "..."
+        const val PARENT_DIRECTORY = ".."
 
         @JvmStatic
         fun fromFile(file: File): FileItem {
