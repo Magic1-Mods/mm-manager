@@ -95,6 +95,7 @@ class MainActivity : AppCompatActivity() {
 
     private var currentPalette = 0
     private var followSystemTheme = false
+    private var currentPrimaryColor = 0xFF212121.toInt()
     private var buttonTint = 0xFF424242.toInt()
     private val customPaths = ArrayList<String>()
     private val greyColorFilter = android.graphics.PorterDuffColorFilter(0xFF9E9E9E.toInt(), android.graphics.PorterDuff.Mode.SRC_IN)
@@ -232,6 +233,7 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         prefs.edit().putInt(KEY_THEME_PALETTE, currentPalette).apply()
         applyThemeColors()
+        populateDynamicStorage()
     }
 
     private fun applyThemeColors() {
@@ -239,7 +241,6 @@ class MainActivity : AppCompatActivity() {
                 (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
                         == android.content.res.Configuration.UI_MODE_NIGHT_YES)
 
-        val primaryColor: Int
         val mainBg: Int
         val panelBg: Int
         val bottomBarBg: Int
@@ -249,7 +250,7 @@ class MainActivity : AppCompatActivity() {
         val dividerColor: Int
 
         if (isDarkMode) {
-            primaryColor = 0xFF212121.toInt()
+            currentPrimaryColor = 0xFF212121.toInt()
             mainBg = 0xFF212121.toInt()
             panelBg = 0xFF303030.toInt()
             bottomBarBg = 0xFF303030.toInt()
@@ -259,7 +260,7 @@ class MainActivity : AppCompatActivity() {
             buttonTint = 0xFFE0E0E0.toInt()
             dividerColor = 0xFF424242.toInt()
         } else {
-            primaryColor = getPrimaryColor()
+            currentPrimaryColor = getPrimaryColor()
             mainBg = 0xFFF5F5F5.toInt()
             panelBg = 0xFFFFFFFF.toInt()
             bottomBarBg = 0xFFFFFFFF.toInt()
@@ -509,16 +510,20 @@ class MainActivity : AppCompatActivity() {
 
         for (i in customPaths.indices) {
             val path = customPaths[i]
-            var name = File(path).name
-            if (name.isEmpty()) name = path
+            val name = File(path).name.ifEmpty { path.substringAfterLast("/").ifEmpty { "Storage" } }
 
             val itemView = LayoutInflater.from(this).inflate(R.layout.item_storage_path, dynamicStorageContainer, false)
 
             val nameText = itemView.findViewById<TextView>(R.id.storage_name)
             val pathText = itemView.findViewById<TextView>(R.id.storage_path)
             val storageTextItem = itemView.findViewById<TextView>(R.id.storage_text)
-            val icon = itemView.findViewById<ImageView>(R.id.custom_storage_icon)
-            icon?.setColorFilter(buttonTint)
+            val bgView = itemView.findViewById<View>(R.id.custom_storage_bg)
+
+            val bg = bgView?.background
+            if (bg is android.graphics.drawable.GradientDrawable) {
+                val shape = bg.mutate() as android.graphics.drawable.GradientDrawable
+                shape.setColor(currentPrimaryColor)
+            }
 
             nameText.text = name
             pathText.text = path
@@ -667,23 +672,32 @@ class MainActivity : AppCompatActivity() {
     private fun getVolumePath(volumeId: String): String? {
         if (volumeId == "primary") return "/storage/emulated/0"
 
-        val storageDir = File("/storage")
-        val volumes = storageDir.listFiles() ?: return null
-        for (vol in volumes) {
-            if (vol.name == volumeId || vol.name.endsWith("_$volumeId")) {
-                return vol.absolutePath
+        val searchDirs = listOf("/storage", "/mnt/media_rw")
+        for (dir in searchDirs) {
+            val f = File(dir)
+            if (!f.exists()) continue
+            val volumes = f.listFiles() ?: continue
+            for (vol in volumes) {
+                if (vol.name == volumeId || vol.name.endsWith("_$volumeId")) {
+                    return vol.absolutePath
+                }
             }
         }
 
         val emulatedDir = File("/storage/emulated")
-        val emulated = emulatedDir.listFiles() ?: return null
-        for (vol in emulated) {
-            if (vol.name == volumeId) {
-                return vol.absolutePath
+        if (emulatedDir.exists()) {
+            val emulated = emulatedDir.listFiles()
+            if (emulated != null) {
+                for (vol in emulated) {
+                    if (vol.name == volumeId) {
+                        return vol.absolutePath
+                    }
+                }
             }
         }
 
-        return "/storage/$volumeId"
+        val guess = "/storage/$volumeId"
+        return if (File(guess).exists()) guess else null
     }
 
     private fun toggleSection(content: LinearLayout, arrow: ImageView) {
