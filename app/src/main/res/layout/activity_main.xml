@@ -77,14 +77,9 @@
 
                 <ImageButton
                     android:id="@+id/btn_toolbar_menu"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_more_vert"
-                    android:contentDescription="Menu"
-                    android:scaleType="centerInside"
-                    app:tint="@color/white" />
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
@@ -223,7 +218,7 @@
             android:background="?attr/headerBackground"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:padding="16dp">
+            android:padding="12dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -529,7 +524,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="gone">
+                        android:visibility="visible">
 
                         <LinearLayout
                             android:id="@+id/nav_recycle_bin"

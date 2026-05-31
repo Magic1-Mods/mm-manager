@@ -95,7 +95,9 @@ class MainActivity : AppCompatActivity() {
 
     private var currentPalette = 0
     private var followSystemTheme = false
+    private var buttonTint = 0xFF424242.toInt()
     private val customPaths = ArrayList<String>()
+    private val greyColorFilter = android.graphics.PorterDuffColorFilter(0xFF9E9E9E.toInt(), android.graphics.PorterDuff.Mode.SRC_IN)
 
     private fun getPrimaryColor(): Int = PALETTES[currentPalette][0]
     private fun getSecondaryColor(): Int = PALETTES[currentPalette][1]
@@ -159,6 +161,7 @@ class MainActivity : AppCompatActivity() {
         setupAdapters()
         setupListeners()
         loadCustomPaths()
+        populateDynamicStorage()
         loadState()
         applyThemeColors()
 
@@ -243,7 +246,6 @@ class MainActivity : AppCompatActivity() {
         val textPrimary: Int
         val textSecondary: Int
         val statsText: Int
-        val buttonTint: Int
         val dividerColor: Int
 
         if (isDarkMode) {
@@ -282,8 +284,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView?>(R.id.stats_left)?.setTextColor(statsText)
         findViewById<TextView?>(R.id.disk_info)?.setTextColor(statsText)
 
-        findViewById<ImageButton?>(R.id.btn_back)?.setColorFilter(buttonTint)
-        findViewById<ImageButton?>(R.id.btn_forward)?.setColorFilter(buttonTint)
         findViewById<ImageButton?>(R.id.btn_new)?.setColorFilter(buttonTint)
         findViewById<ImageButton?>(R.id.btn_swap)?.setColorFilter(buttonTint)
         findViewById<ImageButton?>(R.id.btn_parent)?.setColorFilter(buttonTint)
@@ -404,9 +404,6 @@ class MainActivity : AppCompatActivity() {
         drawerLayout?.addDrawerListener(drawerToggle!!)
         drawerToggle?.syncState()
 
-        findViewById<ImageButton>(R.id.btn_toolbar_menu).setOnClickListener {
-            showDrawerMenu(it)
-        }
     }
 
     private fun initViews() {
@@ -520,6 +517,8 @@ class MainActivity : AppCompatActivity() {
             val nameText = itemView.findViewById<TextView>(R.id.storage_name)
             val pathText = itemView.findViewById<TextView>(R.id.storage_path)
             val storageTextItem = itemView.findViewById<TextView>(R.id.storage_text)
+            val icon = itemView.findViewById<ImageView>(R.id.custom_storage_icon)
+            icon?.setColorFilter(buttonTint)
 
             nameText.text = name
             pathText.text = path
@@ -914,9 +913,18 @@ class MainActivity : AppCompatActivity() {
         btnSwap?.setImageResource(if (activePanel == 0) R.drawable.ic_swap_left_active else R.drawable.ic_swap_right_active)
     }
 
+    private fun updateBottomBarIcons() {
+        val backStack = if (activePanel == 0) backStackLeft else backStackRight
+        val forwardStack = if (activePanel == 0) forwardStackLeft else forwardStackRight
+        btnBack?.setColorFilter(if (backStack.isEmpty()) greyColorFilter else android.graphics.PorterDuffColorFilter(buttonTint, android.graphics.PorterDuff.Mode.SRC_IN))
+        btnForward?.setColorFilter(if (forwardStack.isEmpty()) greyColorFilter else android.graphics.PorterDuffColorFilter(buttonTint, android.graphics.PorterDuff.Mode.SRC_IN))
+    }
+
     private fun updateTopBar() {
         val path = if (activePanel == 0) currentPathLeft else currentPathRight
         toolbarPath?.text = path
+
+        updateBottomBarIcons()
 
         val adapter = if (activePanel == 0) adapterLeft else adapterRight
         val items = adapter.getItems()
