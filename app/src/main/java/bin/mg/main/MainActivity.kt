@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity() {
     private var drawerLayout: DrawerLayout? = null
     private var toolbar: Toolbar? = null
     private var drawerToggle: ActionBarDrawerToggle? = null
+    private var btnToolbarOverflow: ImageButton? = null
 
     private var sectionLocalContent: LinearLayout? = null
     private var sectionToolsContent: LinearLayout? = null
@@ -309,6 +310,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton?>(R.id.btn_new)?.setColorFilter(buttonTint)
         findViewById<ImageButton?>(R.id.btn_swap)?.setColorFilter(buttonTint)
         findViewById<ImageButton?>(R.id.btn_parent)?.setColorFilter(buttonTint)
+        findViewById<ImageButton?>(R.id.btn_toolbar_overflow)?.setColorFilter(0xFFFFFFFF.toInt())
 
         if (::adapterLeft.isInitialized) adapterLeft.setThemeColor(currentPrimaryColor, isDarkMode)
         if (::adapterRight.isInitialized) adapterRight.setThemeColor(currentPrimaryColor, isDarkMode)
@@ -461,6 +463,7 @@ class MainActivity : AppCompatActivity() {
 
         btnThemeToggle = findViewById(R.id.btn_theme_toggle)
         btnDrawerMenu = findViewById(R.id.btn_drawer_menu)
+        btnToolbarOverflow = findViewById(R.id.btn_toolbar_overflow)
     }
 
     private fun initDrawerSections() {
@@ -619,7 +622,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDrawerMenu(anchor: View) {
-        val popup = PopupMenu(this, anchor)
+        val systemDark = followSystemTheme &&
+                (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                        == android.content.res.Configuration.UI_MODE_NIGHT_YES)
+        val isDark = systemDark
+        val themeRes = if (isDark) R.style.AppTheme_Dark else R.style.AppTheme
+        val themedContext = android.view.ContextThemeWrapper(this, themeRes)
+        val popup = PopupMenu(themedContext, anchor)
         popup.menu.add(0, 1, 0, "Theme follows system").isCheckable = true
         popup.menu.findItem(1).isChecked = followSystemTheme
         popup.menu.add(0, 2, 1, "Add local storage").setIcon(R.drawable.ic_local_storage)
@@ -938,7 +947,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
         btnParent?.setOnClickListener { goUp(activePanel == 0) }
+
+        btnToolbarOverflow?.setOnClickListener { showToolbarOverflow(it) }
+        btnToolbarOverflow?.setColorFilter(0xFFFFFFFF.toInt())
+
         updateBottomBarIcons()
+    }
+
+    private fun showToolbarOverflow(anchor: View) {
+        val systemDark = followSystemTheme &&
+                (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                        == android.content.res.Configuration.UI_MODE_NIGHT_YES)
+        val isDark = systemDark
+        val themeRes = if (isDark) R.style.AppTheme_Dark else R.style.AppTheme
+        val themedContext = android.view.ContextThemeWrapper(this, themeRes)
+        val popup = PopupMenu(themedContext, anchor)
+        popup.menuInflater.inflate(R.menu.toolbar_overflow, popup.menu)
+        popup.setOnMenuItemClickListener { false }
+        popup.show()
     }
 
     private fun updateBottomBarIcons() {
