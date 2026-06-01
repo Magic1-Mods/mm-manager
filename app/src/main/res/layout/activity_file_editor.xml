@@ -27,6 +27,15 @@
             app:tint="#E0E0E0" />
 
         <ImageView
+            android:id="@+id/btn_pin"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_push_pin"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#E0E0E0" />
+
+        <ImageView
             android:id="@+id/btn_undo"
             android:layout_width="40dp"
             android:layout_height="40dp"

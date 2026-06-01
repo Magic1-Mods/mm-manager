@@ -130,6 +130,7 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
 
     private fun setupToolbar() {
         findViewById<ImageView>(R.id.btn_menu).setOnClickListener { showFilePopup(it) }
+        findViewById<ImageView>(R.id.btn_pin).setOnClickListener { toggleSearchBar() }
         findViewById<ImageView>(R.id.btn_undo).setOnClickListener { codeEditor?.undo() }
         findViewById<ImageView>(R.id.btn_redo).setOnClickListener { codeEditor?.redo() }
         findViewById<ImageView>(R.id.btn_save).setOnClickListener { saveFile() }
