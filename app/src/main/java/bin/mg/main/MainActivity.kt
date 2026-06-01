@@ -37,7 +37,6 @@ import com.fastrecyclerview.FastScrollerRecyclerView
 import bin.mg.main.model.FileItem
 import bin.mg.main.ui.adapter.FileAdapter
 import bin.mg.main.ui.editor.FileEditorActivity
-import bin.mg.main.ui.editor.DexEditorActivity
 import bin.mg.main.utils.file.FileSystemHelper
 import java.io.File
 import java.util.Locale
@@ -1287,7 +1286,9 @@ class MainActivity : AppCompatActivity() {
     private fun openFile(file: FileItem) {
         val path = file.path
         if (FileUtils.isDexFile(path)) {
-            DexEditorActivity.start(this, path)
+            val intent = Intent(this, bin.mg.main.dexeditor.activity.DexEditorActivity::class.java)
+            intent.putExtra("SelectedDexFiles", arrayListOf(path))
+            startActivity(intent)
         } else if (FileUtils.isTextFile(path)) {
             FileEditorActivity.start(this, path)
         } else if (FileUtils.isApkFile(path)) {

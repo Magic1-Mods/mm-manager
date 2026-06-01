@@ -4,6 +4,21 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <string name="close_btn">Close</string>
+    <string name="error_title">Error</string>
+    <string name="select_all">Select All</string>
+    <string name="copy">Copy</string>
+    <string name="paste">Paste</string>
+    <string name="go_to">Go To</string>
+    <string name="translate">Translate</string>
+    <string name="cut">Cut</string>
+    <string name="long_select">Long Select</string>
+    <string name="link">Open link</string>
+    <string name="comment">Toggle comment</string>
+    <string name="share">Share text</string>
+    <string name="customize">Customize</string>
+    <string name="delete">Delete</string>
+
     <string-array name="font_styles">
         <item>Normal</item>
         <item>Monospace</item>
