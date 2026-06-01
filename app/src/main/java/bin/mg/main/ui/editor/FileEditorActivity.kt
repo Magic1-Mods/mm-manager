@@ -344,7 +344,6 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
                 9 -> {
                     item.isChecked = !item.isChecked
                     isSmoothMode = item.isChecked
-                    try { codeEditor?.setNonertiaSmoothEnabled(isSmoothMode) } catch (_: Exception) {}
                     true
                 }
                 10 -> {
