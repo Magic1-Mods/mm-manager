@@ -33,6 +33,7 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.fastrecyclerview.FastScrollerRecyclerView
 import bin.mg.main.model.FileItem
 import bin.mg.main.ui.adapter.FileAdapter
 import bin.mg.main.ui.editor.FileEditorActivity
@@ -49,8 +50,8 @@ class MainActivity : AppCompatActivity() {
     private var toolbarPath: TextView? = null
     private var topStats: TextView? = null
     private var diskInfo: TextView? = null
-    private lateinit var recyclerLeft: RecyclerView
-    private lateinit var recyclerRight: RecyclerView
+    private lateinit var recyclerLeft: FastScrollerRecyclerView
+    private lateinit var recyclerRight: FastScrollerRecyclerView
     private var panelLeft: View? = null
     private var panelRight: View? = null
     private var btnBack: ImageButton? = null
@@ -168,8 +169,8 @@ class MainActivity : AppCompatActivity() {
         setupAdapters()
         setupListeners()
 
-        loadState()
         applyThemeColors()
+        populateDynamicStorage()
 
         if (!hasPermissions()) {
             requestPermissions()
@@ -249,14 +250,13 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         prefs.edit().putInt(KEY_THEME_PALETTE, currentPalette).apply()
         applyThemeColors()
-        populateDynamicStorage()
     }
 
     private fun applyThemeColors() {
         val systemDark = followSystemTheme &&
                 (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
                         == android.content.res.Configuration.UI_MODE_NIGHT_YES)
-        val isDarkMode = systemDark || (!followSystemTheme && currentPalette == 0)
+        val isDarkMode = systemDark
 
         val mainBg: Int
         val panelBg: Int
@@ -265,6 +265,7 @@ class MainActivity : AppCompatActivity() {
         val textSecondary: Int
         val statsText: Int
         val dividerColor: Int
+        val drawerBg: Int
 
         if (isDarkMode) {
             currentPrimaryColor = 0xFF212121.toInt()
@@ -276,6 +277,7 @@ class MainActivity : AppCompatActivity() {
             statsText = 0xFF9E9E9E.toInt()
             buttonTint = 0xFFE0E0E0.toInt()
             dividerColor = 0xFF424242.toInt()
+            drawerBg = 0xFF303030.toInt()
         } else {
             currentPrimaryColor = getPrimaryColor()
             mainBg = 0xFFF5F5F5.toInt()
@@ -286,6 +288,7 @@ class MainActivity : AppCompatActivity() {
             statsText = 0xFF9E9E9E.toInt()
             buttonTint = 0xFF424242.toInt()
             dividerColor = 0xFFE0E0E0.toInt()
+            drawerBg = 0xFFFFFFFF.toInt()
         }
 
         val window: Window = window
@@ -297,6 +300,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<FrameLayout?>(R.id.panel_right)?.setBackgroundColor(panelBg)
         findViewById<View?>(R.id.divider)?.setBackgroundColor(dividerColor)
         findViewById<LinearLayout?>(R.id.bottom_bar)?.setBackgroundColor(bottomBarBg)
+        findViewById<View?>(R.id.nav_drawer)?.setBackgroundColor(drawerBg)
 
         findViewById<TextView?>(R.id.toolbar_path)?.setTextColor(0xFFFFFFFF.toInt())
         findViewById<TextView?>(R.id.stats_left)?.setTextColor(statsText)
@@ -374,6 +378,17 @@ class MainActivity : AppCompatActivity() {
             val bg = v.background
             if (bg is GradientDrawable) {
                 val shape = bg.mutate() as GradientDrawable
+                shape.setColor(primaryColor)
+            }
+        }
+
+        val container = dynamicStorageContainer ?: return
+        for (i in 0 until container.childCount) {
+            val itemView = container.getChildAt(i)
+            val bgView = itemView.findViewById<View>(R.id.custom_storage_bg) ?: continue
+            val bg = bgView.background
+            if (bg is android.graphics.drawable.GradientDrawable) {
+                val shape = bg.mutate() as android.graphics.drawable.GradientDrawable
                 shape.setColor(primaryColor)
             }
         }
@@ -517,8 +532,6 @@ class MainActivity : AppCompatActivity() {
 
         btnThemeToggle?.setOnClickListener { toggleTheme() }
         btnDrawerMenu?.setOnClickListener { showDrawerMenu(it) }
-
-        populateDynamicStorage()
     }
 
     private fun populateDynamicStorage() {
@@ -856,11 +869,9 @@ class MainActivity : AppCompatActivity() {
         adapterLeft = FileAdapter(this)
         adapterRight = FileAdapter(this)
 
-        recyclerLeft.layoutManager = LinearLayoutManager(this)
         recyclerLeft.setHasFixedSize(true)
         recyclerLeft.itemAnimator = null
 
-        recyclerRight.layoutManager = LinearLayoutManager(this)
         recyclerRight.setHasFixedSize(true)
         recyclerRight.itemAnimator = null
 
