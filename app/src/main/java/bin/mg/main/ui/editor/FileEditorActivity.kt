@@ -34,6 +34,8 @@ import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.SymbolInputView
+import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import bin.mg.main.R
 import java.io.BufferedReader
 import java.io.File
@@ -424,7 +426,6 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         editor.setLineSpacing(2.0f, 1.1f)
 
         editor.setHighlightCurrentLine(true)
-        editor.setHighlightCurrentLineColor(Color.parseColor("#FFF7E0"))
 
         val fontType = prefs.getString("font_type", "normal")
         val typeface = if (fontType == "monospace") Typeface.MONOSPACE else Typeface.DEFAULT
@@ -433,7 +434,17 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
 
         try {
             val scheme = TextMateColorScheme.create(ThemeRegistry.getInstance())
+            scheme.setColor(EditorColorScheme.CURRENT_LINE, Color.parseColor("#FFF7E0"))
+            scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, Color.parseColor("#FFFFFF"))
+            scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, Color.parseColor("#F5F5F5"))
+            scheme.setColor(EditorColorScheme.LINE_NUMBER, Color.parseColor("#9E9E9E"))
+            scheme.setColor(EditorColorScheme.LINE_NUMBER_CURRENT, Color.parseColor("#333333"))
+            scheme.setColor(EditorColorScheme.TEXT_NORMAL, Color.parseColor("#212121"))
             editor.setColorScheme(scheme)
+        } catch (_: Exception) {}
+
+        try {
+            editor.getComponent(EditorTextActionWindow::class.java).setEnabled(false)
         } catch (_: Exception) {}
     }
 
