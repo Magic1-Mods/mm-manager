@@ -36,6 +36,11 @@
             android:name=".ui.editor.FileEditorActivity" 
             android:exported="false"
             android:parentActivityName=".MainActivity" />
+
+        <activity 
+            android:name=".ui.editor.DexEditorActivity" 
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
         
         <activity 
             android:name=".CrashHandler" 

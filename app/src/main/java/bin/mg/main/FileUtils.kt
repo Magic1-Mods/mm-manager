@@ -2,10 +2,12 @@ package bin.mg.main
 
 import android.os.Environment
 import bin.mg.main.model.FileItem
+import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStreamReader
 import java.util.Locale
 
 object FileUtils {
@@ -22,17 +24,13 @@ object FileUtils {
         if (!directory.exists()) return items
         if (!directory.isDirectory) return items
 
-        val files = directory.listFiles()
+        var files = directory.listFiles()
 
-        if (files == null) {
-            if (directoryPath == ROOT_PATH) {
-                val roots = listRootViaShell()
-                for (file in roots) {
-                    items.add(FileItem.fromFile(file))
-                }
-            }
-            return items
+        if (files == null && directoryPath == ROOT_PATH) {
+            files = listRootViaShell()
         }
+
+        if (files == null) return items
 
         files.sortWith(compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase(Locale.ROOT) })
 
@@ -43,24 +41,24 @@ object FileUtils {
         return items
     }
 
-    private fun listRootViaShell(): List<File> {
-        val results = mutableListOf<File>()
-        try {
-            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "ls /"))
-            val reader = process.inputStream.bufferedReader()
-            var line = reader.readLine()
-            while (line != null) {
-                line = line.trim()
-                if (line.isNotEmpty()) {
-                    val f = File("/$line")
-                    if (f.exists()) results.add(f)
+    private fun listRootViaShell(): Array<File>? {
+        return try {
+            val process = Runtime.getRuntime().exec(arrayOf("ls", "-1", "/"))
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            val files = mutableListOf<File>()
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                val name = line ?: continue
+                if (name.isNotEmpty()) {
+                    val f = File("/$name")
+                    files.add(f)
                 }
-                line = reader.readLine()
             }
             process.waitFor()
-        } catch (ignored: Exception) {
+            if (files.isNotEmpty()) files.toTypedArray() else null
+        } catch (e: Exception) {
+            null
         }
-        return results
     }
 
     @JvmStatic
@@ -232,15 +230,87 @@ object FileUtils {
     @JvmStatic
     fun isTextFile(filePath: String?): Boolean {
         if (filePath == null) return false
+        val file = File(filePath)
+        if (!file.exists() || file.isDirectory) return false
+
         val lower = filePath.lowercase(Locale.ROOT)
-        return lower.endsWith(".txt") || lower.endsWith(".log") ||
-                lower.endsWith(".md") || lower.endsWith(".json") ||
-                lower.endsWith(".xml") || lower.endsWith(".properties") ||
-                lower.endsWith(".smali") || lower.endsWith(".java") ||
-                lower.endsWith(".kt") || lower.endsWith(".gradle") ||
-                lower.endsWith(".html") || lower.endsWith(".css") ||
-                lower.endsWith(".js") || lower.endsWith(".py")
+
+        val knownTextExtensions = setOf(
+            "txt", "log", "md", "json", "xml", "properties", "smali",
+            "java", "kt", "kts", "gradle", "gradle.kts", "html", "htm",
+            "css", "js", "ts", "tsx", "jsx", "py", "rb", "go", "rs",
+            "swift", "c", "cpp", "h", "hpp", "cs", "java", "sh", "bash",
+            "yml", "yaml", "toml", "cfg", "conf", "ini", "sql", "r",
+            "lua", "php", "dart", "scala", "vue", "svelte", "astro",
+            "makefile", "cmake", "dockerfile", "gitignore", "editorconfig",
+            "pro", "proguard", "gitattributes", "env", "rc",
+            "bat", "cmd", "ps1", "zsh", "fish", "bashrc", "zshrc",
+            "vim", "el", "lisp", "clj", "cljs", "ex", "exs", "erl",
+            "hs", "ml", "fs", "fsx", "jl", "nim", "cr", "zig"
+        )
+
+        val lastDot = lower.lastIndexOf('.')
+        if (lastDot > 0) {
+            val ext = lower.substring(lastDot + 1)
+            if (ext in knownTextExtensions) return true
+        }
+
+        if (file.length() == 0L) return true
+        if (file.length() > 10 * 1024 * 1024) return false
+
+        return detectByContent(file)
     }
+
+    private fun detectByContent(file: File): Boolean {
+        val bytes = try {
+            val input = FileInputStream(file)
+            val buffer = ByteArray(minOf(8192L, file.length()).toInt())
+            input.read(buffer)
+            input.close()
+            buffer
+        } catch (e: Exception) {
+            return false
+        }
+
+        if (bytes.isEmpty()) return true
+
+        var nullCount = 0
+        var nonPrintableCount = 0
+        var totalChecked = 0
+        var i = 0
+
+        while (i < bytes.size) {
+            val b = bytes[i].toInt() and 0xFF
+            totalChecked++
+
+            if (b == 0x00) {
+                nullCount++
+                if (nullCount > 3) return false
+                i++
+                continue
+            }
+
+            if (b < 0x09 || (b in 0x0E..0x1F && b != 0x1B)) {
+                nonPrintableCount++
+            }
+
+            if (b >= 0xC0 && b <= 0xFD) {
+                val remaining = when {
+                    b and 0xE0 == 0xC0 -> 1
+                    b and 0xF0 == 0xE0 -> 2
+                    b and 0xF8 == 0xF0 -> 3
+                    else -> 0
+                }
+                i += remaining
+            }
+
+            i++
+        }
+
+        val nonPrintableRatio = nonPrintableCount.toFloat() / totalChecked
+        return nonPrintableRatio < 0.05f
+    }
+}
 
     @JvmStatic
     fun isXmlFile(filePath: String?): Boolean {
@@ -253,5 +323,11 @@ object FileUtils {
         if (filePath == null) return false
         val lower = filePath.lowercase(Locale.ROOT)
         return lower.endsWith(".apk") || lower.endsWith(".xapk") || lower.endsWith(".apks")
+    }
+
+    @JvmStatic
+    fun isDexFile(filePath: String?): Boolean {
+        if (filePath == null) return false
+        return filePath.lowercase(Locale.ROOT).endsWith(".dex")
     }
 }

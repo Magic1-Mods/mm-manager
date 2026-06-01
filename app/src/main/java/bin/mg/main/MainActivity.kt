@@ -36,6 +36,7 @@ import androidx.recyclerview.widget.RecyclerView
 import bin.mg.main.model.FileItem
 import bin.mg.main.ui.adapter.FileAdapter
 import bin.mg.main.ui.editor.FileEditorActivity
+import bin.mg.main.ui.editor.DexEditorActivity
 import bin.mg.main.utils.file.FileSystemHelper
 import java.io.File
 import java.util.Locale
@@ -161,12 +162,12 @@ class MainActivity : AppCompatActivity() {
 
         initToolbar()
         initViews()
+        loadCustomPaths()
         initDrawerSections()
         registerFileHandlers()
         setupAdapters()
         setupListeners()
-        loadCustomPaths()
-        populateDynamicStorage()
+
         loadState()
         applyThemeColors()
 
@@ -252,9 +253,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyThemeColors() {
-        val isDarkMode = followSystemTheme &&
+        val systemDark = followSystemTheme &&
                 (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
                         == android.content.res.Configuration.UI_MODE_NIGHT_YES)
+        val isDarkMode = systemDark || (!followSystemTheme && currentPalette == 0)
 
         val mainBg: Int
         val panelBg: Int
@@ -419,7 +421,6 @@ class MainActivity : AppCompatActivity() {
         )
         drawerLayout?.addDrawerListener(drawerToggle!!)
         drawerToggle?.syncState()
-
     }
 
     private fun initViews() {
@@ -926,6 +927,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
         btnParent?.setOnClickListener { goUp(activePanel == 0) }
+        updateBottomBarIcons()
+    }
+
+    private fun updateBottomBarIcons() {
+        val grey = 0xFFBDBDBD.toInt()
+        val active = if (activePanel == 0) 0xFF424242.toInt() else 0xFF424242.toInt()
+
+        val backStack = if (activePanel == 0) backStackLeft else backStackRight
+        val forwardStack = if (activePanel == 0) forwardStackLeft else forwardStackRight
+
+        btnBack?.setColorFilter(if (backStack.isEmpty()) grey else active)
+        btnForward?.setColorFilter(if (forwardStack.isEmpty()) grey else active)
+        btnNew?.setColorFilter(active)
+        btnSwap?.setColorFilter(active)
+        btnParent?.setColorFilter(active)
     }
 
     private fun navigateToPath(path: String, panelIndex: Int) {
@@ -1240,7 +1256,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun openFile(file: FileItem) {
         val path = file.path
-        if (FileUtils.isTextFile(path)) {
+        if (FileUtils.isDexFile(path)) {
+            DexEditorActivity.start(this, path)
+        } else if (FileUtils.isTextFile(path)) {
             FileEditorActivity.start(this, path)
         } else if (FileUtils.isApkFile(path)) {
             val intent = Intent(Intent.ACTION_VIEW)

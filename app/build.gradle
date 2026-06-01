@@ -84,4 +84,12 @@ dependencies {
     implementation 'androidx.documentfile:documentfile:1.0.1'
     implementation 'com.github.bumptech.glide:glide:4.16.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
+
+    implementation 'io.github.Rosemoe.sora-editor:editor:0.23.4'
+    implementation 'io.github.Rosemoe.sora-editor:language-textmate:0.23.4'
+    implementation 'io.github.Rosemoe.sora-editor:language-java:0.23.4'
+    implementation 'io.github.skylot:jadx-core:1.4.7'
+    implementation 'io.github.skylot:jadx-plugins-api:1.4.7'
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'androidx.preference:preference:1.2.1'
 }

@@ -16,8 +16,6 @@ import bin.mg.main.utils.file.FileSystemHelper
 import bin.mg.main.utils.icon.IconManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import java.io.File
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -81,18 +79,22 @@ class ViewHolder(
     }
 
     private fun bindFile(item: FileItem, fileType: FileType) {
-        val fullIcon = fileType == FileType.APK ||
-                (fileType == FileType.IMAGE && isImageThumbnailsEnabled)
+        val bg = ContextCompat.getDrawable(context, R.drawable.bg_file)!!.mutate() as GradientDrawable
+        bg.setColor(ContextCompat.getColor(context, IconManager.getIconTint(fileType)))
+        iconContainer.background = bg
 
-        if (fullIcon) {
-            icon.visibility = View.GONE
+        if (fileType == FileType.IMAGE && isImageThumbnailsEnabled) {
+            icon.visibility = View.VISIBLE
+            icon.scaleType = ImageView.ScaleType.CENTER_CROP
+            icon.colorFilter = null
+        } else if (fileType == FileType.APK) {
+            icon.visibility = View.VISIBLE
+            icon.scaleType = ImageView.ScaleType.FIT_CENTER
+            icon.colorFilter = null
+            icon.setImageResource(IconManager.getIconResource(fileType))
         } else {
             icon.visibility = View.VISIBLE
-
-            val bg = ContextCompat.getDrawable(context, R.drawable.bg_file)!!.mutate() as GradientDrawable
-            bg.setColor(ContextCompat.getColor(context, IconManager.getIconTint(fileType)))
-
-            iconContainer.background = bg
+            icon.scaleType = ImageView.ScaleType.CENTER_INSIDE
             icon.setImageResource(IconManager.getIconResource(fileType))
         }
 
@@ -119,18 +121,9 @@ class ViewHolder(
                 mainHandler.post {
                     Glide.with(context)
                         .load(bitmap)
-                        .into(object : CustomTarget<android.graphics.drawable.Drawable>() {
-                            override fun onResourceReady(
-                                res: android.graphics.drawable.Drawable,
-                                transition: Transition<in android.graphics.drawable.Drawable>?
-                            ) {
-                                iconContainer.background = res
-                            }
-
-                            override fun onLoadCleared(placeholder: android.graphics.drawable.Drawable?) {
-                                iconContainer.background = null
-                            }
-                        })
+                        .override(96, 96)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(icon)
                 }
             }
         }

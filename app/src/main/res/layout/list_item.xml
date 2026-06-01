@@ -3,15 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="42dp"
     android:orientation="horizontal"
-    android:paddingStart="10dp"
-    android:paddingEnd="12dp"
+    android:paddingStart="8dp"
+    android:paddingEnd="10dp"
     android:gravity="center_vertical"
     android:background="?attr/selectableItemBackground">
 
     <FrameLayout
         android:id="@+id/file_icon_container"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:background="@drawable/bg_file">
 
         <ImageView
@@ -37,7 +37,7 @@
             android:textColor="@color/black"
             android:textSize="12sp"
             android:maxLines="1"
-            android:ellipsize="end"
+            android:ellipsize="middle"
             android:includeFontPadding="false"/>
 
         <TextView

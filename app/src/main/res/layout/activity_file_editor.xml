@@ -1,37 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/editor_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/editor_bg">
+    android:background="#212121">
 
     <!-- Toolbar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:background="@color/toolbar_bg"
+        android:background="#303030"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="4dp">
 
         <ImageView
-            android:id="@+id/btn_menu"
+            android:id="@+id/btn_back"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
-            android:src="@drawable/ic_menu"
-            android:scaleType="centerInside"
-            app:tint="@color/white" />
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#FFFFFF" />
 
         <ImageView
-            android:id="@+id/btn_search"
+            android:id="@+id/btn_pin"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
             android:src="@drawable/ic_search"
-            android:scaleType="centerInside"
-            app:tint="@color/white" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#FFFFFF" />
 
         <ImageView
             android:id="@+id/btn_undo"
@@ -39,8 +41,8 @@
             android:layout_height="40dp"
             android:padding="8dp"
             android:src="@drawable/ic_undo"
-            android:scaleType="centerInside"
-            app:tint="@color/white" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#FFFFFF" />
 
         <ImageView
             android:id="@+id/btn_redo"
@@ -48,8 +50,8 @@
             android:layout_height="40dp"
             android:padding="8dp"
             android:src="@drawable/ic_redo"
-            android:scaleType="centerInside"
-            app:tint="@color/white" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#FFFFFF" />
 
         <ImageView
             android:id="@+id/btn_save"
@@ -57,8 +59,8 @@
             android:layout_height="40dp"
             android:padding="8dp"
             android:src="@drawable/ic_save"
-            android:scaleType="centerInside"
-            app:tint="@color/white" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#FFFFFF" />
 
         <View
             android:layout_width="0dp"
@@ -71,8 +73,8 @@
             android:layout_height="40dp"
             android:padding="8dp"
             android:src="@drawable/ic_text"
-            android:scaleType="centerInside"
-            app:tint="@color/white" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#FFFFFF" />
 
         <ImageView
             android:id="@+id/btn_overflow"
@@ -80,129 +82,120 @@
             android:layout_height="40dp"
             android:padding="8dp"
             android:src="@drawable/ic_more_vert"
-            android:scaleType="centerInside"
-            app:tint="@color/white" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#FFFFFF" />
     </LinearLayout>
 
-    <!-- Info bar -->
+    <!-- Search Bar (hidden by default) -->
+    <LinearLayout
+        android:id="@+id/search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#424242"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/search_input"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Search..."
+            android:textColorHint="#757575"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:singleLine="true"
+            android:inputType="text"
+            android:paddingHorizontal="8dp"
+            android:imeOptions="actionSearch" />
+
+        <TextView
+            android:id="@+id/search_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#B0B0B0"
+            android:textSize="12sp"
+            android:paddingHorizontal="4dp" />
+
+        <ImageView
+            android:id="@+id/btn_search_prev"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#B0B0B0" />
+
+        <ImageView
+            android:id="@+id/btn_search_next"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_forward"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#B0B0B0" />
+
+        <ImageView
+            android:id="@+id/btn_search_close"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:padding="4dp"
+            android:src="@drawable/ic_delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#B0B0B0" />
+    </LinearLayout>
+
+    <!-- Info Bar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/info_bar_bg"
+        android:layout_height="24dp"
+        android:background="#424242"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="4dp">
+        android:paddingHorizontal="12dp">
 
         <TextView
             android:id="@+id/textview_filename"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/white"
-            android:textSize="12sp"
+            android:text=""
+            android:textColor="#B0B0B0"
+            android:textSize="11sp"
             android:singleLine="true"
-            android:ellipsize="start" />
+            android:ellipsize="middle" />
 
         <TextView
             android:id="@+id/textview_lineno_encoding"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textSize="12sp" />
+            android:text="1:1   UTF-8"
+            android:textColor="#B0B0B0"
+            android:textSize="11sp" />
     </LinearLayout>
 
-    <!-- Editor -->
-    <FrameLayout
+    <!-- Code Editor (sora-editor) -->
+    <io.github.rosemoe.sora.widget.CodeEditor
+        android:id="@+id/code_editor"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        app:lnPanelPosition="left"
+        app:lnPanelPositionMode="follow" />
 
-        <bin.mg.main.ui.editor.LinedEditText
-            android:id="@+id/smali_editor"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/editor_bg"
-            android:fontFamily="monospace"
-            android:gravity="top|start"
-            android:inputType="textMultiLine|textNoSuggestions"
-            android:padding="8dp"
-            android:textColor="@color/editor_text"
-            android:textSize="13sp"
-            android:scrollbars="vertical" />
-
-        <!-- Search bar (hidden by default) -->
-        <LinearLayout
-            android:id="@+id/search_bar"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_gravity="bottom"
-            android:background="@color/search_bar_bg"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="8dp"
-            android:visibility="gone">
-
-            <EditText
-                android:id="@+id/search_input"
-                android:layout_width="0dp"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_search_input"
-                android:hint="Search..."
-                android:textColorHint="@color/grey_500"
-                android:textColor="@color/editor_text"
-                android:textSize="14sp"
-                android:paddingHorizontal="12dp"
-                android:singleLine="true"
-                android:imeOptions="actionSearch"
-                android:inputType="text" />
-
-            <TextView
-                android:id="@+id/search_result_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="12sp"
-                android:paddingHorizontal="8dp" />
-
-            <ImageView
-                android:id="@+id/btn_search_prev"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="4dp"
-                android:src="@drawable/ic_arrow_back"
-                app:tint="@color/white" />
-
-            <ImageView
-                android:id="@+id/btn_search_next"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="4dp"
-                android:src="@drawable/ic_arrow_forward"
-                app:tint="@color/white" />
-
-            <ImageView
-                android:id="@+id/btn_search_close"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="4dp"
-                android:src="@drawable/ic_delete"
-                app:tint="@color/white" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <!-- Symbol bar -->
+    <!-- Symbol Bar -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/symbol_bar_bg"
+        android:background="#2D2D2D"
         android:scrollbars="none">
 
-        <LinearLayout
+        <io.github.rosemoe.sora.widget.SymbolInputView
             android:id="@+id/symbol_input"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="4dp" />
+            android:layout_height="44dp" />
     </HorizontalScrollView>
 </LinearLayout>

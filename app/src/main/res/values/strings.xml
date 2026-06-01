@@ -4,4 +4,75 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <string-array name="font_styles">
+        <item>Normal</item>
+        <item>Monospace</item>
+    </string-array>
+    <string-array name="font_style_values">
+        <item>normal</item>
+        <item>monospace</item>
+    </string-array>
+
+    <string-array name="font_sizes">
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>18</item>
+        <item>20</item>
+        <item>24</item>
+    </string-array>
+    <string-array name="font_size_values">
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>18</item>
+        <item>20</item>
+        <item>24</item>
+    </string-array>
+
+    <string-array name="tab_sizes">
+        <item>2</item>
+        <item>4</item>
+        <item>8</item>
+    </string-array>
+    <string-array name="tab_size_values">
+        <item>2</item>
+        <item>4</item>
+        <item>8</item>
+    </string-array>
+
+    <string-array name="syntax_entries">
+        <item>Plain Text</item>
+        <item>Java</item>
+        <item>Kotlin</item>
+        <item>Python</item>
+        <item>JavaScript</item>
+        <item>HTML</item>
+        <item>CSS</item>
+        <item>XML</item>
+        <item>JSON</item>
+        <item>Shell</item>
+        <item>Smali</item>
+    </string-array>
+    <string-array name="syntax_values">
+        <item>text</item>
+        <item>java</item>
+        <item>kotlin</item>
+        <item>python</item>
+        <item>javascript</item>
+        <item>html</item>
+        <item>css</item>
+        <item>xml</item>
+        <item>json</item>
+        <item>shell</item>
+        <item>smali</item>
+    </string-array>
 </resources>

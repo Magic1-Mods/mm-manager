@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Appearance">
+        <ListPreference
+            app:key="font_type"
+            app:title="Font"
+            app:summary="%s"
+            app:entries="@array/font_styles"
+            app:entryValues="@array/font_style_values"
+            app:defaultValue="normal" />
+
+        <ListPreference
+            app:key="font_size"
+            app:title="Font size"
+            app:summary="%s"
+            app:entries="@array/font_sizes"
+            app:entryValues="@array/font_size_values"
+            app:defaultValue="14" />
+
+        <ListPreference
+            app:key="tab_size"
+            app:title="Tab size"
+            app:summary="%s"
+            app:entries="@array/tab_sizes"
+            app:entryValues="@array/tab_size_values"
+            app:defaultValue="4" />
+
+        <SwitchPreferenceCompat
+            app:key="show_line_numbers"
+            app:title="Show line numbers"
+            app:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            app:key="word_wrap"
+            app:title="Word wrap"
+            app:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            app:key="auto_indent"
+            app:title="Auto indent"
+            app:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            app:key="syntax_highlighting"
+            app:title="Syntax highlighting"
+            app:defaultValue="true" />
+    </PreferenceCategory>
+</PreferenceScreen>
