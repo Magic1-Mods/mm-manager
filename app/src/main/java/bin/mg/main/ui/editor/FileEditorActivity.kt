@@ -193,24 +193,24 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
             val idx = text.indexOf(query, pos)
             if (idx >= 0) {
                 val lineCol = offsetToLineCol(editor, idx)
-                editor.setSelection(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
+                editor.setSelectionRegion(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
             } else {
                 val idx2 = text.indexOf(query, 0)
                 if (idx2 >= 0) {
                     val lineCol = offsetToLineCol(editor, idx2)
-                    editor.setSelection(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
+                    editor.setSelectionRegion(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
                 }
             }
         } else {
             val idx = text.lastIndexOf(query, maxOf(0, pos - 1))
             if (idx >= 0) {
                 val lineCol = offsetToLineCol(editor, idx)
-                editor.setSelection(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
+                editor.setSelectionRegion(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
             } else {
                 val idx2 = text.lastIndexOf(query)
                 if (idx2 >= 0) {
                     val lineCol = offsetToLineCol(editor, idx2)
-                    editor.setSelection(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
+                    editor.setSelectionRegion(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
                 }
             }
         }
@@ -471,7 +471,7 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
                 null
             )
             val langConfig = assets.open("$grammarName/language-configuration.json").bufferedReader()
-            val language = TextMateLanguage.create(grammarSource, langConfig, themeRegistry.getTheme("light"))
+            val language = TextMateLanguage.create(grammarSource, langConfig)
             editor.setEditorLanguage(language)
         } catch (_: Exception) {
             editor.setEditorLanguage(EmptyLanguage())

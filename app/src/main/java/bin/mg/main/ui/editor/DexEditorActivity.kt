@@ -97,7 +97,7 @@ class DexEditorActivity : AppCompatActivity() {
     }
 
     private fun showClassList() {
-        val groups = mutableListOf<List<Map<String, String>>>()
+        val groups = mutableListOf<MutableMap<String, String>>()
         val children = mutableListOf<List<Map<String, String>>>()
 
         val packages = linkedMapOf<String, MutableList<String>>()
@@ -109,12 +109,13 @@ class DexEditorActivity : AppCompatActivity() {
         }
 
         for ((pkg, classes) in packages) {
-            groups.add(listOf(mapOf("name" to "$pkg (${classes.size})")))
+            val groupMap = mutableMapOf("name" to "$pkg (${classes.size})")
+            groups.add(groupMap)
             children.add(classes.map { mapOf("name" to it) })
         }
 
         if (groups.isEmpty()) {
-            groups.add(listOf(mapOf("name" to "All Classes (${classNames.size})")))
+            groups.add(mutableMapOf("name" to "All Classes (${classNames.size})"))
             children.add(classNames.map { mapOf("name" to it.substringAfterLast('.')) })
         }
 
