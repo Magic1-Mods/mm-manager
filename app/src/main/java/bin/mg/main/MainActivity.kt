@@ -786,7 +786,7 @@ class MainActivity : AppCompatActivity() {
             return customPathUris[path]
         }
         for ((savedPath, uri) in customPathUris) {
-            if (path.startsWith(savedPath) || savedPath.startsWith(path)) {
+            if (path.startsWith(savedPath)) {
                 return uri
             }
         }

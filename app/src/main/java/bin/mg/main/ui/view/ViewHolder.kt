@@ -67,8 +67,10 @@ class ViewHolder(
     }
 
     private fun setFolderUI(type: FileType, isParent: Boolean) {
+        val bgColor = if (themeColor != 0) themeColor else 0xFF1976D2.toInt()
+
         val bg = ContextCompat.getDrawable(context, R.drawable.bg_file)!!.mutate() as GradientDrawable
-        bg.setColor(ContextCompat.getColor(context, R.color.blue_100))
+        bg.setColor(bgColor)
 
         iconContainer.background = bg
         icon.setImageResource(R.drawable.ic_folder)
@@ -149,5 +151,9 @@ class ViewHolder(
 
     private fun formatDate(ts: Long): String {
         return if (ts <= 0) "" else dateFormat.format(Date(ts))
+    }
+
+    companion object {
+        private const val DEFAULT_FOLDER_COLOR = 0xFF1976D2.toInt()
     }
 }

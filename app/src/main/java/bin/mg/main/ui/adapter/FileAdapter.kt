@@ -44,6 +44,7 @@ class FileAdapter(private val context: Context) : RecyclerView.Adapter<ViewHolde
     fun setThemeColor(color: Int, isDarkMode: Boolean) {
         themeColor = color
         this.isDarkMode = isDarkMode
+        notifyDataSetChanged()
     }
 
     fun getThemeColor(): Int = themeColor
