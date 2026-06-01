@@ -63,8 +63,12 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
     private var isModified = false
     private var justSaved = false
     private var isReadOnly = false
+    private var isSmoothMode = false
+    private var isCodeCompletion = true
     private var currentSyntax = "text"
     private var searchVisible = false
+    private var positionHistory = mutableListOf<Pair<Int, Int>>()
+    private var positionIndex = -1
 
     private val executor = Executors.newFixedThreadPool(2)
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -114,6 +118,7 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         codeEditor?.subscribeEvent(SelectionChangeEvent::class.java, object : EventReceiver<SelectionChangeEvent> {
             override fun onReceive(event: SelectionChangeEvent, unsubscribe: Unsubscribe) {
                 updateCursorPosition()
+                saveCursorPosition()
             }
         })
 
@@ -227,6 +232,37 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         return Pair(0, 0)
     }
 
+    private fun saveCursorPosition() {
+        val editor = codeEditor ?: return
+        val cursor = editor.cursor
+        val pos = Pair(cursor.leftLine, cursor.leftColumn)
+        if (positionIndex < positionHistory.size - 1) {
+            positionHistory = positionHistory.subList(0, positionIndex + 1).toMutableList()
+        }
+        positionHistory.add(pos)
+        positionIndex = positionHistory.size - 1
+        if (positionHistory.size > 50) {
+            positionHistory.removeAt(0)
+            positionIndex--
+        }
+    }
+
+    private fun navigateToPreviousPosition() {
+        if (positionIndex > 0) {
+            positionIndex--
+            val pos = positionHistory[positionIndex]
+            codeEditor?.setSelection(pos.first, pos.second)
+        }
+    }
+
+    private fun navigateToNextPosition() {
+        if (positionIndex < positionHistory.size - 1) {
+            positionIndex++
+            val pos = positionHistory[positionIndex]
+            codeEditor?.setSelection(pos.first, pos.second)
+        }
+    }
+
     private fun showEditMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
         popup.menu.add(0, 1, 0, "Copy line")
@@ -253,38 +289,71 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
 
     private fun showOverflowMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
+
         popup.menu.add(0, 1, 0, "File")
         popup.menu.add(0, 2, 1, "Search")
         popup.menu.add(0, 3, 2, "Syntax")
-        popup.menu.add(0, 4, 3, "Jump to line")
-        val wrapItem = popup.menu.add(0, 5, 4, "Soft wrap")
+
+        val prevItem = popup.menu.add(0, 4, 3, "Previous position")
+        prevItem.isEnabled = positionIndex > 0
+
+        val nextItem = popup.menu.add(0, 5, 4, "Next position")
+        nextItem.isEnabled = positionIndex < positionHistory.size - 1
+
+        popup.menu.add(0, 6, 5, "Jump to line")
+
+        val wrapItem = popup.menu.add(0, 7, 6, "Soft wrap")
         wrapItem.isCheckable = true
         wrapItem.isChecked = prefs.getBoolean("word_wrap", false)
-        val roItem = popup.menu.add(0, 6, 5, "Read-only mode")
+
+        val roItem = popup.menu.add(0, 8, 7, "Read-only mode")
         roItem.isCheckable = true
         roItem.isChecked = isReadOnly
-        popup.menu.add(0, 7, 6, "Preferences")
-        popup.menu.add(0, 8, 7, "Close file")
+
+        val smoothItem = popup.menu.add(0, 9, 8, "Smooth mode")
+        smoothItem.isCheckable = true
+        smoothItem.isChecked = isSmoothMode
+
+        val ccItem = popup.menu.add(0, 10, 9, "Code completion")
+        ccItem.isCheckable = true
+        ccItem.isChecked = isCodeCompletion
+
+        popup.menu.add(0, 11, 10, "Preferences")
+        popup.menu.add(0, 12, 11, "Close file")
+
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 1 -> { showFilePopup(anchor); true }
                 2 -> { toggleSearchBar(); true }
                 3 -> { showSyntaxSelector(); true }
-                4 -> { showJumpToLineDialog(); true }
-                5 -> {
+                4 -> { navigateToPreviousPosition(); true }
+                5 -> { navigateToNextPosition(); true }
+                6 -> { showJumpToLineDialog(); true }
+                7 -> {
                     item.isChecked = !item.isChecked
                     prefs.edit().putBoolean("word_wrap", item.isChecked).apply()
                     codeEditor?.setWordwrap(item.isChecked)
                     true
                 }
-                6 -> {
+                8 -> {
                     item.isChecked = !item.isChecked
                     isReadOnly = item.isChecked
                     codeEditor?.setEditable(!isReadOnly)
                     true
                 }
-                7 -> { showPreferencesDialog(); true }
-                8 -> { confirmClose(); true }
+                9 -> {
+                    item.isChecked = !item.isChecked
+                    isSmoothMode = item.isChecked
+                    try { codeEditor?.setNonertiaSmoothEnabled(isSmoothMode) } catch (_: Exception) {}
+                    true
+                }
+                10 -> {
+                    item.isChecked = !item.isChecked
+                    isCodeCompletion = item.isChecked
+                    true
+                }
+                11 -> { showPreferencesDialog(); true }
+                12 -> { confirmClose(); true }
                 else -> false
             }
         }

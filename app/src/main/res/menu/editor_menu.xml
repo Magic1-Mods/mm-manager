@@ -1,78 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
-        android:id="@+id/undo"
-        android:icon="@drawable/ic_undo"
-        android:title="Undo"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/redo"
-        android:icon="@drawable/ic_redo"
-        android:title="Redo"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/save"
-        android:icon="@drawable/ic_save"
-        android:title="Save"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/edit_menu"
-        android:icon="@drawable/ic_text"
-        android:title="Edit"
-        app:showAsAction="always">
+        android:id="@+id/menu_file"
+        android:icon="@drawable/ic_folder"
+        android:title="File"
+        app:showAsAction="ifRoom">
         <menu>
             <item
-                android:id="@+id/copy_line"
-                android:title="Copy line" />
+                android:id="@+id/menu_save"
+                android:title="Save" />
             <item
-                android:id="@+id/cut_line"
-                android:title="Cut line" />
+                android:id="@+id/menu_save_as"
+                android:title="Save as..." />
             <item
-                android:id="@+id/delete_line"
-                android:title="Delete line" />
-            <item
-                android:id="@+id/duplicate_line"
-                android:title="Duplicate line" />
-            <item
-                android:id="@+id/toggle_comment"
-                android:title="Toggle comment" />
-            <item
-                android:id="@+id/increase_indent"
-                android:title="Increase indent" />
-            <item
-                android:id="@+id/decrease_indent"
-                android:title="Decrease indent" />
+                android:id="@+id/menu_close"
+                android:title="Close" />
         </menu>
     </item>
+
     <item
-        android:id="@+id/more_menu"
-        android:icon="@drawable/ic_more_vert"
-        android:title="More"
-        app:showAsAction="always">
-        <menu>
-            <item
-                android:id="@+id/jumpToLine"
-                android:title="Jump to line" />
-            <item
-                android:id="@+id/wrap_text"
-                android:checkable="true"
-                android:checked="false"
-                android:title="Soft wrap" />
-            <item
-                android:id="@+id/read_only"
-                android:checkable="true"
-                android:checked="false"
-                android:title="Read-only mode" />
-            <item
-                android:id="@+id/select_syntax"
-                android:title="Syntax" />
-            <item
-                android:id="@+id/preference"
-                android:title="Preferences" />
-            <item
-                android:id="@+id/close"
-                android:title="Close file" />
-        </menu>
-    </item>
+        android:id="@+id/menu_search"
+        android:icon="@drawable/ic_search"
+        android:title="Search"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menu_syntax"
+        android:icon="@drawable/ic_code"
+        android:title="Syntax"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_previous_position"
+        android:icon="@drawable/ic_chevron_left"
+        android:title="Previous position"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_next_position"
+        android:icon="@drawable/ic_chevron_right"
+        android:title="Next position"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_jump_to_line"
+        android:icon="@drawable/ic_format_list_numbered"
+        android:title="Jump to line"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_soft_wrap"
+        android:checkable="true"
+        android:icon="@drawable/ic_wrap_text_mt"
+        android:title="Soft wrap"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_read_only"
+        android:checkable="true"
+        android:icon="@drawable/ic_eye"
+        android:title="Read-only mode"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_smooth_mode"
+        android:checkable="true"
+        android:icon="@drawable/ic_smooth_mode"
+        android:title="Smooth mode"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_code_completion"
+        android:checkable="true"
+        android:icon="@drawable/ic_code_completion"
+        android:title="Code completion"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_preferences"
+        android:icon="@drawable/ic_settings"
+        android:title="Preferences"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_close_file"
+        android:icon="@drawable/ic_close"
+        android:title="Close file"
+        app:showAsAction="never" />
 </menu>
