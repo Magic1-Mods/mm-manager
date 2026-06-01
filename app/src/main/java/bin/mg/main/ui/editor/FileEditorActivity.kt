@@ -464,7 +464,6 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
             )
             themeRegistry.loadTheme(ThemeModel(themeSource, "light"))
             themeRegistry.setTheme("light")
-            val currentTheme = ThemeModel(themeSource, "light")
 
             val grammarSource = IGrammarSource.fromInputStream(
                 assets.open("$grammarName/syntaxes/$grammarName.tmLanguage.json"),
@@ -472,7 +471,7 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
                 null
             )
             val langConfig = assets.open("$grammarName/language-configuration.json").bufferedReader()
-            val language = TextMateLanguage.create(grammarSource, langConfig, currentTheme)
+            val language = TextMateLanguage.create(grammarSource, langConfig, themeSource)
             editor.setEditorLanguage(language)
         } catch (_: Exception) {
             editor.setEditorLanguage(EmptyLanguage())
