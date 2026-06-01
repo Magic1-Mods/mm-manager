@@ -5,16 +5,13 @@ import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Intent
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.Editable
-import android.text.Selection
-import android.text.SpannableStringBuilder
 import android.text.TextWatcher
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -35,15 +32,12 @@ import io.github.rosemoe.sora.event.EventReceiver
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lang.EmptyLanguage
-import io.github.rosemoe.sora.lang.Language
-import io.github.rosemoe.sora.text.Cursor
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.SymbolInputView
 import bin.mg.main.R
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
-import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -87,9 +81,12 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
 
         currentFilePath = intent.getStringExtra("file_path")
         if (currentFilePath != null && File(currentFilePath!!).exists()) {
+            val fileName = File(currentFilePath!!).name
+            filenameText?.text = fileName
             detectSyntaxAndLoad()
         } else {
             codeEditor?.setText("// No file loaded")
+            filenameText?.text = "untitled"
         }
     }
 
@@ -124,14 +121,13 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
 
         symbolInput?.bindEditor(codeEditor)
         symbolInput?.addSymbols(
-            arrayOf("Tab", "{", "}", "(", ")", "[", "]", "<", ">", "/", "=", "+", "-", "*", ";", ":", "\"", "'", "#", "$"),
-            arrayOf("\t", "{}", "}", "(", ")", "[", "]", "<", ">", "/", "=", "+", "-", "*", ";", ":", "\"", "'", "#", "$")
+            arrayOf("→", "/", "+", "-", "*", "=", "<", ">", "{", "}", "(", ")", "[", "]", ";", ":", "\"", "'", "#", "$"),
+            arrayOf("→", "/", "+", "-", "*", "=", "<", ">", "{", "}", "(", ")", "[", "]", ";", ":", "\"", "'", "#", "$")
         )
     }
 
     private fun setupToolbar() {
-        findViewById<ImageView>(R.id.btn_back).setOnClickListener { confirmClose() }
-        findViewById<ImageView>(R.id.btn_pin).setOnClickListener { toggleSearchBar() }
+        findViewById<ImageView>(R.id.btn_menu).setOnClickListener { showFilePopup(it) }
         findViewById<ImageView>(R.id.btn_undo).setOnClickListener { codeEditor?.undo() }
         findViewById<ImageView>(R.id.btn_redo).setOnClickListener { codeEditor?.redo() }
         findViewById<ImageView>(R.id.btn_save).setOnClickListener { saveFile() }
@@ -290,69 +286,67 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
     private fun showOverflowMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
 
-        popup.menu.add(0, 1, 0, "File")
-        popup.menu.add(0, 2, 1, "Search")
-        popup.menu.add(0, 3, 2, "Syntax")
+        popup.menu.add(0, 1, 0, "Search")
 
-        val prevItem = popup.menu.add(0, 4, 3, "Previous position")
+        val prevItem = popup.menu.add(0, 2, 1, "Previous position")
         prevItem.isEnabled = positionIndex > 0
 
-        val nextItem = popup.menu.add(0, 5, 4, "Next position")
+        val nextItem = popup.menu.add(0, 3, 2, "Next position")
         nextItem.isEnabled = positionIndex < positionHistory.size - 1
 
-        popup.menu.add(0, 6, 5, "Jump to line")
+        popup.menu.add(0, 4, 3, "Jump to line")
 
-        val wrapItem = popup.menu.add(0, 7, 6, "Soft wrap")
+        val wrapItem = popup.menu.add(0, 5, 4, "Soft wrap")
         wrapItem.isCheckable = true
         wrapItem.isChecked = prefs.getBoolean("word_wrap", false)
 
-        val roItem = popup.menu.add(0, 8, 7, "Read-only mode")
+        val roItem = popup.menu.add(0, 6, 5, "Read-only mode")
         roItem.isCheckable = true
         roItem.isChecked = isReadOnly
 
-        val smoothItem = popup.menu.add(0, 9, 8, "Smooth mode")
+        val smoothItem = popup.menu.add(0, 7, 6, "Smooth mode")
         smoothItem.isCheckable = true
         smoothItem.isChecked = isSmoothMode
 
-        val ccItem = popup.menu.add(0, 10, 9, "Code completion")
+        val ccItem = popup.menu.add(0, 8, 7, "Code completion")
         ccItem.isCheckable = true
         ccItem.isChecked = isCodeCompletion
 
-        popup.menu.add(0, 11, 10, "Preferences")
-        popup.menu.add(0, 12, 11, "Close file")
+        popup.menu.add(0, 9, 8, "Syntax")
+        popup.menu.add(0, 10, 9, "Preferences")
+        popup.menu.add(0, 11, 10, "Close file")
 
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                1 -> { showFilePopup(anchor); true }
-                2 -> { toggleSearchBar(); true }
-                3 -> { showSyntaxSelector(); true }
-                4 -> { navigateToPreviousPosition(); true }
-                5 -> { navigateToNextPosition(); true }
-                6 -> { showJumpToLineDialog(); true }
-                7 -> {
+                1 -> { toggleSearchBar(); true }
+                2 -> { navigateToPreviousPosition(); true }
+                3 -> { navigateToNextPosition(); true }
+                4 -> { showJumpToLineDialog(); true }
+                5 -> {
                     item.isChecked = !item.isChecked
                     prefs.edit().putBoolean("word_wrap", item.isChecked).apply()
                     codeEditor?.setWordwrap(item.isChecked)
                     true
                 }
-                8 -> {
+                6 -> {
                     item.isChecked = !item.isChecked
                     isReadOnly = item.isChecked
                     codeEditor?.setEditable(!isReadOnly)
                     true
                 }
-                9 -> {
+                7 -> {
                     item.isChecked = !item.isChecked
                     isSmoothMode = item.isChecked
                     true
                 }
-                10 -> {
+                8 -> {
                     item.isChecked = !item.isChecked
                     isCodeCompletion = item.isChecked
                     true
                 }
-                11 -> { showPreferencesDialog(); true }
-                12 -> { confirmClose(); true }
+                9 -> { showSyntaxSelector(); true }
+                10 -> { showPreferencesDialog(); true }
+                11 -> { confirmClose(); true }
                 else -> false
             }
         }
@@ -428,6 +422,9 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         editor.setLineNumberEnabled(lineNumbers)
         editor.setLineNumberMarginLeft(2f)
         editor.setLineSpacing(2.0f, 1.1f)
+
+        editor.setHighlightCurrentLine(true)
+        editor.setHighlightCurrentLineColor(Color.parseColor("#FFF7E0"))
 
         val fontType = prefs.getString("font_type", "normal")
         val typeface = if (fontType == "monospace") Typeface.MONOSPACE else Typeface.DEFAULT
@@ -551,8 +548,7 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         val cursor = editor.cursor
         val line = cursor.leftLine + 1
         val col = cursor.leftColumn + 1
-        val modified = if (isModified) " *" else ""
-        lineNoEncodingText?.text = "$line:$col   UTF-8$modified"
+        lineNoEncodingText?.text = "$line:$col   UTF-8"
     }
 
     private fun updateInfoBar() {
@@ -675,9 +671,6 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
     }
 
     companion object {
-        private val executor = java.util.concurrent.Executors.newSingleThreadExecutor()
-        private val mainHandler = Handler(Looper.getMainLooper())
-
         @JvmStatic
         fun start(context: Activity, filePath: String) {
             val intent = Intent(context, FileEditorActivity::class.java)

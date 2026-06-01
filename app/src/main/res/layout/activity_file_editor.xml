@@ -12,28 +12,19 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:background="#303030"
+        android:background="#1A1A1A"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="4dp">
 
         <ImageView
-            android:id="@+id/btn_back"
+            android:id="@+id/btn_menu"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
-            android:src="@drawable/ic_arrow_back"
+            android:src="@drawable/ic_menu"
             android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="#FFFFFF" />
-
-        <ImageView
-            android:id="@+id/btn_pin"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:padding="8dp"
-            android:src="@drawable/ic_search"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="#FFFFFF" />
+            app:tint="#E0E0E0" />
 
         <ImageView
             android:id="@+id/btn_undo"
@@ -42,7 +33,7 @@
             android:padding="8dp"
             android:src="@drawable/ic_undo"
             android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="#FFFFFF" />
+            app:tint="#E0E0E0" />
 
         <ImageView
             android:id="@+id/btn_redo"
@@ -51,7 +42,7 @@
             android:padding="8dp"
             android:src="@drawable/ic_redo"
             android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="#FFFFFF" />
+            app:tint="#E0E0E0" />
 
         <ImageView
             android:id="@+id/btn_save"
@@ -60,21 +51,21 @@
             android:padding="8dp"
             android:src="@drawable/ic_save"
             android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="#FFFFFF" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            app:tint="#E0E0E0" />
 
         <ImageView
             android:id="@+id/btn_edit_mode"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
-            android:src="@drawable/ic_text"
+            android:src="@drawable/ic_edit"
             android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="#FFFFFF" />
+            app:tint="#E0E0E0" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
         <ImageView
             android:id="@+id/btn_overflow"
@@ -83,7 +74,7 @@
             android:padding="8dp"
             android:src="@drawable/ic_more_vert"
             android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="#FFFFFF" />
+            app:tint="#E0E0E0" />
     </LinearLayout>
 
     <!-- Search Bar (hidden by default) -->
@@ -91,7 +82,7 @@
         android:id="@+id/search_bar"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:background="#424242"
+        android:background="#1A1A1A"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="8dp"
@@ -125,7 +116,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:padding="4dp"
-            android:src="@drawable/ic_arrow_back"
+            android:src="@drawable/ic_chevron_left"
             android:background="?attr/selectableItemBackgroundBorderless"
             app:tint="#B0B0B0" />
 
@@ -134,7 +125,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:padding="4dp"
-            android:src="@drawable/ic_arrow_forward"
+            android:src="@drawable/ic_chevron_right"
             android:background="?attr/selectableItemBackgroundBorderless"
             app:tint="#B0B0B0" />
 
@@ -143,7 +134,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:padding="4dp"
-            android:src="@drawable/ic_delete"
+            android:src="@drawable/ic_close"
             android:background="?attr/selectableItemBackgroundBorderless"
             app:tint="#B0B0B0" />
     </LinearLayout>
@@ -152,7 +143,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="24dp"
-        android:background="#424242"
+        android:background="#2D2D2D"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="12dp">
@@ -162,8 +153,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text=""
-            android:textColor="#B0B0B0"
+            android:text="untitled"
+            android:textColor="#A0A0A0"
             android:textSize="11sp"
             android:singleLine="true"
             android:ellipsize="middle" />
@@ -173,7 +164,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="1:1   UTF-8"
-            android:textColor="#B0B0B0"
+            android:textColor="#A0A0A0"
             android:textSize="11sp" />
     </LinearLayout>
 
@@ -186,16 +177,19 @@
         app:lnPanelPosition="left"
         app:lnPanelPositionMode="follow" />
 
-    <!-- Symbol Bar -->
-    <HorizontalScrollView
+    <!-- Symbol Bar - matches MT Manager -->
+    <LinearLayout
+        android:id="@+id/symbol_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#2D2D2D"
-        android:scrollbars="none">
+        android:layout_height="44dp"
+        android:background="#FAFAFA"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <io.github.rosemoe.sora.widget.SymbolInputView
             android:id="@+id/symbol_input"
-            android:layout_width="wrap_content"
-            android:layout_height="44dp" />
-    </HorizontalScrollView>
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1" />
+    </LinearLayout>
 </LinearLayout>
