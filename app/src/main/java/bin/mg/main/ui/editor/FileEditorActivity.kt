@@ -24,13 +24,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import io.github.rosemoe.sora.langs.java.JavaLanguage
-import io.github.rosemoe.sora.langs.python.PythonLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
-import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
-import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
 import org.eclipse.tm4e.core.registry.IGrammarSource
 import org.eclipse.tm4e.core.registry.IThemeSource
 import io.github.rosemoe.sora.event.ContentChangeEvent
@@ -83,7 +80,6 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         initViews()
         setupToolbar()
         setupSearchBar()
-        setupSymbolBar()
 
         currentFilePath = intent.getStringExtra("file_path")
         if (currentFilePath != null && File(currentFilePath!!).exists()) {
@@ -164,7 +160,7 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         if (searchVisible) {
             searchInput?.requestFocus()
         } else {
-            codeEditor?.findAllOnGlobal(null)
+            searchInput?.setText("")
         }
     }
 
@@ -196,32 +192,39 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         if (forward) {
             val idx = text.indexOf(query, pos)
             if (idx >= 0) {
-                val line = editor.text.getLineIndex(idx)
-                val col = idx - editor.text.getCharIndex(line, 0)
-                editor.setSelection(line, col, line, col + query.length)
+                val lineCol = offsetToLineCol(editor, idx)
+                editor.setSelection(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
             } else {
                 val idx2 = text.indexOf(query, 0)
                 if (idx2 >= 0) {
-                    val line = editor.text.getLineIndex(idx2)
-                    val col = idx2 - editor.text.getCharIndex(line, 0)
-                    editor.setSelection(line, col, line, col + query.length)
+                    val lineCol = offsetToLineCol(editor, idx2)
+                    editor.setSelection(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
                 }
             }
         } else {
             val idx = text.lastIndexOf(query, maxOf(0, pos - 1))
             if (idx >= 0) {
-                val line = editor.text.getLineIndex(idx)
-                val col = idx - editor.text.getCharIndex(line, 0)
-                editor.setSelection(line, col, line, col + query.length)
+                val lineCol = offsetToLineCol(editor, idx)
+                editor.setSelection(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
             } else {
                 val idx2 = text.lastIndexOf(query)
                 if (idx2 >= 0) {
-                    val line = editor.text.getLineIndex(idx2)
-                    val col = idx2 - editor.text.getCharIndex(line, 0)
-                    editor.setSelection(line, col, line, col + query.length)
+                    val lineCol = offsetToLineCol(editor, idx2)
+                    editor.setSelection(lineCol.first, lineCol.second, lineCol.first, lineCol.second + query.length)
                 }
             }
         }
+    }
+
+    private fun offsetToLineCol(editor: CodeEditor, offset: Int): Pair<Int, Int> {
+        val text = editor.text
+        var remaining = offset
+        for (line in 0 until text.lineCount) {
+            val lineLen = text.getColumnCount(line) + 1
+            if (remaining < lineLen) return Pair(line, remaining)
+            remaining -= lineLen
+        }
+        return Pair(0, 0)
     }
 
     private fun showEditMenu(anchor: View) {
@@ -378,7 +381,7 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
 
     private fun detectSyntaxAndLoad() {
         val path = currentFilePath ?: return
-        val ext = path.substringAfterLast('.', '').lowercase()
+        val ext = path.substringAfterLast(".", "").lowercase()
         currentSyntax = when (ext) {
             "java" -> "java"
             "kt" -> "kotlin"
@@ -442,7 +445,6 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
             when (syntax) {
                 "java" -> editor.setEditorLanguage(JavaLanguage())
                 "kotlin" -> editor.setEditorLanguage(JavaLanguage())
-                "python" -> editor.setEditorLanguage(PythonLanguage())
                 "smali" -> loadTextMateLanguage("smali")
                 else -> editor.setEditorLanguage(EmptyLanguage())
             }
@@ -454,17 +456,22 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
     private fun loadTextMateLanguage(grammarName: String) {
         val editor = codeEditor ?: return
         try {
-            FileProviderRegistry.getInstance().addProvider(AssetsFileResolver(assets))
-            ThemeRegistry.getInstance().loadTheme(
-                ThemeModel(IThemeSource.fromInputStream(assets.open("themes/light.json"), "light.json", null), "light")
+            val themeRegistry = ThemeRegistry.getInstance()
+            val themeSource = IThemeSource.fromInputStream(
+                assets.open("themes/light.json"),
+                "light.json",
+                null
             )
-            ThemeRegistry.getInstance().setTheme("light")
+            themeRegistry.loadTheme(ThemeModel(themeSource, "light"))
+            themeRegistry.setTheme("light")
 
-            val language = TextMateLanguage.create(
-                IGrammarSource.fromInputStream(assets.open("$grammarName/syntaxes/$grammarName.tmLanguage.json"), "$grammarName.tmLanguage.json", null),
-                assets.open("$grammarName/language-configuration.json").bufferedReader(),
-                ThemeRegistry.getInstance().getTheme("light")
+            val grammarSource = IGrammarSource.fromInputStream(
+                assets.open("$grammarName/syntaxes/$grammarName.tmLanguage.json"),
+                "$grammarName.tmLanguage.json",
+                null
             )
+            val langConfig = assets.open("$grammarName/language-configuration.json").bufferedReader()
+            val language = TextMateLanguage.create(grammarSource, langConfig, themeRegistry.getTheme("light"))
             editor.setEditorLanguage(language)
         } catch (_: Exception) {
             editor.setEditorLanguage(EmptyLanguage())
@@ -476,7 +483,12 @@ class FileEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         val cursor = editor.cursor
         val line = cursor.leftLine + 1
         val col = cursor.leftColumn + 1
-        lineNoEncodingText?.text = "$line:$col   UTF-8"
+        val modified = if (isModified) " *" else ""
+        lineNoEncodingText?.text = "$line:$col   UTF-8$modified"
+    }
+
+    private fun updateInfoBar() {
+        updateCursorPosition()
     }
 
     private fun saveFile() {

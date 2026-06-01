@@ -310,7 +310,6 @@ object FileUtils {
         val nonPrintableRatio = nonPrintableCount.toFloat() / totalChecked
         return nonPrintableRatio < 0.05f
     }
-}
 
     @JvmStatic
     fun isXmlFile(filePath: String?): Boolean {

@@ -1091,13 +1091,6 @@ class MainActivity : AppCompatActivity() {
         btnSwap?.setImageResource(if (activePanel == 0) R.drawable.ic_swap_left_active else R.drawable.ic_swap_right_active)
     }
 
-    private fun updateBottomBarIcons() {
-        val backStack = if (activePanel == 0) backStackLeft else backStackRight
-        val forwardStack = if (activePanel == 0) forwardStackLeft else forwardStackRight
-        btnBack?.setColorFilter(if (backStack.isEmpty()) greyColorFilter else android.graphics.PorterDuffColorFilter(buttonTint, android.graphics.PorterDuff.Mode.SRC_IN))
-        btnForward?.setColorFilter(if (forwardStack.isEmpty()) greyColorFilter else android.graphics.PorterDuffColorFilter(buttonTint, android.graphics.PorterDuff.Mode.SRC_IN))
-    }
-
     private fun updateTopBar() {
         val path = if (activePanel == 0) currentPathLeft else currentPathRight
         toolbarPath?.text = path

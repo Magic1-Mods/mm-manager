@@ -16,7 +16,8 @@ import androidx.appcompat.app.AppCompatActivity
 import bin.mg.main.R
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
-import io.github.skylot.jadx.core.JadxDecompiler
+import jadx.api.JadxArgs
+import jadx.api.JadxDecompiler
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -34,6 +35,7 @@ class DexEditorActivity : AppCompatActivity() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var jadxInstance: JadxDecompiler? = null
     private var classNames = mutableListOf<String>()
+    private var allClassNames = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,40 +65,27 @@ class DexEditorActivity : AppCompatActivity() {
         val dialog = ProgressDialog.show(this, "Loading", "Loading DEX file...", true)
         executor.execute {
             try {
-                val jadx = JadxDecompiler(File(dexFilePath!!))
+                val args = JadxArgs()
+                args.setInputFiles(listOf(File(dexFilePath!!)))
+                args.setSkipResources(true)
+                args.isShowInconsistentCode = true
+
+                val jadx = JadxDecompiler(args)
                 jadx.load()
                 jadxInstance = jadx
 
                 val nodes = mutableListOf<String>()
-                for (cls in jadx.dex_classes.classNodes) {
-                    nodes.add(cls.type.className)
+                for (cls in jadx.classes) {
+                    nodes.add(cls.fullName)
                 }
+                allClassNames = nodes
                 classNames = nodes
 
                 mainHandler.post {
                     dialog.dismiss()
-                    filenameText?.text = File(dexFilePath!!).name
+                    filenameText?.text = File(dexFilePath!!).name + " (${classNames.size} classes)"
 
-                    val adapter = object : SimpleExpandableListAdapter(
-                        this@DexEditorActivity,
-                        listOf(mapOf("name" to "Classes (${classNames.size})")),
-                        android.R.layout.simple_expandable_list_item_1,
-                        arrayOf("name"),
-                        intArrayOf(android.R.id.text1),
-                        listOf(classNames.map { mapOf("name" to it.substringAfterLast('.')) }),
-                        android.R.layout.simple_list_item_1,
-                        arrayOf("name"),
-                        intArrayOf(android.R.id.text1)
-                    ) {}
-
-                    classListView?.setAdapter(adapter)
-                    classListView?.setOnChildClickListener { _, _, _, childPos, _ ->
-                        if (childPos < classNames.size) {
-                            showClassSource(classNames[childPos])
-                        }
-                        true
-                    }
-                    classListView?.expandGroup(0)
+                    showClassList()
                 }
             } catch (e: Exception) {
                 mainHandler.post {
@@ -107,18 +96,70 @@ class DexEditorActivity : AppCompatActivity() {
         }
     }
 
+    private fun showClassList() {
+        val groups = mutableListOf<List<Map<String, String>>>()
+        val children = mutableListOf<List<Map<String, String>>>()
+
+        val packages = linkedMapOf<String, MutableList<String>>()
+        for (cls in classNames) {
+            val lastDot = cls.lastIndexOf('.')
+            val pkg = if (lastDot > 0) cls.substring(0, lastDot) else "(default)"
+            val simpleName = if (lastDot > 0) cls.substring(lastDot + 1) else cls
+            packages.getOrPut(pkg) { mutableListOf() }.add(simpleName)
+        }
+
+        for ((pkg, classes) in packages) {
+            groups.add(listOf(mapOf("name" to "$pkg (${classes.size})")))
+            children.add(classes.map { mapOf("name" to it) })
+        }
+
+        if (groups.isEmpty()) {
+            groups.add(listOf(mapOf("name" to "All Classes (${classNames.size})")))
+            children.add(classNames.map { mapOf("name" to it.substringAfterLast('.')) })
+        }
+
+        val adapter = object : SimpleExpandableListAdapter(
+            this@DexEditorActivity,
+            groups,
+            android.R.layout.simple_expandable_list_item_1,
+            arrayOf("name"),
+            intArrayOf(android.R.id.text1),
+            children,
+            android.R.layout.simple_list_item_1,
+            arrayOf("name"),
+            intArrayOf(android.R.id.text1)
+        ) {}
+
+        classListView?.setAdapter(adapter)
+        classListView?.setOnChildClickListener { _, _, groupPos, childPos, _ ->
+            val pkgNames = packages.keys.toList()
+            if (groupPos < pkgNames.size) {
+                val pkg = pkgNames[groupPos]
+                val classes = packages[pkg]
+                if (classes != null && childPos < classes.size) {
+                    val simpleName = classes[childPos]
+                    val fullName = if (pkg == "(default)") simpleName else "$pkg.$simpleName"
+                    showClassSource(fullName)
+                }
+            }
+            true
+        }
+
+        for (i in groups.indices) {
+            classListView?.expandGroup(i)
+        }
+    }
+
     private fun showClassSource(className: String) {
         val dialog = ProgressDialog.show(this, "Loading", "Loading class...", true)
         executor.execute {
             try {
                 val jadx = jadxInstance ?: return@execute
-                val classNode = jadx.dex_classes.classNodes.find { it.type.className == className }
+                val javaClass = jadx.searchJavaClassByOrigFullName("L${className.replace('.', '/')};")
 
-                val source = if (classNode != null) {
+                val source = if (javaClass != null) {
                     try {
-                        val codeWriter = jadx.getCodeWriter()
-                        jadx.codeGen.generateClass(codeWriter, classNode)
-                        codeWriter.toString()
+                        javaClass.code
                     } catch (_: Exception) {
                         "// Could not decompile $className\n// Class may contain complex structures"
                     }
@@ -132,6 +173,8 @@ class DexEditorActivity : AppCompatActivity() {
                     try {
                         codeEditor?.setEditorLanguage(JavaLanguage())
                     } catch (_: Exception) {}
+                    codeEditor?.setEditable(false)
+                    lineNoText?.text = className
                     toggleView()
                 }
             } catch (e: Exception) {
