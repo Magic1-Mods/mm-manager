@@ -9,9 +9,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 
 import bin.mg.main.R;
 import com.google.android.material.tabs.TabLayout;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +22,7 @@ public class DexActivity extends AppCompatActivity {
 
     private List<String> classes;
     private TabPage myPager;
+    private DrawerLayout drawerLayout;
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private ViewPager viewPager;
@@ -53,10 +56,13 @@ public class DexActivity extends AppCompatActivity {
 
     private void initToolbar() {
         setSupportActionBar(toolbar);
+        drawerLayout = (DrawerLayout) findViewById(R.id.dex_drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(R.string.dex_title);
-            getSupportActionBar().setSubtitle(R.string.dex_subtitle);
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setTitle("");
+            getSupportActionBar().setSubtitle("");
         }
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -144,6 +150,10 @@ public class DexActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 }
