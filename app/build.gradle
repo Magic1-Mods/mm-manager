@@ -101,5 +101,4 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'me.zhanghai.android.fastscroll:library:1.3.0'
-    implementation 'com.blogspot.atifsoftwares:animatoolib:1.2'
 }
