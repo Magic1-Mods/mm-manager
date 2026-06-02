@@ -1318,9 +1318,13 @@ class MainActivity : AppCompatActivity() {
     private fun showOpenWithDialog(dexPath: String) {
         val options = resources.getStringArray(R.array.open_with_dex_options)
         val parent = File(dexPath).parentFile
-        val dexFiles = parent?.listFiles { f ->
-            f.isFile && (f.name.endsWith(".dex", ignoreCase = true) || f.name.endsWith(".DEX", ignoreCase = true))
-        }?.sortedBy { it.name } ?: arrayOf(File(dexPath))
+        val dexFiles: List<File> = if (parent != null) {
+            (parent.listFiles { f ->
+                f.isFile && (f.name.endsWith(".dex", ignoreCase = true) || f.name.endsWith(".DEX", ignoreCase = true))
+            }?.toList() ?: listOf(File(dexPath))).sortedBy { it.name }
+        } else {
+            listOf(File(dexPath))
+        }
 
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_open_with_dex, null)
         val radioGroup = dialogView.findViewById<RadioGroup>(R.id.open_with_radio_group)
@@ -1344,7 +1348,7 @@ class MainActivity : AppCompatActivity() {
                 val checkedId = radioGroup.checkedRadioButtonId
                 val selectedIndex = (0 until radioGroup.childCount)
                     .firstOrNull { radioGroup.getChildAt(it).id == checkedId } ?: 0
-                handleOpenWithSelection(selectedIndex, options[selectedIndex], dexPath, dexFiles.toList())
+                handleOpenWithSelection(selectedIndex, options[selectedIndex], dexPath, dexFiles)
             }
             .create()
         dialog.show()
