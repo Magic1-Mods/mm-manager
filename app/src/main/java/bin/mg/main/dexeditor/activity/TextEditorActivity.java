@@ -135,7 +135,7 @@ Thanks to @AndroidPrimwe
 */
 
 
-public class TextEditorActivity extends AppCompatActivity implements SmaliMethodListFragment.DialogLineNumberListener {
+public class TextEditorActivity extends AppCompatActivity {
 	public static ClassTree classTree;
 	private String currentTitle;
 	private AppBarLayout appBarLayout;
@@ -171,7 +171,7 @@ public class TextEditorActivity extends AppCompatActivity implements SmaliMethod
 	private String saveCompileError = "";
 	private Intent intent = new Intent();
 	
-	public static SmaliMethodListFragment smaliMethodsStringsFragment = null;
+	public static Object smaliMethodsStringsFragment = null;
 	public static Parcelable methodRecyclerViewState = null;
 	public static Parcelable stringsRecyclerViewState = null;
 	public static boolean wasStringsVisible = false;
@@ -217,7 +217,6 @@ public class TextEditorActivity extends AppCompatActivity implements SmaliMethod
 		
 		// Reset state if activity is recreated
 		if (savedInstanceState == null) {
-			smaliMethodsStringsFragment = null;
 			methodRecyclerViewState = null;
 			stringsRecyclerViewState = null;
 			wasStringsVisible = false;
@@ -392,37 +391,12 @@ public class TextEditorActivity extends AppCompatActivity implements SmaliMethod
 	
 	
 	private void showSmaliNavigation(String tempSmaliPath, String currentTitle, int lineNo) {
-		File smaliFile = new File(tempSmaliPath);
-		boolean fileChanged = !tempSmaliPath.equals(lastSmaliFilePath) || 
-		(smaliFile.exists() && smaliFile.lastModified() != lastModifiedTime);
-		
-		if (smaliMethodsStringsFragment == null || fileChanged) {
-			// Create a new instance if none exists or file has changed
-			smaliMethodsStringsFragment = new SmaliMethodListFragment();
-			smaliMethodsStringsFragment.show(getSupportFragmentManager(), " ");
-			smaliMethodsStringsFragment.updateUi(tempSmaliPath, currentTitle.replace(".smali", ""), lineNo, dexVersion);
-			
-			// Update tracking variables
-			lastSmaliFilePath = tempSmaliPath;
-			lastModifiedTime = smaliFile.exists() ? smaliFile.lastModified() : -1;
-			
-			// Reset visibility and scroll states since it's a fresh load
-			wasStringsVisible = false;
-			methodRecyclerViewState = null;
-			stringsRecyclerViewState = null;
-		} else {
-			// Reuse the existing fragment instance
-			smaliMethodsStringsFragment.show(getSupportFragmentManager(), " ");
-			smaliMethodsStringsFragment.restorePreviousState(methodRecyclerViewState, stringsRecyclerViewState, wasStringsVisible);
-		}
 	}
-	
-	
+
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		// Clear the fragment instance on activity destruction
-		smaliMethodsStringsFragment = null;
 	}
 	
 	@Override
@@ -1149,9 +1123,6 @@ public class TextEditorActivity extends AppCompatActivity implements SmaliMethod
 						}
 					});
 				} else {
-					SmaliMethodListFragment fragment = new SmaliMethodListFragment();
-					fragment.show(getSupportFragmentManager(), " ");
-					fragment.updateUi(tempSmaliPath, currentTitle.replace(".smali", ""), cursor.getLeftLine(), dexVersion);
 				}
 			} catch (Exception e) {
 				ErrorDlg(e.toString());
