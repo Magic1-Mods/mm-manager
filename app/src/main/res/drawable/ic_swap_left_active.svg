@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <!-- top-right arrow: muted/dim -->
+  <path fill="#ffffff" fill-opacity="0.3" d="M17.5,4.7v3.2h-7.5v2.2h7.5v3.2L21.9,9z"/>
+  <!-- bottom-left arrow: active/bright -->
+  <path fill="#ffffff" d="M6.5,11.3v3.2h7.5v2.2h-7.5v3.2L2.1,15.6z"/>
+</svg>
