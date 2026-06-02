@@ -1,32 +1,33 @@
 # ==========================================
-# 🔥 GLOBAL SETTINGS
+# SOURCE LINE NUMBERS (for stack traces)
 # ==========================================
 
 -renamesourcefileattribute SourceFile
 -keepattributes SourceFile,LineNumberTable
 
-# Remove logs
+# ==========================================
+# REMOVE LOG CALLS
+# ==========================================
+
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
     public static *** v(...);
     public static *** i(...);
     public static *** w(...);
-    public static *** e(...);
 }
 
 # ==========================================
-# 🔥 DICTIONARY (UNICODE OBFUSCATION)
+# OBFUSCATION DICTIONARY
 # ==========================================
 
--obfuscationdictionary proguard-dictionary.txt
--classobfuscationdictionary proguard-dictionary.txt
+-obfuscationdictionary       proguard-dictionary.txt
+-classobfuscationdictionary  proguard-dictionary.txt
 -packageobfuscationdictionary proguard-dictionary.txt
 
-# Force usage of dictionary
 -dontusemixedcaseclassnames
 
 # ==========================================
-# 🔥 AGGRESSIVE OBFUSCATION
+# AGGRESSIVE OBFUSCATION
 # ==========================================
 
 -useuniqueclassmembernames
@@ -35,7 +36,7 @@
 -flattenpackagehierarchy ''
 
 # ==========================================
-# 🔥 OPTIMIZATION
+# OPTIMIZATION
 # ==========================================
 
 -optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
@@ -43,71 +44,79 @@
 -allowaccessmodification
 
 # ==========================================
-# 🔥 KEEP ONLY REQUIRED ENTRY POINTS
+# KOTLIN METADATA + COROUTINES
 # ==========================================
 
-# MainActivity (keep but allow obfuscation inside)
--keep class com.android.support.MainActivity {
-    <init>();
+-keep class kotlin.Metadata { *; }
+-keepclassmembers class **$WhenMappings { <fields>; }
+-keep class kotlin.coroutines.Continuation
+-keep class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**
+-dontwarn kotlin.reflect.jvm.internal.**
+
+# ==========================================
+# ANDROID ENTRY POINTS (keep constructors + class)
+# ==========================================
+
+-keep public class * extends android.app.Application
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ContentProvider
+-keep public class * extends androidx.appcompat.app.AppCompatActivity
+-keep public class * extends androidx.fragment.app.Fragment
+-keep public class * extends android.preference.Preference
+
+# Our app's main activities/services stay at their FQCN
+-keep class bin.mg.main.MainActivity { *; }
+-keep class bin.mg.main.AppMain { *; }
+-keep class bin.mg.main.app.dex.plus.DexActivity { *; }
+-keep class bin.mg.main.ui.editor.FileEditorActivity { *; }
+-keep class bin.mg.main.ui.editor.EditorPreferencesFragment { *; }
+-keep class bin.mg.main.ui.editor.TextEditorPreferencesFragment { *; }
+-keep class bin.mg.main.ui.editor.SyntaxSelectorFragment { *; }
+
+# ==========================================
+# VIEWS REFERENCED FROM XML
+# (Activity#setContentView inflates by reflection)
+# ==========================================
+
+-keepclasseswithmembers class * {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keepclasseswithmembers class * {
+    public <init>(android.content.Context, android.util.AttributeSet, int);
+}
+-keepclasseswithmembers class * extends android.view.View {
+    public <init>(android.content.Context);
 }
 
-# Android components (keep constructors only)
--keep class * extends android.app.Activity {
-    <init>();
-}
--keep class * extends android.app.Service {
-    <init>();
-}
--keep class * extends android.content.BroadcastReceiver {
-    <init>();
-}
--keep class * extends android.content.ContentProvider {
-    <init>();
-}
+# Custom views in our project
+-keep class bin.mg.main.PullToRefreshLayout { *; }
+-keep class bin.mg.main.ui.view.ViewHolder { *; }
+-keep class bin.mg.main.app.dex.plus.clickeffect.T_a { *; }
 
 # ==========================================
-# 🔥 REQUIRED ANDROID / UI CLASSES
+# ENUMS (values()/valueOf used by reflection)
 # ==========================================
 
--keep class android.os.Handler { *; }
-
-# RecyclerView essentials
--keep class androidx.recyclerview.widget.RecyclerView { *; }
--keep class androidx.recyclerview.widget.LinearLayoutManager { *; }
-
-# Your adapter
--keep class com.android.support.SoAdapter { *; }
-
-# AppCompat + Material (needed)
--keep class androidx.appcompat.** { *; }
--keep class com.google.android.material.** { *; }
-
-# Core Android usage
--keep class android.view.** { *; }
--keep class android.widget.** { *; }
--keep class android.content.Context { *; }
-
-# File handling
--keep class java.io.** { *; }
-
-# ==========================================
-# 🔥 STRINGFOG SUPPORT
-# ==========================================
-
--keep class com.github.megatronking.stringfog.** { *; }
--keep class * implements com.github.megatronking.stringfog.IStringFog { *; }
--keep class com.github.megatronking.stringfog.xor.StringFogImpl { *; }
-
-# ==========================================
-# 🔥 JNI / SERIALIZATION SAFETY
-# ==========================================
-
-# Native methods
--keepclasseswithmembernames class * {
-    native <methods>;
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
 }
 
-# Serializable
+# ==========================================
+# PARCELABLE
+# ==========================================
+
+-keepclassmembers class * implements android.os.Parcelable {
+    public static final ** CREATOR;
+}
+
+# ==========================================
+# SERIALIZABLE (Intent extras, prefs)
+# ==========================================
+
 -keepclassmembers class * implements java.io.Serializable {
     static final long serialVersionUID;
     private static final java.io.ObjectStreamField[] serialPersistentFields;
@@ -116,9 +125,129 @@
     java.lang.Object writeReplace();
     java.lang.Object readResolve();
 }
+-keepnames class * implements java.io.Serializable
+-keepclassmembers class * implements java.io.Serializable {
+    <fields>;
+}
 
 # ==========================================
-# 🔥 CLEANUP / AGGRESSIVE SHRINKING
+# JNI / NATIVE METHODS
+# Keep class + native method names AND keep
+# the class in its original package path
+# (no repackaging of native holders)
+# ==========================================
+
+-keepclasseswithmembernames,includedescriptorclasses class * {
+    native <methods>;
+}
+
+# Keep the original FQCN of any class that has native methods.
+# (Prevents -repackageclasses '' from moving them, which would
+# break JNI symbol resolution at runtime.)
+-keep class * {
+    native <methods>;
+}
+-keeppackagenames class * {
+    native <methods>;
+}
+-keep class * extends android.app.Application { native <methods>; }
+-keep class * extends android.app.Activity    { native <methods>; }
+-keep class * extends android.app.Service     { native <methods>; }
+
+# ==========================================
+# ANNOTATIONS + SIGNED CODE
+# ==========================================
+
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes InnerClasses
+-keepattributes EnclosingMethod
+-keepattributes Exceptions
+-keepattributes Deprecated
+
+# Keep classes referenced by annotations
+-keep,allowobfuscation @interface * { *; }
+
+# ==========================================
+# ANDROIDX / MATERIAL
+# ==========================================
+
+-keep class androidx.lifecycle.** { *; }
+-keep class androidx.core.** { *; }
+-keep class androidx.appcompat.** { *; }
+-keep class com.google.android.material.** { *; }
+-keep class androidx.recyclerview.widget.** { *; }
+-keep class androidx.viewpager.widget.** { *; }
+-keep class androidx.drawerlayout.widget.** { *; }
+-keep class androidx.cardview.widget.** { *; }
+-keep class androidx.preference.** { *; }
+-keep class androidx.documentfile.** { *; }
+-keep class androidx.swiperefreshlayout.** { *; }
+-keep class androidx.constraintlayout.** { *; }
+-keep class androidx.interpolator.** { *; }
+-keep class androidx.startup.** { *; }
+-dontwarn androidx.**
+
+# ==========================================
+# SORA EDITOR (text editor library)
+# ==========================================
+
+-keep class io.github.rosemoe.sora.** { *; }
+-keep class org.eclipse.tm4e.** { *; }
+-dontwarn io.github.rosemoe.sora.**
+-dontwarn org.eclipse.tm4e.**
+
+# ==========================================
+# DEX LIBRARY (org.jf.dexlib2 — heavy reflection)
+# ==========================================
+
+-keep class org.jf.dexlib2.** { *; }
+-keep class org.jf.util.** { *; }
+-keep class com.google.common.** { *; }
+-keep class javax.annotation.** { *; }
+-keep class com.google.code.findbugs.** { *; }
+-dontwarn org.jf.dexlib2.**
+-dontwarn org.jf.util.**
+-dontwarn com.google.common.**
+-dontwarn javax.annotation.**
+
+# ==========================================
+# GLIDE (image loader used elsewhere)
+# ==========================================
+
+-keep public class * extends com.bumptech.glide.module.AppGlideModule
+-keep class com.bumptech.glide.GeneratedAppGlideModuleImpl
+-keep public enum com.bumptech.glide.load.ImageHeaderParser$** { **[] $VALUES; public *; }
+-dontwarn com.bumptech.glide.**
+
+# ==========================================
+# FAST SCROLLER (custom RecyclerView)
+# ==========================================
+
+-keep class com.fastrecyclerview.** { *; }
+-dontwarn com.fastrecyclerview.**
+
+# ==========================================
+# GSON (used by theme/serialization)
+# ==========================================
+
+-keep class com.google.gson.** { *; }
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+-keepclassmembers,allowobfuscation class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+-dontwarn com.google.gson.**
+
+# ==========================================
+# THIRD-PARTY
+# ==========================================
+
+-keep class com.github.angads25.filepicker.** { *; }
+-dontwarn com.github.angads25.filepicker.**
+
+# ==========================================
+# SUPPRESS WARNINGS
 # ==========================================
 
 -dontwarn **
