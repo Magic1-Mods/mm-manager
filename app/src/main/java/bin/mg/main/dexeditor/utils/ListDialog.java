@@ -50,7 +50,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 import android.graphics.*;
 import android.graphics.drawable.*;
 import android.media.*;

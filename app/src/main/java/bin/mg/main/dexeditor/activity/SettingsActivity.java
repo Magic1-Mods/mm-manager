@@ -77,7 +77,7 @@ import java.util.*;
 import java.util.regex.*;
 import me.zhanghai.android.fastscroll.*;
 import org.json.*;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 
 /*
 Author @developer-krushna

@@ -55,7 +55,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import bin.mg.main.dexeditor.views.*;
 import bin.mg.main.dexeditor.utils.*;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 
 /*
 Author @developer-krushna

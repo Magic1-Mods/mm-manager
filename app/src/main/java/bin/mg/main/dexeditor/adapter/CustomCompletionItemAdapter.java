@@ -45,7 +45,7 @@ import android.widget.TextView;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.widget.component.EditorCompletionAdapter;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 

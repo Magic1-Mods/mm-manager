@@ -68,7 +68,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 
 
 /*

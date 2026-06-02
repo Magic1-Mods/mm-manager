@@ -84,7 +84,7 @@ import java.util.HashMap;
 import me.zhanghai.android.fastscroll.*;
 import bin.mg.main.dexeditor.views.*;
 import bin.mg.main.dexeditor.utils.*;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 
 /*
 Author @developer-krushna

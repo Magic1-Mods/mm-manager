@@ -105,7 +105,7 @@ import bin.mg.main.dexeditor.fragment.*;
 import bin.mg.main.dexeditor.smali.Smali2Java;
 import bin.mg.main.dexeditor.views.*;
 import bin.mg.main.dexeditor.utils.*;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 
 
 import org.eclipse.tm4e.core.registry.IGrammarSourceMT;

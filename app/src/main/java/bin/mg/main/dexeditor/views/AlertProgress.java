@@ -44,7 +44,7 @@ import android.graphics.Color;
 import android.app.AlertDialog.Builder;
 import android.graphics.drawable.GradientDrawable;
 import android.app.*;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 import bin.mg.main.dexeditor.utils.*;
 
 /* 

@@ -90,7 +90,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 import bin.mg.main.dexeditor.activity.*;
 
 /*

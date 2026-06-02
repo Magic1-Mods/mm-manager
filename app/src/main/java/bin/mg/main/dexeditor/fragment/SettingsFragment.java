@@ -47,7 +47,7 @@ import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 import bin.mg.main.dexeditor.activity.EditFloatingMenusActivity;
 
 /*

@@ -58,7 +58,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 
 /*
 Author @developer-krushna

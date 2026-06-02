@@ -77,7 +77,7 @@ import java.util.regex.*;
 import org.json.*;
 import bin.mg.main.dexeditor.views.*;
 import bin.mg.main.dexeditor.utils.*;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 /*
 Author @developer-krushna
 */

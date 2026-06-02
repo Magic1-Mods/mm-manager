@@ -82,7 +82,7 @@ import java.util.regex.*;
 import org.json.*;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import bin.mg.main.dexeditor.updateSoraMenu.*;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 
 /*
 Author @developer-krushna

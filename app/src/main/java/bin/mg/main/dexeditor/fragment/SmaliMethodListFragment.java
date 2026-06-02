@@ -85,7 +85,7 @@ import java.util.List;
 import java.util.Map;
 import bin.mg.main.dexeditor.GraphDot.*;
 import bin.mg.main.dexeditor.utils.*;
-import bin.mg.main.dexeditor.R;
+import bin.mg.main.R;
 import bin.mg.main.dexeditor.views.*;
 import bin.mg.main.dexeditor.activity.*;
 import bin.mg.main.dexeditor.smali.*;
