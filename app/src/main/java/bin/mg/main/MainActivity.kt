@@ -42,6 +42,7 @@ import bin.mg.main.model.FileItem
 import bin.mg.main.ui.adapter.FileAdapter
 import bin.mg.main.ui.editor.FileEditorActivity
 import bin.mg.main.utils.file.FileSystemHelper
+import bin.mg.main.utils.theme.ThemeManager
 import java.io.File
 import java.util.Locale
 import java.util.Stack
@@ -99,8 +100,6 @@ class MainActivity : AppCompatActivity() {
     @Volatile
     private var loadingPathRight: String? = null
 
-    private var currentPalette = 0
-    private var followSystemTheme = false
     private var currentPrimaryColor = 0xFF212121.toInt()
     private var buttonTint = 0xFF424242.toInt()
     private val customPaths = ArrayList<String>()
@@ -110,58 +109,11 @@ class MainActivity : AppCompatActivity() {
 
     data class CustomStorageEntry(val path: String, val displayName: String)
 
-    private fun getPrimaryColor(): Int = PALETTES[currentPalette][0]
-    private fun getSecondaryColor(): Int = PALETTES[currentPalette][1]
-
-    private fun lightenColor(color: Int, factor: Float): Int {
-        val a = (color shr 24) and 0xFF
-        var r = (color shr 16) and 0xFF
-        var g = (color shr 8) and 0xFF
-        var b = color and 0xFF
-        r = minOf(255, (r + (255 - r) * factor).toInt())
-        g = minOf(255, (g + (255 - g) * factor).toInt())
-        b = minOf(255, (b + (255 - b) * factor).toInt())
-        return (a shl 24) or (r shl 16) or (g shl 8) or b
-    }
-
-    private fun darkenColor(color: Int, factor: Float): Int {
-        val a = (color shr 24) and 0xFF
-        var r = (color shr 16) and 0xFF
-        var g = (color shr 8) and 0xFF
-        var b = color and 0xFF
-        r = maxOf(0, (r * (1 - factor)).toInt())
-        g = maxOf(0, (g * (1 - factor)).toInt())
-        b = maxOf(0, (b * (1 - factor)).toInt())
-        return (a shl 24) or (r shl 16) or (g shl 8) or b
-    }
-
-    private fun getThemeColor(attrName: String, defaultColor: Int): Int {
-        val primary = getPrimaryColor()
-        val secondary = getSecondaryColor()
-
-        return when (attrName) {
-            "drawerBackground" -> lightenColor(primary, 0.92f)
-            "headerBackground" -> primary
-            "iconTint" -> 0xFFFFFFFF.toInt()
-            "iconTintSecondary" -> lightenColor(primary, 0.6f)
-            "textPrimary" -> darkenColor(primary, 0.5f)
-            "textSecondary" -> lightenColor(primary, 0.35f)
-            "sectionText" -> secondary
-            "dividerColor" -> lightenColor(primary, 0.82f)
-            "progressTint" -> secondary
-            "mainBackground" -> lightenColor(primary, 0.92f)
-            "toolbarBackground" -> primary
-            "panelBg" -> 0xFFFFFFFF.toInt()
-            "bottomBarBackground" -> 0xFFFFFFFF.toInt()
-            "statsTextColor" -> lightenColor(primary, 0.5f)
-            "buttonTint" -> darkenColor(primary, 0.3f)
-            else -> defaultColor
-        }
-    }
+    private fun lightenColor(color: Int, factor: Float): Int = ThemeManager.lighten(color, factor)
+    private fun darkenColor(color: Int, factor: Float): Int = ThemeManager.darken(color, factor)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        loadThemePalette()
-        applyTheme()
+        ThemeManager.applyActivityTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -187,32 +139,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadThemePalette() {
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        currentPalette = prefs.getInt(KEY_THEME_PALETTE, 0)
-        followSystemTheme = prefs.getBoolean(KEY_FOLLOW_SYSTEM_THEME, false)
+        // Theme is now loaded via ThemeManager
     }
 
     private fun applyTheme() {
-        if (followSystemTheme) {
-            val currentNightMode = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
-            if (currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
-                setTheme(R.style.AppTheme_Dark)
-            } else {
-                try {
-                    val themeRes = R.style::class.java.getField(THEMES[currentPalette]).getInt(null)
-                    setTheme(themeRes)
-                } catch (e: Exception) {
-                    setTheme(R.style.AppTheme)
-                }
-            }
-        } else {
-            try {
-                val themeRes = R.style::class.java.getField(THEMES[currentPalette]).getInt(null)
-                setTheme(themeRes)
-            } catch (e: Exception) {
-                setTheme(R.style.AppTheme)
-            }
-        }
+        ThemeManager.applyActivityTheme(this)
     }
 
     private fun loadCustomPaths() {
@@ -250,50 +181,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun toggleTheme() {
-        currentPalette = (currentPalette + 1) % PALETTES.size
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        prefs.edit().putInt(KEY_THEME_PALETTE, currentPalette).apply()
+        val next = (ThemeManager.currentPalette(this) + 1) % ThemeManager.PALETTES.size
+        ThemeManager.setPalette(this, next)
         applyThemeColors()
     }
 
     private fun applyThemeColors() {
-        val systemDark = followSystemTheme &&
-                (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
-                        == android.content.res.Configuration.UI_MODE_NIGHT_YES)
-        val isDarkMode = systemDark
+        val isDarkMode = ThemeManager.isDarkMode(this)
 
-        val mainBg: Int
-        val panelBg: Int
-        val bottomBarBg: Int
-        val textPrimary: Int
-        val textSecondary: Int
-        val statsText: Int
-        val dividerColor: Int
-        val drawerBg: Int
-
-        if (isDarkMode) {
-            currentPrimaryColor = 0xFF212121.toInt()
-            mainBg = 0xFF212121.toInt()
-            panelBg = 0xFF303030.toInt()
-            bottomBarBg = 0xFF303030.toInt()
-            textPrimary = 0xFFFFFFFF.toInt()
-            textSecondary = 0xFFB0B0B0.toInt()
-            statsText = 0xFF9E9E9E.toInt()
-            buttonTint = 0xFFE0E0E0.toInt()
-            dividerColor = 0xFF424242.toInt()
-            drawerBg = 0xFF303030.toInt()
-        } else {
-            currentPrimaryColor = getPrimaryColor()
-            mainBg = 0xFFF5F5F5.toInt()
-            panelBg = 0xFFFFFFFF.toInt()
-            bottomBarBg = 0xFFFFFFFF.toInt()
-            textPrimary = 0xFF212121.toInt()
-            textSecondary = 0xFF757575.toInt()
-            statsText = 0xFF9E9E9E.toInt()
-            buttonTint = 0xFF424242.toInt()
-            dividerColor = 0xFFE0E0E0.toInt()
-            drawerBg = 0xFFFFFFFF.toInt()
-        }
+        currentPrimaryColor = ThemeManager.primary(this)
+        val mainBg = ThemeManager.mainBackground(this)
+        val panelBg = ThemeManager.panelBackground(this)
+        val bottomBarBg = panelBg
+        val textPrimary = ThemeManager.textPrimary(this)
+        val textSecondary = ThemeManager.textSecondary(this)
+        val statsText = ThemeManager.statsText(this)
+        buttonTint = ThemeManager.buttonTint(this)
+        val dividerColor = ThemeManager.dividerColor(this)
+        val drawerBg = ThemeManager.drawerBackground(this)
 
         val window: Window = window
         window.statusBarColor = currentPrimaryColor
@@ -323,15 +228,8 @@ class MainActivity : AppCompatActivity() {
     private fun updateDrawerColors(primaryColor: Int, isDarkMode: Boolean) {
         val drawerView = findViewById<View?>(R.id.nav_drawer) ?: return
 
-        val textPrimary: Int
-        val textSecondary: Int
-        if (isDarkMode) {
-            textPrimary = 0xFFFFFFFF.toInt()
-            textSecondary = 0xFFB0B0B0.toInt()
-        } else {
-            textPrimary = 0xFF212121.toInt()
-            textSecondary = 0xFF757575.toInt()
-        }
+        val textPrimary = ThemeManager.textPrimary(this)
+        val textSecondary = ThemeManager.textSecondary(this)
 
         findViewById<View?>(R.id.header_background)?.setBackgroundColor(primaryColor)
 
@@ -625,28 +523,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDrawerMenu(anchor: View) {
-        val systemDark = followSystemTheme &&
-                (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
-                        == android.content.res.Configuration.UI_MODE_NIGHT_YES)
-        val isDark = systemDark
+        val isDark = ThemeManager.isDarkMode(this)
         val themeRes = if (isDark) R.style.AppTheme_Dark else R.style.AppTheme
         val themedContext = android.view.ContextThemeWrapper(this, themeRes)
         val popup = PopupMenu(themedContext, anchor)
         popup.menu.add(0, 1, 0, "Theme follows system").isCheckable = true
-        popup.menu.findItem(1).isChecked = followSystemTheme
+        popup.menu.findItem(1).isChecked = ThemeManager.followSystemTheme(this)
         popup.menu.add(0, 2, 1, "Add local storage").setIcon(R.drawable.ic_local_storage)
         popup.menu.add(0, 3, 2, "Manage tools group").setIcon(R.drawable.ic_settings)
         popup.menu.add(0, 4, 3, "Preferences").setIcon(R.drawable.ic_settings)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 1 -> {
-                    followSystemTheme = !followSystemTheme
-                    val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                    prefs.edit().putBoolean(KEY_FOLLOW_SYSTEM_THEME, followSystemTheme).apply()
-                    if (followSystemTheme) {
-                        currentPalette = 0
-                        prefs.edit().putInt(KEY_THEME_PALETTE, currentPalette).apply()
-                    }
+                    val newFollow = !ThemeManager.followSystemTheme(this)
+                    ThemeManager.setFollowSystem(this, newFollow)
                     recreate()
                     true
                 }
@@ -958,10 +848,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showToolbarOverflow(anchor: View) {
-        val systemDark = followSystemTheme &&
-                (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
-                        == android.content.res.Configuration.UI_MODE_NIGHT_YES)
-        val isDark = systemDark
+        val isDark = ThemeManager.isDarkMode(this)
         val themeRes = if (isDark) R.style.AppTheme_Dark else R.style.AppTheme
         val themedContext = android.view.ContextThemeWrapper(this, themeRes)
         val popup = PopupMenu(themedContext, anchor)
@@ -1539,41 +1426,7 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_PATH_RIGHT = "pathRight"
         private const val KEY_SCROLL_LEFT = "scrollLeft"
         private const val KEY_SCROLL_RIGHT = "scrollRight"
-        private const val KEY_THEME_PALETTE = "themePalette"
-        private const val KEY_FOLLOW_SYSTEM_THEME = "followSystemTheme"
         private const val KEY_CUSTOM_PATHS = "customPaths"
         private const val DEBOUNCE_DELAY = 200L
-
-        private val THEMES = arrayOf(
-            "AppTheme",
-            "AppTheme.Palette1",
-            "AppTheme.Palette2",
-            "AppTheme.Palette3",
-            "AppTheme.Palette4",
-            "AppTheme.Palette5",
-            "AppTheme.Palette6",
-            "AppTheme.Palette7",
-            "AppTheme.Palette8",
-            "AppTheme.Palette9",
-            "AppTheme.Palette10"
-        )
-
-        private val PALETTES = arrayOf(
-            intArrayOf(0xFF212121.toInt(), 0xFF424242.toInt()),
-            intArrayOf(0xFF1565C0.toInt(), 0xFF1E88E5.toInt()),
-            intArrayOf(0xFF6A1B9A.toInt(), 0xFF8E24AA.toInt()),
-            intArrayOf(0xFF2E7D32.toInt(), 0xFF43A047.toInt()),
-            intArrayOf(0xFFE65100.toInt(), 0xFFF57C00.toInt()),
-            intArrayOf(0xFFC2185B.toInt(), 0xFFD81B60.toInt()),
-            intArrayOf(0xFF00838F.toInt(), 0xFF00ACC1.toInt()),
-            intArrayOf(0xFF4527A0.toInt(), 0xFF5E35B1.toInt()),
-            intArrayOf(0xFFB71C1C.toInt(), 0xFFE53935.toInt()),
-            intArrayOf(0xFF1A237E.toInt(), 0xFF3949AB.toInt()),
-            intArrayOf(0xFF00695C.toInt(), 0xFF00897B.toInt()),
-            intArrayOf(0xFF0277BD.toInt(), 0xFF00838F.toInt()),
-            intArrayOf(0xFF4A148C.toInt(), 0xFF6A1B9A.toInt()),
-            intArrayOf(0xFFBF360C.toInt(), 0xFFE64A19.toInt()),
-            intArrayOf(0xFF1B5E20.toInt(), 0xFF2E7D32.toInt()),
-        )
     }
 }

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_build"
-        android:icon="@drawable/ic_hammer"
+        android:icon="@drawable/ic_compile"
         android:title="Build"
         app:showAsAction="ifRoom" />
     <item
