@@ -142,17 +142,11 @@
 }
 
 # Keep the original FQCN of any class that has native methods.
-# (Prevents -repackageclasses '' from moving them, which would
-# break JNI symbol resolution at runtime.)
+# -keep on the class itself prevents -repackageclasses ''
+# from moving it, which would break JNI symbol resolution.
 -keep class * {
     native <methods>;
 }
--keeppackagenames class * {
-    native <methods>;
-}
--keep class * extends android.app.Application { native <methods>; }
--keep class * extends android.app.Activity    { native <methods>; }
--keep class * extends android.app.Service     { native <methods>; }
 
 # ==========================================
 # ANNOTATIONS + SIGNED CODE
