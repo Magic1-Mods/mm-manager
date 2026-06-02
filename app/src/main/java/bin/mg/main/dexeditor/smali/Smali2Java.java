@@ -55,7 +55,7 @@ import com.android.tools.smali.dexlib2.writer.pool.DexPool;
 import com.android.tools.smali.smali2.Smali;
 import com.android.tools.smali.smali.SmaliOptions;
 
-import bin.mg.main.dexeditor.FileUtil;
+import bin.mg.main.dexeditor.utils.FileUtil;
 /*
 Author @developer-krushna
 */

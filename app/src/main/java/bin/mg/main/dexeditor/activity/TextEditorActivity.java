@@ -108,12 +108,12 @@ import bin.mg.main.dexeditor.utils.*;
 import bin.mg.main.R;
 
 
-import org.eclipse.tm4e.core.registry.IGrammarSourceMT;
-import org.eclipse.tm4e.core.registry.IThemeSourceMT;
+import org.eclipse.tm4e.core.registry.IGrammarSource;
+import org.eclipse.tm4e.core.registry.IThemeSource;
 
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
-import org.eclipse.tm4e.core.registry.IThemeSourceMT;
+import org.eclipse.tm4e.core.registry.IThemeSource;
 import androidx.appcompat.app.AppCompatActivity;
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver;
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry;
@@ -1374,7 +1374,7 @@ public class TextEditorActivity extends AppCompatActivity {
 	private TextMateColorScheme getColorScheme(String themeName) {
 		try {
 			AssetManager assets = getAssets();
-			return TextMateColorScheme.create(IThemeSourceMT.fromInputStream(assets.open("themes/" + themeName), themeName, null));
+			return TextMateColorScheme.create(IThemeSource.fromInputStream(assets.open("themes/" + themeName), themeName, null));
 		} catch (Exception ignored) {
 			return null;
 		}
@@ -1383,7 +1383,7 @@ public class TextEditorActivity extends AppCompatActivity {
 	private Language getSmaliLanguage(String themeName) {
 		try {
 			return TextMateLanguage.create(
-			IGrammarSourceMT.fromInputStream(getAssets().open("smali/syntaxes/smali.tmLanguage.json"), "smali.tmLanguage.json", null),
+			IGrammarSource.fromInputStream(getAssets().open("smali/syntaxes/smali.tmLanguage.json"), "smali.tmLanguage.json", null),
 			new InputStreamReader(getAssets().open("smali/language-configuration.json")),
 			getColorScheme(themeName).getThemeSource()
 			);
@@ -1888,7 +1888,7 @@ public class TextEditorActivity extends AppCompatActivity {
 		try {
 			scheme.loadTheme(
 			new ThemeModel(
-			IThemeSourceMT.fromInputStream(
+			IThemeSource.fromInputStream(
 			FileProviderRegistry.getInstance().tryGetInputStream(path),
 			path,
 			null),

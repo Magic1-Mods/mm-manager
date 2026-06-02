@@ -66,8 +66,6 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import com.blogspot.atifsoftwares.animatoolib.*;
-import com.github.angads25.filepicker.*;
-import com.github.chrisbanes.photoview.*;
 import com.google.android.material.appbar.AppBarLayout;
 import io.github.rosemoe.sora.*;
 import io.github.rosemoe.sora.langs.java.*;
