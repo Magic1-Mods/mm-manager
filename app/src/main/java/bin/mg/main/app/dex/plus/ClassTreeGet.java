@@ -1,6 +1,6 @@
 package bin.mg.main.app.dex.plus;
 
-import static bin.mg.main.app.dex.plus.Log.TAG;
+import static bin.mg.main.app.dex.plus.DexLog.TAG;
 import android.util.Log;
 import org.jf.dexlib2.DexFileFactory;
 import org.jf.dexlib2.Opcodes;

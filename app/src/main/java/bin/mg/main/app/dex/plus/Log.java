@@ -2,7 +2,7 @@ package bin.mg.main.app.dex.plus;
 
 import android.util.Log;
 
-public class Log {
+public class DexLog {
 
     public static final String TAG = "ANTIK";
 
@@ -11,4 +11,6 @@ public class Log {
         Log.i(TAG, String.valueOf(args));
 
     }
+
+}
 }
