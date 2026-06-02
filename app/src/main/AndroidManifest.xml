@@ -38,22 +38,7 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
-            android:name=".dexeditor.activity.DexEditorActivity"
-            android:exported="false"
-            android:parentActivityName=".MainActivity" />
-
-        <activity
-            android:name=".dexeditor.activity.TextEditorActivity"
-            android:exported="false"
-            android:parentActivityName=".MainActivity" />
-
-        <activity
-            android:name=".dexeditor.activity.JavaViewActivity"
-            android:exported="false"
-            android:parentActivityName=".MainActivity" />
-
-        <activity
-            android:name=".dexeditor.activity.SettingsActivity"
+            android:name=".app.dex.plus.DexActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 

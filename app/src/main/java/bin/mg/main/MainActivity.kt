@@ -1286,8 +1286,10 @@ class MainActivity : AppCompatActivity() {
     private fun openFile(file: FileItem) {
         val path = file.path
         if (FileUtils.isDexFile(path)) {
-            val intent = Intent(this, bin.mg.main.dexeditor.activity.DexEditorActivity::class.java)
-            intent.putExtra("SelectedDexFiles", arrayListOf(path))
+            val intent = Intent(this, bin.mg.main.app.dex.plus.DexActivity::class.java)
+            val dexMap = HashMap<String, String>()
+            dexMap[File(path).name] = path
+            intent.putExtra("dexP", dexMap)
             startActivity(intent)
         } else if (FileUtils.isTextFile(path)) {
             FileEditorActivity.start(this, path)
