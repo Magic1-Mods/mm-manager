@@ -4,7 +4,7 @@ import android.util.Log;
 
 public class DexLog {
 
-    public static final String TAG = "ANTIK";
+    public static final String TAG = "MM-DEXEDITOR-PLUS";
 
     public static void log(Object args) {
 

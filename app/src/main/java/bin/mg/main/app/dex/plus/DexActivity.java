@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.core.view.GravityCompat;
 
 import bin.mg.main.R;
 import com.google.android.material.tabs.TabLayout;
