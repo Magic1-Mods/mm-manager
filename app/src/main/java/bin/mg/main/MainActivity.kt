@@ -17,6 +17,8 @@ import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.Window
+import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
@@ -24,6 +26,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.ProgressBar
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -1286,11 +1290,7 @@ class MainActivity : AppCompatActivity() {
     private fun openFile(file: FileItem) {
         val path = file.path
         if (FileUtils.isDexFile(path)) {
-            val intent = Intent(this, bin.mg.main.app.dex.plus.DexActivity::class.java)
-            val dexMap = HashMap<String, String>()
-            dexMap[File(path).name] = path
-            intent.putExtra("dexP", dexMap)
-            startActivity(intent)
+            showOpenWithDialog(path)
         } else if (FileUtils.isTextFile(path)) {
             FileEditorActivity.start(this, path)
         } else if (FileUtils.isApkFile(path)) {
@@ -1310,28 +1310,125 @@ class MainActivity : AppCompatActivity() {
             try {
                 startActivity(intent)
             } catch (e: Exception) {
-                Toast.makeText(this, "No app found to install APK", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            val intent = Intent(Intent.ACTION_VIEW)
-            val uri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val fileUri = androidx.core.content.FileProvider.getUriForFile(
-                    this,
-                    "$packageName.fileprovider",
-                    File(path)
-                )
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                fileUri
-            } else {
-                Uri.fromFile(File(path))
-            }
-            intent.setDataAndType(uri, FileUtils.getMimeType(path))
-            try {
-                startActivity(intent)
-            } catch (e: Exception) {
                 Toast.makeText(this, "No app found", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun showOpenWithDialog(dexPath: String) {
+        val options = resources.getStringArray(R.array.open_with_dex_options)
+        val parent = File(dexPath).parentFile
+        val dexFiles = parent?.listFiles { f ->
+            f.isFile && (f.name.endsWith(".dex", ignoreCase = true) || f.name.endsWith(".DEX", ignoreCase = true))
+        }?.sortedBy { it.name } ?: arrayOf(File(dexPath))
+
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_open_with_dex, null)
+        val radioGroup = dialogView.findViewById<RadioGroup>(R.id.open_with_radio_group)
+
+        for (i in options.indices) {
+            val itemView = LayoutInflater.from(this).inflate(R.layout.item_open_with_radio, radioGroup, false)
+            val radio = itemView.findViewById<RadioButton>(R.id.open_with_item_radio)
+            val label = itemView.findViewById<TextView>(R.id.open_with_item_label)
+            radio.id = View.generateViewId()
+            radio.tag = i
+            label.text = options[i]
+            radioGroup.addView(itemView)
+        }
+        radioGroup.check(radioGroup.getChildAt(0).id)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Open with...")
+            .setView(dialogView)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("OK") { _, _ ->
+                val checkedId = radioGroup.checkedRadioButtonId
+                val selectedIndex = (0 until radioGroup.childCount)
+                    .firstOrNull { radioGroup.getChildAt(it).id == checkedId } ?: 0
+                handleOpenWithSelection(selectedIndex, options[selectedIndex], dexPath, dexFiles.toList())
+            }
+            .create()
+        dialog.show()
+    }
+
+    private fun handleOpenWithSelection(
+        optionIndex: Int,
+        optionLabel: String,
+        dexPath: String,
+        dexFiles: List<File>
+    ) {
+        when (optionIndex) {
+            0 -> {
+                if (dexFiles.size > 1) {
+                    showMultiDexDialog(dexFiles, optionIndex, optionLabel) { selected ->
+                        if (selected.isNotEmpty()) {
+                            launchDexActivity(selected)
+                        } else {
+                            launchDexActivity(listOf(File(dexPath)))
+                        }
+                    }
+                } else {
+                    launchDexActivity(listOf(File(dexPath)))
+                }
+            }
+            else -> Toast.makeText(this, "$optionLabel: Coming soon", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showMultiDexDialog(
+        dexFiles: List<File>,
+        optionIndex: Int,
+        optionLabel: String,
+        onResult: (List<File>) -> Unit
+    ) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_multidex, null)
+        val container = dialogView.findViewById<LinearLayout>(R.id.multidex_checkbox_container)
+        val btnSelectAll = dialogView.findViewById<Button>(R.id.multidex_select_all)
+        val btnCancel = dialogView.findViewById<Button>(R.id.multidex_cancel)
+        val btnOk = dialogView.findViewById<Button>(R.id.multidex_ok)
+
+        val checkBoxes = ArrayList<CheckBox>()
+        for (f in dexFiles) {
+            val itemView = LayoutInflater.from(this).inflate(R.layout.item_multidex_check, container, false)
+            val cb = itemView.findViewById<CheckBox>(R.id.multidex_item_check)
+            val name = itemView.findViewById<TextView>(R.id.multidex_item_name)
+            name.text = f.name
+            cb.tag = f
+            container.addView(itemView)
+            checkBoxes.add(cb)
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("MultiDex")
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        btnSelectAll.setOnClickListener {
+            val allChecked = checkBoxes.all { it.isChecked }
+            for (cb in checkBoxes) {
+                cb.isChecked = !allChecked
+            }
+        }
+        btnCancel.setOnClickListener { dialog.dismiss() }
+        btnOk.setOnClickListener {
+            val selected = checkBoxes.filter { it.isChecked }
+                .mapNotNull { it.tag as? File }
+            dialog.dismiss()
+            onResult(selected)
+        }
+        dialog.setOnCancelListener { onResult(emptyList()) }
+        dialog.show()
+    }
+
+    private fun launchDexActivity(dexFiles: List<File>) {
+        if (dexFiles.isEmpty()) return
+        val dexMap = LinkedHashMap<String, String>()
+        for (f in dexFiles) {
+            dexMap[f.name] = f.absolutePath
+        }
+        val intent = Intent(this, bin.mg.main.app.dex.plus.DexActivity::class.java)
+        intent.putExtra("dexP", dexMap)
+        startActivity(intent)
     }
 
     private fun showAboutDialog() {

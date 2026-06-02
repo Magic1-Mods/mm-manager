@@ -76,15 +76,29 @@
         <item>smali</item>
     </string-array>
 
-    <string name="dex_title">Class Tree</string>
+    <string name="dex_title">Dex Editor plus</string>
     <string name="dex_subtitle">Temporary project</string>
     <string name="tab_explorer">EXPLORER</string>
+    <string name="tab_history">HISTORY</string>
     <string name="tab_search">SEARCH</string>
     <string name="tab_strings">STRINGS</string>
+    <string name="no_history_yet">No history yet</string>
 
     <string-array name="dex_tab_titles">
         <item>@string/tab_explorer</item>
+        <item>@string/tab_history</item>
         <item>@string/tab_search</item>
         <item>@string/tab_strings</item>
+    </string-array>
+
+    <string-array name="open_with_dex_options">
+        <item>Dex Editor plus</item>
+        <item>Dex Editor</item>
+        <item>Repair dex file</item>
+        <item>Dex property</item>
+        <item>Dex2Jar</item>
+        <item>Dex2Smali</item>
+        <item>Decrypt dex strings</item>
+        <item>Translation mode</item>
     </string-array>
 </resources>

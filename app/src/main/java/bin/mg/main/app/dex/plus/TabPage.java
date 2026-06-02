@@ -99,11 +99,19 @@ public class TabPage extends PagerAdapter {
     @NonNull
     @Override
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
-        if (position != 0) {
+        if (position == 0) {
+            // EXPLORER tab - class tree RecyclerView
+        } else {
+            // HISTORY, SEARCH, STRINGS tabs - placeholder
             TextView tv = new TextView(ctx);
-            tv.setText(tabs[position]);
+            if (position == 1) {
+                tv.setText(R.string.no_history_yet);
+            } else {
+                tv.setText(tabs[position]);
+            }
             tv.setGravity(Gravity.CENTER);
             tv.setTextSize(18);
+            tv.setPadding(0, 60, 0, 0);
             container.addView(tv);
             return tv;
         }

@@ -11,8 +11,13 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:navigationIconTint="#FFFFFF" />
+        app:navigationIcon="@drawable/ic_menu"
+        app:navigationIconTint="#FFFFFF"
+        app:titleTextColor="#FFFFFF"
+        app:subtitleTextColor="#CCFFFFFF" />
 
     <FrameLayout
         android:layout_width="match_parent"
