@@ -75,7 +75,6 @@
         <item>shell</item>
         <item>smali</item>
     </string-array>
-</resources>
 
     <string name="dex_title">Class Tree</string>
     <string name="dex_subtitle">Temporary project</string>

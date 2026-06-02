@@ -1,4 +1,4 @@
-package bin.mg.main.core.info
+package bin.mg.main.app
 
 import android.graphics.drawable.Drawable
 import bin.mg.main.model.FileItem
