@@ -1,11 +1,15 @@
 package bin.mg.editor.rendering.input
 
 import android.os.Bundle
+import android.view.inputmethod.CompletionInfo
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputConnection
+import android.view.inputmethod.ExtractedText
+import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputContentInfo
+import android.view.inputmethod.InputConnection
 import bin.mg.editor.core.document.EditorBuffer
 
+@Suppress("NOTHING_TO_OVERRIDE")
 class EditorInputConnection(
     private val buffer: EditorBuffer,
     private val onUpdate: () -> Unit
@@ -84,11 +88,10 @@ class EditorInputConnection(
         return true
     }
 
-    override fun getExtractedText(request: android.view.inputmethod.ExtractedTextRequest?, flags: Int): android.view.inputmethod.ExtractedText {
-        val et = android.view.inputmethod.ExtractedText()
+    override fun getExtractedText(request: ExtractedTextRequest?, flags: Int): ExtractedText? {
+        val et = ExtractedText()
         et.text = buffer.getText()
         et.startOffset = 0
-        et.length = buffer.getText().length
         return et
     }
 
@@ -97,26 +100,14 @@ class EditorInputConnection(
         return true
     }
 
-    override fun clearComposition(): Boolean {
-        composingText = ""
-        composingStart = -1
-        composingEnd = -1
-        onUpdate()
+    override fun commitCompletion(text: CompletionInfo?): Boolean {
+        text?.text?.let { commitText(it, 0) }
         return true
     }
 
-    override fun deleteAllText(): Boolean {
-        val text = buffer.getText()
-        if (text.isNotEmpty()) {
-            buffer.cursorManager.moveTo(0, 0)
-            val lastLine = buffer.getLineCount() - 1
-            val lastCol = buffer.getLineText(lastLine).length
-            buffer.cursorManager.selection.set(0, 0, lastLine, lastCol)
-            buffer.deleteSelection()
-        }
-        onUpdate()
-        return true
-    }
+    override fun commitCorrection(info: android.view.inputmethod.CorrectionInfo?): Boolean = false
+
+    override fun commitContent(inputContentInfo: InputContentInfo, flags: Int, opts: Bundle?): Boolean = false
 
     override fun getCursorCapsMode(reqModes: Int): Int = 0
 
@@ -137,23 +128,17 @@ class EditorInputConnection(
 
     override fun getSelectedText(flags: Int): CharSequence? = null
 
-    override fun clearMetaKeyStates(states: Int): Boolean {
-        return true
-    }
+    override fun clearMetaKeyStates(states: Int): Boolean = true
 
     override fun reportFullscreenMode(enabled: Boolean): Boolean = true
 
     override fun performContextMenuAction(id: Int): Boolean = false
 
-    override fun requestCursorUpdates(cursorUpdateMode: Int): Boolean {
-        return true
-    }
-
-    override fun commitCorrection(info: android.view.inputmethod.CorrectionInfo?): Boolean = false
+    override fun requestCursorUpdates(cursorUpdateMode: Int): Boolean = true
 
     override fun performPrivateCommand(action: String?, extras: Bundle?): Boolean = false
 
-    override fun closeConnection() {}
+    override fun sendKeyEvent(event: android.view.KeyEvent?): Boolean = false
 
-    override fun commitContent(inputContentInfo: InputContentInfo, flags: Int, opts: Bundle?): Boolean = false
+    override fun closeConnection() {}
 }
