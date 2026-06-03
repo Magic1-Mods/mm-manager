@@ -40,7 +40,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.fastrecyclerview.FastScrollerRecyclerView
 import bin.mg.main.model.FileItem
 import bin.mg.main.ui.adapter.FileAdapter
-import bin.mg.main.ui.editor.FileEditorActivity
+import bin.mg.main.file.TextEditorActivity
 import bin.mg.main.utils.file.FileSystemHelper
 import bin.mg.main.utils.theme.ThemeManager
 import java.io.File
@@ -1179,7 +1179,7 @@ class MainActivity : AppCompatActivity() {
         if (FileUtils.isDexFile(path)) {
             showOpenWithDialog(path)
         } else if (FileUtils.isTextFile(path)) {
-            FileEditorActivity.start(this, path)
+            TextEditorActivity.start(this, path)
         } else if (FileUtils.isApkFile(path)) {
             val intent = Intent(Intent.ACTION_VIEW)
             val uri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

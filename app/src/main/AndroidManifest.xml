@@ -33,7 +33,7 @@
         </activity>
         
         <activity
-            android:name=".ui.editor.FileEditorActivity"
+            android:name=".file.TextEditorActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 

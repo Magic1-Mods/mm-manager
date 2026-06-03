@@ -1,0 +1,20 @@
+{
+    name: ["Lua", ".lua"]
+    comment: {startsWith: "--", addToContains: false}
+    contains: [
+        {match: /^#!.*/, 0: "comment"}
+        {match: /--\[(=*)\[(?:(?!\]\1\])[\s\S])*\]\1\]/, 0: "comment"}
+        {match: /--(?!\[=*\[).*/, 0: "comment"}
+        {match: /::[_a-zA-Z][_a-zA-Z\d]*::/, 0: "label"}
+        {match: /\b__[_a-zA-Z\d]+\b/, 0: "keyword2"}
+        {builtin: #C_QUOTED_STRING#}
+        {match: /\[(=*)\[(?:(?!\]\1\])[\s\S])*\]\1\]/, 0: "string"}
+        {number: "10|16|F|E|P"}
+        {match: keywordsToRegex("local global boolean number userdata"), 0: "type"}
+        {match: keywordsToRegex("true false nil"), 0: "constant"}
+        {match: keywordsToRegex("return then while and break goto do else elseif end for function if in not or repeat until thread table"), 0: "keyword"}
+        {match: /(?<!\.)\.(?=[_a-zA-Z])/, 0: "namespace"}
+        {match: /(?<!:):[_a-zA-Z][_a-zA-Z0-9]*\b/, 0: "variable"}
+        {match: /#(?=[_a-zA-Z])/, 0: "operator"}
+    ]
+}
