@@ -72,24 +72,26 @@
 }
 
 # ==========================================
-# SORA EDITOR — class names only, let members rename
+# SORA EDITOR — only public API we call directly
 # ==========================================
 -keep public class io.github.rosemoe.sora.widget.CodeEditor { public *; }
 -keep public class io.github.rosemoe.sora.widget.SymbolInputView { public *; }
--keep class io.github.rosemoe.sora.langs.textmate.** { *; }
--keep class io.github.rosemoe.sora.langs.java.** { *; }
--keep class io.github.rosemoe.sora.lang.EmptyLanguage { *; }
--keep class io.github.rosemoe.sora.widget.schemes.EditorColorScheme { *; }
--keep class io.github.rosemoe.sora.widget.component.EditorTextActionWindow { *; }
--keep class io.github.rosemoe.sora.event.** { *; }
+-keep public class io.github.rosemoe.sora.widget.schemes.EditorColorScheme { public *; }
+-keep public class io.github.rosemoe.sora.langs.textmate.TextMateLanguage { public *; }
+-keep public class io.github.rosemoe.sora.langs.textmate.TextMateColorScheme { public *; }
+-keep public class io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry { public *; }
+-keep public class io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel { *; }
+-keep public class io.github.rosemoe.sora.langs.java.JavaLanguage { public *; }
+-keep public class io.github.rosemoe.sora.lang.EmptyLanguage { public *; }
+-keep public class io.github.rosemoe.sora.widget.component.EditorTextActionWindow { *; }
 -dontwarn io.github.rosemoe.sora.**
 
 # ==========================================
-# TM4E — TextMate engine internals
+# TM4E — only what sora-editor TextMate calls
 # ==========================================
--keep class org.eclipse.tm4e.core.** { *; }
--keep class org.eclipse.tm4e.theme.** { *; }
--keep class org.eclipse.tm4e.registry.** { *; }
+-keep public class org.eclipse.tm4e.core.registry.IGrammarSource { public *; }
+-keep public class org.eclipse.tm4e.core.registry.IThemeSource { public *; }
+-keep public class org.eclipse.tm4e.core.registry.Registry { public *; }
 -dontwarn org.eclipse.tm4e.**
 
 # ==========================================
