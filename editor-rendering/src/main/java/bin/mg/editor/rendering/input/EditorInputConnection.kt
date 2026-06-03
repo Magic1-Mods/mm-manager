@@ -1,6 +1,7 @@
 package bin.mg.editor.rendering.input
 
 import android.os.Bundle
+import android.os.Handler
 import android.view.inputmethod.CompletionInfo
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedText
@@ -145,4 +146,6 @@ class EditorInputConnection(
     override fun sendKeyEvent(event: android.view.KeyEvent?): Boolean = false
 
     override fun closeConnection() {}
+
+    override fun getHandler(): Handler? = null
 }
