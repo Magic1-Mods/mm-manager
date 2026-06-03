@@ -81,6 +81,29 @@ class EditorBuffer(initialText: String = "") {
 
     fun length(): Int = buffer.length()
 
+    fun lineStartOffset(line: Int): Int = buffer.lineStartOffset(line)
+
+    fun lineEndOffset(line: Int): Int = buffer.lineEndOffset(line)
+
+    fun insert(offset: Int, text: String) {
+        buffer.insert(offset, text)
+        notifyContentChanged(0, buffer.lineCount() - 1, buffer.lineCount())
+    }
+
+    fun delete(offset: Int, length: Int) {
+        buffer.delete(offset, length)
+        notifyContentChanged(0, buffer.lineCount() - 1, buffer.lineCount())
+    }
+
+    fun replace(offset: Int, length: Int, text: String) {
+        buffer.replace(offset, length, text)
+        notifyContentChanged(0, buffer.lineCount() - 1, buffer.lineCount())
+    }
+
+    fun substring(offset: Int, length: Int): String = buffer.substring(offset, length)
+
+    fun charAt(offset: Int): Char = buffer.charAt(offset)
+
     private fun notifyContentChanged(startLine: Int, endLine: Int, newLineCount: Int) {
         for (l in documentListeners) l.onContentChanged(startLine, endLine, newLineCount)
     }
