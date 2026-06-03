@@ -16,9 +16,7 @@
 # OBFUSCATION — max obfuscation
 # ==========================================
 -repackageclasses ''
--flattenpackagehierarchy ''
 -overloadaggressively
--useuniqueclassmembernames
 -dontusemixedcaseclassnames
 
 # ==========================================
@@ -109,16 +107,15 @@
 
 # ==========================================
 # DEXLIB2 — vendored source, R8 can analyze
-# Only keep entry points, let R8 strip rest
 # ==========================================
--keep class org.jf.dexlib2 DexFileFactory { *; }
+-keep class org.jf.dexlib2.DexFileFactory { *; }
 -keep class org.jf.dexlib2.dexbacked.DexBackedDexFile { public *; }
 -keep class org.jf.dexlib2.writer.pool.DexPool { public *; }
 -keep class org.jf.dexlib2.builder.DexBuilder { public *; }
 -dontwarn org.jf.dexlib2.**
 
 # ==========================================
-# GUAVA — minimal, only core classes
+# GUAVA — minimal
 # ==========================================
 -keep class com.google.common.base.** { *; }
 -keep class com.google.common.collect.** { *; }
