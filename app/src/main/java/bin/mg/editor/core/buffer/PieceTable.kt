@@ -103,7 +103,7 @@ class PieceTable(initialText: String = "") {
         if (line < 0 || line >= lineStarts.size) return ""
         val start = lineStarts[line]
         val end = lineEndOffset(line)
-        return substring(start, end - start).trimEnd('\r')
+        return substring(start, end - start).trimEnd('\r', '\n')
     }
 
     fun insert(offset: Int, text: String) {
@@ -337,9 +337,11 @@ class PieceTable(initialText: String = "") {
         for (c in text) if (c == '\n') newlines++
         if (newlines == 0) return
         val insertLine = offsetToLine(offset)
+        var searchFrom = 0
         for (i in 0 until newlines) {
-            val nlPos = text.indexOf('\n', if (i == 0) 0 else text.indexOf('\n') + 1)
+            val nlPos = text.indexOf('\n', searchFrom)
             if (nlPos >= 0) {
+                searchFrom = nlPos + 1
                 val lineOffset = offset + nlPos + 1
                 val insertIdx = (insertLine + i + 1).coerceAtMost(lineStarts.size)
                 lineStarts.add(insertIdx, lineOffset)
