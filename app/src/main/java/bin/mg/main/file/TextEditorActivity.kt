@@ -18,6 +18,8 @@ import android.view.Window
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.view.ViewTreeObserver
+import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -258,6 +260,9 @@ class TextEditorActivity : AppCompatActivity(),
             saveCursorPosition()
         }
 
+        // Keyboard visibility listener
+        setupKeyboardVisibility()
+
         filenameText?.setOnClickListener {
             currentFilePath?.let { path ->
                 val clip = android.content.ClipData.newPlainText("filename", File(path).name)
@@ -267,27 +272,100 @@ class TextEditorActivity : AppCompatActivity(),
         }
     }
 
+    private fun setupKeyboardVisibility() {
+        val rootView = findViewById<View>(android.R.id.content)
+        rootView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                val heightDiff = rootView.rootView.height - rootView.height
+                val isKeyboardVisible = heightDiff > 150
+                val symbolBar = findViewById<LinearLayout>(R.id.symbol_bar) ?: return
+                symbolBar.visibility = if (isKeyboardVisible) View.GONE else View.VISIBLE
+            }
+        })
+    }
+
     private fun setupSymbolBar() {
-        val symbols = arrayOf("\u2190", "\u2192", "/", "+", "-", "*", "=", "<", ">", "{", "}", "(", ")", ";", "#")
         val container = symbolInput ?: return
         container.removeAllViews()
+        container.orientation = android.widget.LinearLayout.VERTICAL
+        container.setPadding(0, 4.dp, 0, 4.dp)
 
         val isDark = ThemeManager.isDarkMode(this)
-        val btnColor = if (isDark) 0xFFCCCCCC.toInt() else 0xFF333333.toInt()
-        val btnBgColor = if (isDark) 0xFF2A2A2A.toInt() else 0xFFE8E8E8.toInt()
+        val textColor = if (isDark) 0xFFCCCCCC.toInt() else 0xFF333333.toInt()
+        val bgColor = if (isDark) 0xFF1A1A1A.toInt() else 0xFFE8E8E8.toInt()
+        val dividerColor = if (isDark) 0xFF333333.toInt() else 0xFFCCCCCC.toInt()
 
-        for (sym in symbols) {
-            val btn = ImageButton(this).apply {
-                layoutParams = LinearLayout.LayoutParams(0, 44.dp, 1f)
-                setBackgroundColor(Color.TRANSPARENT)
-                setColorFilter(btnColor)
-                contentDescription = sym
+        container.setBackgroundColor(bgColor)
+
+        // Row 1: → / + - * = <
+        val row1Symbols = arrayOf("\u2192", "/", "+", "-", "*", "=", "<")
+        addSymbolRow(container, row1Symbols, textColor, dividerColor)
+
+        // Row 2: > " ' ; | \ _
+        val row2Symbols = arrayOf(">", "\"", "'", ";", "|", "\\", "_")
+        addSymbolRow(container, row2Symbols, textColor, dividerColor)
+
+        // Row 3: ( ) [ ] { } ...
+        val row3Symbols = arrayOf("(", ")", "[", "]", "{", "}", "...")
+        addSymbolRow(container, row3Symbols, textColor, dividerColor)
+    }
+
+    private fun addSymbolRow(container: android.widget.LinearLayout, symbols: Array<String>, textColor: Int, dividerColor: Int) {
+        val row = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        for ((index, sym) in symbols.withIndex()) {
+            val btn = android.widget.TextView(this).apply {
+                text = sym
+                setTextColor(textColor)
+                textSize = 16f
+                typeface = Typeface.MONOSPACE
+                gravity = Gravity.CENTER
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    0,
+                    40.dp,
+                    1f
+                )
+                setPadding(4.dp, 4.dp, 4.dp, 4.dp)
+                isClickable = true
+                isFocusable = true
+                setBackgroundResource(android.R.drawable.list_selector_background)
                 setOnClickListener {
                     codeEditor?.buffer?.insertText(sym)
+                    codeEditor?.requestFocus()
                 }
             }
-            container.addView(btn)
+            row.addView(btn)
+
+            // Add divider between symbols (not after last)
+            if (index < symbols.size - 1) {
+                val divider = View(this).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        1,
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                    )
+                    setBackgroundColor(dividerColor)
+                }
+                row.addView(divider)
+            }
         }
+
+        container.addView(row)
+
+        // Add thin divider between rows
+        val rowDivider = View(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                1
+            )
+            setBackgroundColor(dividerColor)
+        }
+        container.addView(rowDivider)
     }
 
     private val Int.dp: Int get() = (this * resources.displayMetrics.density).toInt()
