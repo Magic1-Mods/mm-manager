@@ -2,7 +2,9 @@ package bin.mg.editor.rendering.input
 
 import android.os.Bundle
 import android.os.Handler
+import android.view.KeyEvent
 import android.view.inputmethod.CompletionInfo
+import android.view.inputmethod.CorrectionInfo
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedText
 import android.view.inputmethod.ExtractedTextRequest
@@ -10,7 +12,6 @@ import android.view.inputmethod.InputContentInfo
 import android.view.inputmethod.InputConnection
 import bin.mg.editor.core.document.EditorBuffer
 
-@Suppress("NOTHING_TO_OVERRIDE")
 class EditorInputConnection(
     private val buffer: EditorBuffer,
     private val onUpdate: () -> Unit
@@ -32,18 +33,7 @@ class EditorInputConnection(
     }
 
     override fun setComposingText(text: CharSequence?, newCursorPosition: Int): Boolean {
-        if (composingStart >= 0 && composingEnd > composingStart) {
-            val cursor = buffer.cursorManager.cursor
-            val savedLine = cursor.line
-            val savedCol = cursor.column
-            buffer.cursorManager.moveTo(composingStart / 100000, composingStart % 100000)
-            buffer.cursorManager.selection.set(
-                composingStart / 100000, composingStart % 100000,
-                composingEnd / 100000, composingEnd % 100000
-            )
-            buffer.deleteSelection()
-            cursor.moveTo(savedLine, savedCol)
-        }
+        removeComposing()
         if (text.isNullOrEmpty()) {
             composingText = ""
             composingStart = -1
@@ -60,10 +50,14 @@ class EditorInputConnection(
         return true
     }
 
+    override fun setComposingRegion(start: Int, end: Int): Boolean {
+        composingStart = start
+        composingEnd = end
+        return true
+    }
+
     override fun finishComposingText(): Boolean {
-        composingText = ""
-        composingStart = -1
-        composingEnd = -1
+        removeComposing()
         onUpdate()
         return true
     }
@@ -110,7 +104,7 @@ class EditorInputConnection(
         return true
     }
 
-    override fun commitCorrection(info: android.view.inputmethod.CorrectionInfo?): Boolean = false
+    override fun commitCorrection(info: CorrectionInfo?): Boolean = false
 
     override fun commitContent(inputContentInfo: InputContentInfo, flags: Int, opts: Bundle?): Boolean = false
 
@@ -143,9 +137,27 @@ class EditorInputConnection(
 
     override fun performPrivateCommand(action: String?, extras: Bundle?): Boolean = false
 
-    override fun sendKeyEvent(event: android.view.KeyEvent?): Boolean = false
+    override fun sendKeyEvent(event: KeyEvent?): Boolean = false
 
     override fun closeConnection() {}
 
     override fun getHandler(): Handler? = null
+
+    private fun removeComposing() {
+        if (composingStart >= 0 && composingEnd > composingStart) {
+            val cursor = buffer.cursorManager.cursor
+            val savedLine = cursor.line
+            val savedCol = cursor.column
+            buffer.cursorManager.moveTo(composingStart / 100000, composingStart % 100000)
+            buffer.cursorManager.selection.set(
+                composingStart / 100000, composingStart % 100000,
+                composingEnd / 100000, composingEnd % 100000
+            )
+            buffer.deleteSelection()
+            cursor.moveTo(savedLine, savedCol)
+        }
+        composingText = ""
+        composingStart = -1
+        composingEnd = -1
+    }
 }
