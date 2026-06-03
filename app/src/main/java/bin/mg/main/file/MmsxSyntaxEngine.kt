@@ -3,13 +3,10 @@ package bin.mg.main.file
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
-import android.text.style.StyleSpan
 import android.graphics.Color
 import android.graphics.Typeface
-import io.github.rosemoe.sora.widget.CodeEditor
+import bin.mg.editor.core.buffer.TextSpan
+import bin.mg.editor.rendering.view.CodeEditorView
 import java.util.regex.Pattern
 
 class MmsxSyntaxEngine(private val context: Context) {
@@ -42,7 +39,7 @@ class MmsxSyntaxEngine(private val context: Context) {
     @Volatile var isHighlighting = false
         private set
 
-    // Hardcoded fallback: extension → syntax name (used when .mmsx files haven't loaded yet)
+    // Hardcoded fallback: extension -> syntax name (used when .mmsx files haven't loaded yet)
     private val builtinExtMap = mapOf(
         "java" to "java", "kt" to "kotlin", "kts" to "kotlin",
         "py" to "python", "pyw" to "python",
@@ -59,7 +56,6 @@ class MmsxSyntaxEngine(private val context: Context) {
         "go" to "go",
         "rs" to "rust",
         "swift" to "swift",
-        "kt" to "kotlin",
         "rb" to "ruby",
         "php" to "php",
         "sql" to "sql",
@@ -203,7 +199,6 @@ class MmsxSyntaxEngine(private val context: Context) {
     }
 
     private fun extractName(content: String): String? {
-        // Match: name: ["LanguageName", ".ext1", ".ext2"]
         val pattern = Pattern.compile("name\\s*:\\s*\\[\\s*\"([^\"]+)\"")
         val matcher = pattern.matcher(content)
         return if (matcher.find()) matcher.group(1) else null
@@ -211,7 +206,6 @@ class MmsxSyntaxEngine(private val context: Context) {
 
     private fun extractExtensions(content: String): List<String> {
         val extensions = mutableListOf<String>()
-        // Match: name: ["Language", ".ext1", ".ext2"] — extensions start with a dot
         val pattern = Pattern.compile("\"\\.(\\w+)\"")
         val matcher = pattern.matcher(content)
         while (matcher.find()) {
@@ -269,100 +263,120 @@ class MmsxSyntaxEngine(private val context: Context) {
         return styles
     }
 
-    fun highlight(editor: CodeEditor, syntaxName: String?) {
-        if (syntaxName == null || syntaxName == "text") return
+    /**
+     * Tokenize a single line into TextSpan objects using this syntax definition.
+     * This does NOT call setText — it only returns span data for the renderer.
+     */
+    fun tokenizeLine(line: String, def: SyntaxDef): List<TextSpan> {
+        if (line.isEmpty()) return emptyList()
+        val spans = mutableListOf<TextSpan>()
+
+        // Priority order: keywords, keyword2, strings, numbers, annotations, constants, meta, comments
+        val taken = BooleanArray(line.length) { false }
+
+        fun addSpans(pattern: Pattern, color: Int, bold: Boolean = false, italic: Boolean = false) {
+            val matcher = pattern.matcher(line)
+            while (matcher.find()) {
+                val start = matcher.start()
+                val end = matcher.end()
+                if (start < end && end <= line.length) {
+                    var overlap = false
+                    for (i in start until end) { if (taken[i]) { overlap = true; break } }
+                    if (!overlap) {
+                        spans.add(TextSpan(start, end, color, bold, italic))
+                        for (i in start until end) taken[i] = true
+                    }
+                }
+            }
+        }
+
+        // Comments (highest priority — they eat everything after them)
+        if (def.commentLine != null) {
+            val lineCommentPattern = Pattern.compile(Pattern.quote(def.commentLine) + ".*$", Pattern.MULTILINE)
+            addSpans(lineCommentPattern, styleColors["comment"]!!, italic = true)
+        }
+        if (def.commentBlockStart != null && def.commentBlockEnd != null) {
+            val blockPattern = Pattern.compile(
+                Pattern.quote(def.commentBlockStart) + "[\\s\\S]*?" + Pattern.quote(def.commentBlockEnd),
+                Pattern.DOTALL
+            )
+            addSpans(blockPattern, styleColors["comment"]!!, italic = true)
+        }
+
+        // Strings
+        for (pattern in def.stringPatterns) {
+            addSpans(pattern, styleColors["string"]!!)
+        }
+
+        // Keywords
+        if (def.keywords.isNotEmpty()) {
+            val keywordPattern = Pattern.compile("\\b(${def.keywords.joinToString("|") { Pattern.quote(it) }})\\b")
+            addSpans(keywordPattern, styleColors["keyword"]!!, bold = true)
+        }
+
+        if (def.keyword2.isNotEmpty()) {
+            val keyword2Pattern = Pattern.compile("\\b(${def.keyword2.joinToString("|") { Pattern.quote(it) }})\\b")
+            addSpans(keyword2Pattern, styleColors["keyword2"]!!)
+        }
+
+        // Numbers
+        def.numberPattern?.let { addSpans(it, styleColors["number"]!!) }
+
+        // Annotations
+        def.annotationPattern?.let { addSpans(it, styleColors["meta"]!!) }
+
+        // Constants
+        def.constantPattern?.let { addSpans(it, styleColors["constant"]!!) }
+
+        // Meta patterns
+        for (pattern in def.metaPatterns) {
+            addSpans(pattern, styleColors["meta"]!!)
+        }
+
+        return spans
+    }
+
+    /**
+     * Highlight the entire document. Produces a Map<lineIndex, List<TextSpan>>
+     * and calls editor.setTextSyntaxSpans() without modifying content.
+     */
+    fun highlight(editor: CodeEditorView, syntaxName: String?) {
+        if (syntaxName == null || syntaxName == "text") {
+            editor.setTextSyntaxSpans(emptyMap())
+            return
+        }
         if (isHighlighting) return
         val def = loadedDefs[syntaxName] ?: return
 
         highlightRunnable?.let { mainHandler.removeCallbacks(it) }
         highlightRunnable = Runnable { performHighlight(editor, def) }
-        mainHandler.postDelayed(highlightRunnable!!, 300)
+        mainHandler.postDelayed(highlightRunnable!!, 150)
     }
 
-    private fun performHighlight(editor: CodeEditor, def: SyntaxDef) {
+    private fun performHighlight(editor: CodeEditorView, def: SyntaxDef) {
         if (isHighlighting) return
         isHighlighting = true
         try {
-            val text = editor.text ?: run { isHighlighting = false; return }
-            val content = text.toString()
-            if (content.isEmpty()) { isHighlighting = false; return }
+            val buffer = editor.buffer
+            val lineCount = buffer.getLineCount()
+            val spansMap = mutableMapOf<Int, List<TextSpan>>()
 
-            // Save cursor position
-            val cursorLine = editor.cursor.leftLine
-            val cursorCol = editor.cursor.leftColumn
-            val selStart = editor.cursor.left
-            val selEnd = editor.cursor.right
-
-            val ssb = SpannableStringBuilder(content)
-            val commentColor = styleColors["comment"] ?: Color.parseColor("#808080")
-            val stringColor = styleColors["string"] ?: Color.parseColor("#6A8759")
-            val numberColor = styleColors["number"] ?: Color.parseColor("#6897BB")
-            val keywordColor = styleColors["keyword"] ?: Color.parseColor("#CC7832")
-            val metaColor = styleColors["meta"] ?: Color.parseColor("#BBB529")
-            val constantColor = styleColors["constant"] ?: Color.parseColor("#9876AA")
-            val keyword2Color = styleColors["keyword2"] ?: Color.parseColor("#AE8ABE")
-
-            if (def.keywords.isNotEmpty()) {
-                val keywordPattern = Pattern.compile("\\b(${def.keywords.joinToString("|") { Pattern.quote(it) }})\\b")
-                applyPatternStyle(ssb, content, keywordPattern, keywordColor, Typeface.BOLD)
-            }
-
-            if (def.keyword2.isNotEmpty()) {
-                val keyword2Pattern = Pattern.compile("\\b(${def.keyword2.joinToString("|") { Pattern.quote(it) }})\\b")
-                applyPatternStyle(ssb, content, keyword2Pattern, keyword2Color, Typeface.NORMAL)
-            }
-
-            for (pattern in def.stringPatterns) {
-                applyPatternStyle(ssb, content, pattern, stringColor, Typeface.NORMAL)
-            }
-
-            def.numberPattern?.let { applyPatternStyle(ssb, content, it, numberColor, Typeface.NORMAL) }
-            def.annotationPattern?.let { applyPatternStyle(ssb, content, it, metaColor, Typeface.NORMAL) }
-            def.constantPattern?.let { applyPatternStyle(ssb, content, it, constantColor, Typeface.NORMAL) }
-
-            for (pattern in def.metaPatterns) {
-                applyPatternStyle(ssb, content, pattern, metaColor, Typeface.NORMAL)
-            }
-
-            if (def.commentLine != null) {
-                val lineCommentPattern = Pattern.compile(Pattern.quote(def.commentLine) + ".*$", Pattern.MULTILINE)
-                applyPatternStyle(ssb, content, lineCommentPattern, commentColor, Typeface.ITALIC)
-            }
-
-            if (def.commentBlockStart != null && def.commentBlockEnd != null) {
-                val blockPattern = Pattern.compile(
-                    Pattern.quote(def.commentBlockStart) + "[\\s\\S]*?" + Pattern.quote(def.commentBlockEnd),
-                    Pattern.DOTALL
-                )
-                applyPatternStyle(ssb, content, blockPattern, commentColor, Typeface.ITALIC)
-            }
-
-            // Set text without triggering recursive highlights
-            editor.setText(ssb)
-
-            // Restore cursor position
-            try {
-                if (cursorLine < editor.lineCount) {
-                    editor.setSelection(cursorLine, cursorCol.coerceAtMost(editor.text.getColumnCount(cursorLine)))
+            for (lineIdx in 0 until lineCount) {
+                val lineText = buffer.getLineText(lineIdx)
+                if (lineText.isNotEmpty()) {
+                    val lineSpans = tokenizeLine(lineText, def)
+                    if (lineSpans.isNotEmpty()) {
+                        spansMap[lineIdx] = lineSpans
+                    }
                 }
-            } catch (_: Exception) {}
+            }
+
+            mainHandler.post {
+                editor.setTextSyntaxSpans(spansMap)
+                isHighlighting = false
+            }
         } catch (_: Exception) {
-        } finally {
             isHighlighting = false
-        }
-    }
-
-    private fun applyPatternStyle(ssb: SpannableStringBuilder, content: String, pattern: Pattern, color: Int, style: Int) {
-        val matcher = pattern.matcher(content)
-        while (matcher.find()) {
-            val start = matcher.start()
-            val end = matcher.end()
-            if (start < end && end <= ssb.length) {
-                ssb.setSpan(ForegroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                if (style != Typeface.NORMAL) {
-                    ssb.setSpan(StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
         }
     }
 }

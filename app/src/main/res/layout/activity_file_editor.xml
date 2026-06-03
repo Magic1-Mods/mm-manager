@@ -194,14 +194,12 @@
                 android:background="?attr/selectableItemBackgroundBorderless" />
         </LinearLayout>
 
-        <!-- ── Code Editor (sora-editor) ── -->
-        <io.github.rosemoe.sora.widget.CodeEditor
+        <!-- ── Code Editor (custom Canvas-based) ── -->
+        <bin.mg.editor.rendering.view.CodeEditorView
             android:id="@+id/code_editor"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            app:lnPanelPosition="left"
-            app:lnPanelPositionMode="follow" />
+            android:layout_weight="1" />
 
         <!-- ── Symbol / shortcut bar ── -->
         <LinearLayout
@@ -211,11 +209,13 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <io.github.rosemoe.sora.widget.SymbolInputView
+            <LinearLayout
                 android:id="@+id/symbol_input"
                 android:layout_width="0dp"
                 android:layout_height="44dp"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical" />
         </LinearLayout>
 
     </LinearLayout>

@@ -22,21 +22,14 @@ import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.ImageButton
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.ColorUtils
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import io.github.rosemoe.sora.event.ContentChangeEvent
-import io.github.rosemoe.sora.event.EventReceiver
-import io.github.rosemoe.sora.event.SelectionChangeEvent
-import io.github.rosemoe.sora.event.Unsubscribe
-import io.github.rosemoe.sora.lang.EmptyLanguage
-import io.github.rosemoe.sora.widget.CodeEditor
-import io.github.rosemoe.sora.widget.SymbolInputView
-import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import bin.mg.editor.rendering.view.CodeEditorView
 import bin.mg.main.R
 import bin.mg.main.utils.theme.ThemeManager
 import java.io.BufferedReader
@@ -52,8 +45,8 @@ class TextEditorActivity : AppCompatActivity(),
     SyntaxSelectorFragment.OnSyntaxSelectedListener {
 
     // ─── Views ────────────────────────────────────────────────────────────────
-    private var codeEditor: CodeEditor? = null
-    private var symbolInput: SymbolInputView? = null
+    private var codeEditor: CodeEditorView? = null
+    private var symbolInput: LinearLayout? = null
     private var filenameText: TextView? = null
     private var lineNoEncodingText: TextView? = null
     private var searchBar: LinearLayout? = null
@@ -98,21 +91,20 @@ class TextEditorActivity : AppCompatActivity(),
 
         syntaxEngine = MmsxSyntaxEngine(this)
         syntaxEngine.onSyntaxesLoaded = {
-            // After syntaxes load, if we have a pending syntax to apply, do it now
             if (syntaxLoadPending) {
                 syntaxLoadPending = false
                 val path = currentFilePath
                 if (path != null) {
                     currentSyntax = syntaxEngine.getSyntaxForFile(path) ?: detectSyntaxFallback(path)
                     fileSyntaxes[path] = currentSyntax
-                    loadLanguageForSyntax(currentSyntax)
+                    syntaxEngine.highlight(codeEditor!!, currentSyntax)
                 }
             }
         }
         executor.execute { syntaxEngine.loadAllSyntaxes() }
 
         initViews()
-        applyTheme()          // ← single call wires all colours
+        applyTheme()
         setupDrawer()
         setupToolbar()
         setupSearchBar()
@@ -128,15 +120,6 @@ class TextEditorActivity : AppCompatActivity(),
 
     // ─── Theme ────────────────────────────────────────────────────────────────
 
-    /**
-     * Apply ThemeManager colours to every surface.
-     *
-     * Rules:
-     *  • followSystemTheme == true  →  isDarkMode() drives everything (dark bg or light bg)
-     *  • followSystemTheme == false →  use the selected palette's primary/secondary colours
-     *    for the toolbar & drawer header; the editor body gets dark-mode colours always
-     *    (standard code-editor look) unless the system is in light mode AND no palette chosen.
-     */
     private fun applyTheme() {
         val isDark       = ThemeManager.isDarkMode(this)
         val followSystem = ThemeManager.followSystemTheme(this)
@@ -151,26 +134,19 @@ class TextEditorActivity : AppCompatActivity(),
         val window: Window = window
         window.statusBarColor = toolbarBg
 
-        // Icon / text tint on toolbar — always white (toolbar is always coloured/dark)
         val toolbarIconTint = 0xFFFFFFFF.toInt()
-        // Filename text on info bar
         val filenameColor   = if (isDark) 0xFFCCCCCC.toInt() else ThemeManager.lighten(primary, 0.80f)
         val statsColor      = ThemeManager.statsText(this)
-        // Symbol bar
         val symbolBarBg     = if (isDark) 0xFF1A1A1A.toInt() else ThemeManager.lighten(primary, 0.94f)
-        // Search bar
         val searchBg        = if (isDark) 0xFF1E1E1E.toInt() else ThemeManager.lighten(primary, 0.96f)
         val searchTextColor = if (isDark) 0xFFDDDDDD.toInt() else 0xFF222222.toInt()
         val searchHintColor = if (isDark) 0xFF666666.toInt() else ThemeManager.lighten(primary, 0.55f)
         val searchIconTint  = if (isDark) 0xFF888888.toInt() else ThemeManager.lighten(primary, 0.45f)
-        // Main editor body bg
         val editorBodyBg    = if (isDark) 0xFF1E1E1E.toInt() else 0xFFFAFAFA.toInt()
 
-        // ── Root / main content background ──────────────────────────────────
         val mainContent = findViewById<LinearLayout>(R.id.editor_main_content)
         mainContent?.setBackgroundColor(editorBodyBg)
 
-        // ── Toolbar ──────────────────────────────────────────────────────────
         val toolbar = findViewById<LinearLayout>(R.id.editor_toolbar)
         toolbar?.setBackgroundColor(toolbarBg)
 
@@ -179,16 +155,13 @@ class TextEditorActivity : AppCompatActivity(),
             findViewById<ImageView>(id)?.setColorFilter(toolbarIconTint)
         }
 
-        // ── Info bar ─────────────────────────────────────────────────────────
         val infoBar = findViewById<LinearLayout>(R.id.editor_info_bar)
         infoBar?.setBackgroundColor(infoBg)
         filenameText?.setTextColor(filenameColor)
         lineNoEncodingText?.setTextColor(statsColor)
 
-        // ── Divider ──────────────────────────────────────────────────────────
         findViewById<View>(R.id.editor_divider)?.setBackgroundColor(dividerColor)
 
-        // ── Search bar ───────────────────────────────────────────────────────
         searchBar?.setBackgroundColor(searchBg)
         searchInput?.setTextColor(searchTextColor)
         searchInput?.setHintTextColor(searchHintColor)
@@ -197,74 +170,49 @@ class TextEditorActivity : AppCompatActivity(),
             findViewById<ImageView>(id)?.setColorFilter(searchIconTint)
         }
 
-        // ── Symbol bar ───────────────────────────────────────────────────────
         val symbolBar = findViewById<LinearLayout>(R.id.symbol_bar)
         symbolBar?.setBackgroundColor(symbolBarBg)
-        symbolInput?.let { siv ->
-            siv.setBackgroundColor(symbolBarBg)
-            siv.setTextColor(if (isDark) 0xFFCCCCCC.toInt() else ThemeManager.darken(primary, 0.3f))
-        }
 
-        // ── Drawer ───────────────────────────────────────────────────────────
         val drawer = findViewById<LinearLayout>(R.id.editor_drawer)
-        // Drawer body is lighter than header
         val drawerBodyBg = if (isDark) 0xFF242424.toInt() else 0xFFFFFFFF.toInt()
         drawer?.setBackgroundColor(drawerBodyBg)
 
         val drawerHeader = findViewById<LinearLayout>(R.id.drawer_header)
-        drawerHeader?.setBackgroundColor(toolbarBg)          // same colour as toolbar
+        drawerHeader?.setBackgroundColor(toolbarBg)
 
         for (id in listOf(R.id.btn_drawer_edit, R.id.btn_drawer_overflow)) {
             findViewById<ImageView>(id)?.setColorFilter(toolbarIconTint)
         }
 
-        // ── Editor colour scheme ─────────────────────────────────────────────
-        applyEditorColorScheme(isDark)
+        // Apply editor colors to our custom CodeEditorView
+        applyEditorColors(isDark)
     }
 
-    /**
-     * Build and apply an EditorColorScheme.
-     * Dark  → VS-Dark / JetBrains palette (matches screenshot).
-     * Light → clean light palette.
-     */
-    private fun applyEditorColorScheme(isDark: Boolean) {
-        val scheme = EditorColorScheme()
+    private fun applyEditorColors(isDark: Boolean) {
+        val editor = codeEditor ?: return
         if (isDark) {
-            scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND,           Color.parseColor("#1E1E1E"))
-            scheme.setColor(EditorColorScheme.CURRENT_LINE,               Color.parseColor("#2A2D2E"))
-            scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND,     Color.parseColor("#1E1E1E"))
-            scheme.setColor(EditorColorScheme.LINE_NUMBER,                Color.parseColor("#606366"))
-            scheme.setColor(EditorColorScheme.LINE_NUMBER_CURRENT,        Color.parseColor("#A0A0A0"))
-            scheme.setColor(EditorColorScheme.TEXT_NORMAL,                Color.parseColor("#A9B7C6"))
-            scheme.setColor(EditorColorScheme.TEXT_SELECTED,              Color.parseColor("#214283"))
-            scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND,   Color.parseColor("#214283"))
-            scheme.setColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND,    Color.parseColor("#32593A"))
-            scheme.setColor(EditorColorScheme.FUNCTION_NAME,              Color.parseColor("#FFC66D"))
-            scheme.setColor(EditorColorScheme.KEYWORD,                    Color.parseColor("#CC7832"))
-            scheme.setColor(EditorColorScheme.LITERAL,                    Color.parseColor("#6A8759"))
-            scheme.setColor(EditorColorScheme.ANNOTATION,                 Color.parseColor("#BBB529"))
-            scheme.setColor(EditorColorScheme.COMMENT,                    Color.parseColor("#808080"))
+            editor.renderer.backgroundColor = Color.parseColor("#1E1E1E")
+            editor.renderer.textColor = Color.parseColor("#A9B7C6")
+            editor.renderer.lineNumberColor = Color.parseColor("#606366")
+            editor.renderer.lineNumberCurrentColor = Color.parseColor("#A0A0A0")
+            editor.renderer.gutterBgColor = Color.parseColor("#1E1E1E")
+            editor.renderer.currentLineColor = Color.parseColor("#2A2D2E")
+            editor.renderer.selectionColor = Color.parseColor("#214283")
+            editor.renderer.cursorColor = Color.parseColor("#A9B7C6")
+            editor.renderer.separatorColor = Color.parseColor("#333333")
         } else {
-            // Light scheme
-            scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND,           Color.parseColor("#FAFAFA"))
-            scheme.setColor(EditorColorScheme.CURRENT_LINE,               Color.parseColor("#F0F4FF"))
-            scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND,     Color.parseColor("#F5F5F5"))
-            scheme.setColor(EditorColorScheme.LINE_NUMBER,                Color.parseColor("#AAAAAA"))
-            scheme.setColor(EditorColorScheme.LINE_NUMBER_CURRENT,        Color.parseColor("#666666"))
-            scheme.setColor(EditorColorScheme.TEXT_NORMAL,                Color.parseColor("#212121"))
-            scheme.setColor(EditorColorScheme.TEXT_SELECTED,              Color.parseColor("#BBDEFB"))
-            scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND,   Color.parseColor("#BBDEFB"))
-            scheme.setColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND,    Color.parseColor("#C8E6C9"))
-            scheme.setColor(EditorColorScheme.FUNCTION_NAME,              Color.parseColor("#795548"))
-            scheme.setColor(EditorColorScheme.KEYWORD,                    Color.parseColor("#0000FF"))
-            scheme.setColor(EditorColorScheme.LITERAL,                    Color.parseColor("#2E7D32"))
-            scheme.setColor(EditorColorScheme.ANNOTATION,                 Color.parseColor("#B0681E"))
-            scheme.setColor(EditorColorScheme.COMMENT,                    Color.parseColor("#888888"))
+            editor.renderer.backgroundColor = Color.parseColor("#FAFAFA")
+            editor.renderer.textColor = Color.parseColor("#212121")
+            editor.renderer.lineNumberColor = Color.parseColor("#AAAAAA")
+            editor.renderer.lineNumberCurrentColor = Color.parseColor("#666666")
+            editor.renderer.gutterBgColor = Color.parseColor("#F5F5F5")
+            editor.renderer.currentLineColor = Color.parseColor("#F0F4FF")
+            editor.renderer.selectionColor = Color.parseColor("#BBDEFB")
+            editor.renderer.cursorColor = Color.parseColor("#212121")
+            editor.renderer.separatorColor = Color.parseColor("#E0E0E0")
         }
-        codeEditor?.setColorScheme(scheme)
     }
 
-    /** Darken a packed ARGB colour by [factor] (0..1). */
     private fun darkenSurface(color: Int, factor: Float): Int {
         val a = (color shr 24) and 0xFF
         val r = maxOf(0, ((color shr 16 and 0xFF) * (1 - factor)).toInt())
@@ -288,34 +236,27 @@ class TextEditorActivity : AppCompatActivity(),
 
         applyEditorSettings()
 
-        codeEditor?.subscribeEvent(ContentChangeEvent::class.java,
-            object : EventReceiver<ContentChangeEvent> {
-                override fun onReceive(event: ContentChangeEvent, unsubscribe: Unsubscribe) {
-                    if (!justSaved && !syntaxEngine.isHighlighting) {
-                        isModified = true
-                        updateInfoBar()
-                    }
-                    justSaved = false
-                    handleUndoRedoState()
-                    if (currentSyntax != "text" && !syntaxEngine.isHighlighting) {
-                        syntaxEngine.highlight(codeEditor!!, currentSyntax)
-                    }
-                }
-            })
+        // Wire symbol bar buttons
+        setupSymbolBar()
 
-        codeEditor?.subscribeEvent(SelectionChangeEvent::class.java,
-            object : EventReceiver<SelectionChangeEvent> {
-                override fun onReceive(event: SelectionChangeEvent, unsubscribe: Unsubscribe) {
-                    updateCursorPosition()
-                    saveCursorPosition()
-                }
-            })
+        // Content change callback
+        codeEditor?.onContentChanged = { _ ->
+            if (!justSaved && !syntaxEngine.isHighlighting) {
+                isModified = true
+                updateInfoBar()
+            }
+            justSaved = false
+            handleUndoRedoState()
+            if (currentSyntax != "text" && !syntaxEngine.isHighlighting) {
+                syntaxEngine.highlight(codeEditor!!, currentSyntax)
+            }
+        }
 
-        symbolInput?.bindEditor(codeEditor)
-        symbolInput?.addSymbols(
-            arrayOf("\u2192", "/", "+", "-", "*", "=", "<", ">"),
-            arrayOf("\u2192", "/", "+", "-", "*", "=", "<", ">")
-        )
+        // Cursor move callback
+        codeEditor?.onCursorMoved = { line, col ->
+            lineNoEncodingText?.text = "${line + 1}:${col + 1}   UTF-8"
+            saveCursorPosition()
+        }
 
         filenameText?.setOnClickListener {
             currentFilePath?.let { path ->
@@ -325,6 +266,31 @@ class TextEditorActivity : AppCompatActivity(),
             }
         }
     }
+
+    private fun setupSymbolBar() {
+        val symbols = arrayOf("\u2190", "\u2192", "/", "+", "-", "*", "=", "<", ">", "{", "}", "(", ")", ";", "#")
+        val container = symbolInput ?: return
+        container.removeAllViews()
+
+        val isDark = ThemeManager.isDarkMode(this)
+        val btnColor = if (isDark) 0xFFCCCCCC.toInt() else 0xFF333333.toInt()
+        val btnBgColor = if (isDark) 0xFF2A2A2A.toInt() else 0xFFE8E8E8.toInt()
+
+        for (sym in symbols) {
+            val btn = ImageButton(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, 44.dp, 1f)
+                setBackgroundColor(Color.TRANSPARENT)
+                setColorFilter(btnColor)
+                contentDescription = sym
+                setOnClickListener {
+                    codeEditor?.buffer?.insertText(sym)
+                }
+            }
+            container.addView(btn)
+        }
+    }
+
+    private val Int.dp: Int get() = (this * resources.displayMetrics.density).toInt()
 
     // ─── Drawer ───────────────────────────────────────────────────────────────
 
@@ -344,7 +310,6 @@ class TextEditorActivity : AppCompatActivity(),
         drawerLayout?.addDrawerListener(toggle)
         toggle.syncState()
 
-        // Wire up drawer header buttons
         findViewById<ImageView>(R.id.btn_drawer_edit)?.setOnClickListener {
             drawerLayout?.closeDrawers()
         }
@@ -406,7 +371,7 @@ class TextEditorActivity : AppCompatActivity(),
         lastSearchQuery = query
         if (query.isEmpty()) { searchCount?.text = ""; return }
         executor.execute {
-            val text = codeEditor?.text?.toString() ?: return@execute
+            val text = codeEditor?.getText() ?: return@execute
             val count = text.split(query).size - 1
             mainHandler.post {
                 searchCount?.text = if (count > 0) "$count found" else "No match"
@@ -418,41 +383,33 @@ class TextEditorActivity : AppCompatActivity(),
         val query = lastSearchQuery
         if (query.isEmpty()) return
         val editor = codeEditor ?: return
-        val text = editor.text.toString()
+        val text = editor.getText()
 
         if (forward) {
-            val idx = text.indexOf(query, editor.cursor.right).takeIf { it >= 0 }
+            val idx = text.indexOf(query, editor.buffer.cursorManager.cursor.column).takeIf { it >= 0 }
                 ?: text.indexOf(query, 0)
             if (idx >= 0) {
-                val lc = offsetToLineCol(editor, idx)
-                editor.setSelectionRegion(lc.first, lc.second, lc.first, lc.second + query.length)
+                val line = editor.buffer.offsetToLine(idx)
+                val col = editor.buffer.offsetToColumn(idx)
+                editor.setSelection(line, col, line, col + query.length)
             }
         } else {
-            val idx = text.lastIndexOf(query, maxOf(0, editor.cursor.left - 1)).takeIf { it >= 0 }
+            val idx = text.lastIndexOf(query, maxOf(0, editor.buffer.cursorManager.cursor.column - 1)).takeIf { it >= 0 }
                 ?: text.lastIndexOf(query)
             if (idx >= 0) {
-                val lc = offsetToLineCol(editor, idx)
-                editor.setSelectionRegion(lc.first, lc.second, lc.first, lc.second + query.length)
+                val line = editor.buffer.offsetToLine(idx)
+                val col = editor.buffer.offsetToColumn(idx)
+                editor.setSelection(line, col, line, col + query.length)
             }
         }
-    }
-
-    private fun offsetToLineCol(editor: CodeEditor, offset: Int): Pair<Int, Int> {
-        val text = editor.text
-        var remaining = offset
-        for (line in 0 until text.lineCount) {
-            val lineLen = text.getColumnCount(line) + 1
-            if (remaining < lineLen) return Pair(line, remaining)
-            remaining -= lineLen
-        }
-        return Pair(0, 0)
     }
 
     // ─── Cursor / position history ────────────────────────────────────────────
 
     private fun saveCursorPosition() {
         val editor = codeEditor ?: return
-        val pos = Pair(editor.cursor.leftLine, editor.cursor.leftColumn)
+        val cursor = editor.buffer.cursorManager.cursor
+        val pos = Pair(cursor.line, cursor.column)
         if (currentFileIndex >= 0 && currentFileIndex < openFiles.size)
             filePositions[openFiles[currentFileIndex]] = pos
         if (positionIndex < positionHistory.size - 1)
@@ -463,10 +420,18 @@ class TextEditorActivity : AppCompatActivity(),
     }
 
     private fun navigateToPreviousPosition() {
-        if (positionIndex > 0) { positionIndex--; codeEditor?.setSelection(positionHistory[positionIndex].first, positionHistory[positionIndex].second) }
+        if (positionIndex > 0) {
+            positionIndex--
+            val pos = positionHistory[positionIndex]
+            codeEditor?.setCursorPosition(pos.first, pos.second)
+        }
     }
     private fun navigateToNextPosition() {
-        if (positionIndex < positionHistory.size - 1) { positionIndex++; codeEditor?.setSelection(positionHistory[positionIndex].first, positionHistory[positionIndex].second) }
+        if (positionIndex < positionHistory.size - 1) {
+            positionIndex++
+            val pos = positionHistory[positionIndex]
+            codeEditor?.setCursorPosition(pos.first, pos.second)
+        }
     }
 
     // ─── Popup menus ─────────────────────────────────────────────────────────
@@ -482,8 +447,8 @@ class TextEditorActivity : AppCompatActivity(),
         popup.menu.add(0, 7, 6, "Decrease indent")
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                1 -> { codeEditor?.copyText(); true }
-                2 -> { codeEditor?.cutLine(); true }
+                1 -> { copyCurrentLine(); true }
+                2 -> { cutCurrentLine(); true }
                 3 -> { deleteCurrentLine(); true }
                 4 -> { duplicateCurrentLine(); true }
                 5 -> { toggleComment(); true }
@@ -517,7 +482,7 @@ class TextEditorActivity : AppCompatActivity(),
                 2  -> { navigateToPreviousPosition(); true }
                 3  -> { navigateToNextPosition(); true }
                 4  -> { showJumpToLineDialog(); true }
-                5  -> { item.isChecked = !item.isChecked; prefs.edit().putBoolean("word_wrap", item.isChecked).apply(); codeEditor?.setWordwrap(item.isChecked); true }
+                5  -> { item.isChecked = !item.isChecked; prefs.edit().putBoolean("word_wrap", item.isChecked).apply(); codeEditor?.setWordWrap(item.isChecked); true }
                 6  -> { item.isChecked = !item.isChecked; isReadOnly = item.isChecked; codeEditor?.setEditable(!isReadOnly); true }
                 7  -> { item.isChecked = !item.isChecked; isSmoothMode = item.isChecked; true }
                 8  -> { item.isChecked = !item.isChecked; isCodeCompletion = item.isChecked; true }
@@ -538,7 +503,7 @@ class TextEditorActivity : AppCompatActivity(),
         currentSyntax = syntaxName
         if (currentFileIndex >= 0 && currentFileIndex < openFiles.size)
             fileSyntaxes[openFiles[currentFileIndex]] = syntaxName
-        loadLanguageForSyntax(syntaxName)
+        syntaxEngine.highlight(codeEditor!!, currentSyntax)
     }
 
     private fun showPreferencesDialog() { EditorPreferencesFragment().show(supportFragmentManager, "prefs") }
@@ -556,7 +521,7 @@ class TextEditorActivity : AppCompatActivity(),
             .setTitle("Jump to line")
             .setView(input)
             .setPositiveButton("Go") { _, _ ->
-                input.text.toString().toIntOrNull()?.let { if (it > 0) codeEditor?.jumpToLine(it - 1) }
+                input.text.toString().toIntOrNull()?.let { if (it > 0) codeEditor?.scrollToLine(it - 1) }
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -566,15 +531,10 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun applyEditorSettings() {
         val editor = codeEditor ?: return
-        editor.setTextSize(prefs.getInt("font_size", 14).toFloat())
-        editor.setWordwrap(prefs.getBoolean("word_wrap", false))
-        editor.setLineNumberEnabled(prefs.getBoolean("show_line_numbers", true))
-        editor.setLineNumberMarginLeft(2f)
+        editor.setFontSize(prefs.getInt("font_size", 14).toFloat())
+        editor.setWordWrap(prefs.getBoolean("word_wrap", false))
+        editor.setLineNumbers(prefs.getBoolean("show_line_numbers", true))
         editor.setLineSpacing(2.0f, 1.1f)
-        editor.setHighlightCurrentLine(true)
-        editor.setTypefaceText(Typeface.MONOSPACE)
-        editor.setTypefaceLineNumber(Typeface.MONOSPACE)
-        try { editor.getComponent(EditorTextActionWindow::class.java).setEnabled(false) } catch (_: Exception) {}
     }
 
     // ─── Undo / redo state ────────────────────────────────────────────────────
@@ -592,8 +552,8 @@ class TextEditorActivity : AppCompatActivity(),
     // ─── Info bar ─────────────────────────────────────────────────────────────
 
     private fun updateCursorPosition() {
-        val cursor = codeEditor?.cursor ?: return
-        lineNoEncodingText?.text = "${cursor.leftLine + 1}:${cursor.leftColumn + 1}   UTF-8"
+        val cursor = codeEditor?.buffer?.cursorManager?.cursor ?: return
+        lineNoEncodingText?.text = "${cursor.line + 1}:${cursor.column + 1}   UTF-8"
     }
 
     private fun updateInfoBar() { updateCursorPosition(); updateFilenameTab() }
@@ -610,7 +570,7 @@ class TextEditorActivity : AppCompatActivity(),
         val dialog = ProgressDialog.show(this, "Saving", "Writing file…", true)
         executor.execute {
             try {
-                val content = codeEditor?.text?.toString() ?: ""
+                val content = codeEditor?.getText() ?: ""
                 Files.write(Paths.get(path), content.toByteArray(StandardCharsets.UTF_8))
                 fileContents[path] = content
                 mainHandler.post {
@@ -628,50 +588,101 @@ class TextEditorActivity : AppCompatActivity(),
 
     // ─── Line editing helpers ────────────────────────────────────────────────
 
+    private fun copyCurrentLine() {
+        val editor = codeEditor ?: return
+        val line = editor.buffer.cursorManager.cursor.line
+        val lineText = editor.buffer.getLineText(line)
+        val clip = android.content.ClipData.newPlainText("line", lineText)
+        getSystemService(android.content.ClipboardManager::class.java)?.setPrimaryClip(clip)
+        Toast.makeText(this, "Line copied", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun cutCurrentLine() {
+        val editor = codeEditor ?: return
+        val line = editor.buffer.cursorManager.cursor.line
+        val lineText = editor.buffer.getLineText(line)
+        val clip = android.content.ClipData.newPlainText("line", lineText)
+        getSystemService(android.content.ClipboardManager::class.java)?.setPrimaryClip(clip)
+        deleteCurrentLine()
+    }
+
     private fun deleteCurrentLine() {
         val editor = codeEditor ?: return
-        val line = editor.cursor.leftLine
-        val lc   = editor.lineCount
+        val line = editor.buffer.cursorManager.cursor.line
+        val lineCount = editor.buffer.getLineCount()
+        val lineText = editor.buffer.getLineText(line)
         when {
-            lc <= 1 -> { editor.setSelection(0, 0); editor.setText("") }
-            line == lc - 1 -> { editor.setSelectionRegion(line-1, editor.text.getColumnCount(line-1), line, editor.text.getColumnCount(line)); editor.deleteText() }
-            else           -> { editor.setSelectionRegion(line, 0, line+1, 0); editor.deleteText() }
+            lineCount <= 1 -> {
+                editor.setText("")
+            }
+            line == lineCount - 1 -> {
+                // Last line: delete from end of previous line to end of this line
+                val prevLine = line - 1
+                val prevLen = editor.buffer.getLineText(prevLine).length
+                editor.setSelection(prevLine, prevLen, line, lineText.length)
+                editor.buffer.deleteSelection()
+            }
+            else -> {
+                // Middle line: delete from start of this line to start of next line
+                val nextLineStart = lineText.length + 1 // +1 for the newline
+                editor.setSelection(line, 0, line + 1, 0)
+                editor.buffer.deleteSelection()
+            }
         }
+        editor.invalidate()
+        handleUndoRedoState()
     }
 
     private fun duplicateCurrentLine() {
         val editor = codeEditor ?: return
-        val line = editor.cursor.leftLine
-        editor.text.insert(line, editor.text.getColumnCount(line), "\n${editor.text.getLineString(line)}")
+        val line = editor.buffer.cursorManager.cursor.line
+        val lineText = editor.buffer.getLineText(line)
+        val col = lineText.length
+        editor.buffer.cursorManager.moveTo(line, col)
+        editor.buffer.insertText("\n$lineText")
+        editor.invalidate()
     }
 
     private fun toggleComment() {
         val editor = codeEditor ?: return
-        val line = editor.cursor.leftLine
-        val s = editor.text.getLineString(line)
+        val line = editor.buffer.cursorManager.cursor.line
+        val s = editor.buffer.getLineText(line)
         val i = s.indexOfFirst { !it.isWhitespace() }
         if (i < 0) return
         if (s[i] == '#') {
             val end = if (i + 1 < s.length && s[i + 1] == ' ') i + 2 else i + 1
-            editor.setSelectionRegion(line, i, line, end); editor.deleteText()
+            editor.setSelection(line, i, line, end)
+            editor.buffer.deleteSelection()
         } else {
-            editor.setSelection(line, i); editor.commitText("# ")
+            editor.buffer.cursorManager.moveTo(line, i)
+            editor.buffer.insertText("# ")
         }
+        editor.invalidate()
     }
 
     private fun indentLine() {
         val editor = codeEditor ?: return
-        editor.setSelection(editor.cursor.leftLine, 0); editor.commitText("    ")
+        val line = editor.buffer.cursorManager.cursor.line
+        editor.buffer.cursorManager.moveTo(line, 0)
+        editor.buffer.insertText("    ")
+        editor.invalidate()
     }
 
     private fun unindentLine() {
         val editor = codeEditor ?: return
-        val line = editor.cursor.leftLine
-        val s = editor.text.getLineString(line)
+        val line = editor.buffer.cursorManager.cursor.line
+        val s = editor.buffer.getLineText(line)
         when {
-            s.startsWith("    ") -> { editor.setSelectionRegion(line, 0, line, 4); editor.deleteText() }
-            s.startsWith("\t")   -> { editor.setSelectionRegion(line, 0, line, 1); editor.deleteText() }
+            s.startsWith("    ") -> {
+                editor.setSelection(line, 0, line, 4)
+                editor.buffer.deleteSelection()
+            }
+            s.startsWith("\t") -> {
+                editor.setSelection(line, 0, line, 1)
+                editor.buffer.deleteSelection()
+            }
         }
+        editor.invalidate()
     }
 
     // ─── Multi-file management ───────────────────────────────────────────────
@@ -679,12 +690,11 @@ class TextEditorActivity : AppCompatActivity(),
     private fun openFile(path: String) {
         val existing = openFiles.indexOf(path)
         if (existing >= 0) { switchToFile(existing); return }
-        // Save current file state before switching
         if (currentFileIndex >= 0 && currentFileIndex < openFiles.size) {
             val old = openFiles[currentFileIndex]
-            fileContents[old] = codeEditor?.text?.toString() ?: ""
-            val c = codeEditor?.cursor
-            if (c != null) filePositions[old] = Pair(c.leftLine, c.leftColumn)
+            fileContents[old] = codeEditor?.getText() ?: ""
+            val c = codeEditor?.buffer?.cursorManager?.cursor
+            if (c != null) filePositions[old] = Pair(c.line, c.column)
             fileSyntaxes[old] = currentSyntax
         }
         openFiles.add(path)
@@ -697,12 +707,11 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun switchToFile(index: Int) {
         if (index < 0 || index >= openFiles.size || index == currentFileIndex) return
-        // Save current file state
         if (currentFileIndex >= 0 && currentFileIndex < openFiles.size) {
             val old = openFiles[currentFileIndex]
-            fileContents[old] = codeEditor?.text?.toString() ?: ""
-            val c = codeEditor?.cursor
-            if (c != null) filePositions[old] = Pair(c.leftLine, c.leftColumn)
+            fileContents[old] = codeEditor?.getText() ?: ""
+            val c = codeEditor?.buffer?.cursorManager?.cursor
+            if (c != null) filePositions[old] = Pair(c.line, c.column)
             fileSyntaxes[old] = currentSyntax
         }
         currentFileIndex = index
@@ -715,14 +724,16 @@ class TextEditorActivity : AppCompatActivity(),
         if (content != null) {
             codeEditor?.setText(content)
             filePositions[path]?.let { pos ->
-                if (pos.first < codeEditor?.lineCount ?: 0) {
-                    codeEditor?.setSelection(pos.first, pos.second.coerceAtMost(codeEditor?.text?.getColumnCount(pos.first) ?: 0))
+                val lineCount = codeEditor?.buffer?.getLineCount() ?: 0
+                if (pos.first < lineCount) {
+                    val maxCol = codeEditor?.buffer?.getLineText(pos.first)?.length ?: 0
+                    codeEditor?.setCursorPosition(pos.first, pos.second.coerceAtMost(maxCol))
                 }
             }
             isModified = false
             handleUndoRedoState()
             updateInfoBar()
-            if (currentSyntax != "text") syntaxEngine.highlight(codeEditor!!, currentSyntax)
+            syntaxEngine.highlight(codeEditor!!, currentSyntax)
         } else {
             loadFile()
         }
@@ -743,9 +754,7 @@ class TextEditorActivity : AppCompatActivity(),
     private fun updateDrawerList() { openFileAdapter?.setFiles(openFiles, currentFileIndex) }
 
     private fun detectSyntaxForFile(path: String): String {
-        // First try the loaded .mmsx syntaxes
         syntaxEngine.getSyntaxForFile(path)?.let { return it }
-        // Fallback to hardcoded mapping
         return detectSyntaxFallback(path)
     }
 
@@ -794,7 +803,6 @@ class TextEditorActivity : AppCompatActivity(),
             fileSyntaxes[path] = currentSyntax
             loadFile()
         } else {
-            // Syntaxes still loading — use fallback for now, re-apply after load
             currentSyntax = detectSyntaxFallback(path)
             fileSyntaxes[path] = currentSyntax
             syntaxLoadPending = true
@@ -821,27 +829,12 @@ class TextEditorActivity : AppCompatActivity(),
                     isModified = false
                     handleUndoRedoState()
                     updateInfoBar()
-                    if (currentSyntax != "text") syntaxEngine.highlight(codeEditor!!, currentSyntax)
+                    syntaxEngine.highlight(codeEditor!!, currentSyntax)
                 }
             } catch (e: Exception) {
                 mainHandler.post { dialog.dismiss(); Toast.makeText(this@TextEditorActivity, "Failed to load file", Toast.LENGTH_SHORT).show() }
             }
         }
-    }
-
-    private fun loadLanguageForSyntax(syntax: String) {
-        val editor = codeEditor ?: return
-        if (!prefs.getBoolean("syntax_highlighting", true) || syntax == "text") {
-            editor.setEditorLanguage(EmptyLanguage()); return
-        }
-        try {
-            if (syntaxEngine.getDef(syntax) != null) {
-                editor.setEditorLanguage(EmptyLanguage())
-                syntaxEngine.highlight(editor, syntax)
-            } else {
-                editor.setEditorLanguage(EmptyLanguage())
-            }
-        } catch (_: Exception) { editor.setEditorLanguage(EmptyLanguage()) }
     }
 
     // ─── Close guard ─────────────────────────────────────────────────────────

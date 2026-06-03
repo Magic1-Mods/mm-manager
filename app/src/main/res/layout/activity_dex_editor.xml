@@ -95,11 +95,9 @@
         android:background="#1E1E1E"
         android:visibility="gone">
 
-        <io.github.rosemoe.sora.widget.CodeEditor
+        <bin.mg.editor.rendering.view.CodeEditorView
             android:id="@+id/dex_editor"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:lnPanelPosition="left"
-            app:lnPanelPositionMode="follow" />
+            android:layout_height="match_parent" />
     </FrameLayout>
 </LinearLayout>

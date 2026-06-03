@@ -72,19 +72,11 @@
 }
 
 # ==========================================
-# SORA EDITOR — minimal API surface
+# CUSTOM EDITOR MODULES
 # ==========================================
--keep public class io.github.rosemoe.sora.widget.CodeEditor { public *; }
--keep public class io.github.rosemoe.sora.widget.SymbolInputView { public *; }
--keep public class io.github.rosemoe.sora.widget.schemes.EditorColorScheme { public *; }
--keep public class io.github.rosemoe.sora.langs.textmate.TextMateLanguage { public *; }
--keep public class io.github.rosemoe.sora.langs.textmate.TextMateColorScheme { public *; }
--keep public class io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry { public *; }
--keep public class io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel { *; }
--keep public class io.github.rosemoe.sora.langs.java.JavaLanguage { public *; }
--keep public class io.github.rosemoe.sora.lang.EmptyLanguage { public *; }
--keep public class io.github.rosemoe.sora.widget.component.EditorTextActionWindow { *; }
--dontwarn io.github.rosemoe.sora.**
+-keep class bin.mg.editor.core.** { *; }
+-keep class bin.mg.editor.rendering.** { *; }
+-keep class bin.mg.editor.syntax.** { *; }
 
 # ==========================================
 # TM4E — TextMate grammar engine
