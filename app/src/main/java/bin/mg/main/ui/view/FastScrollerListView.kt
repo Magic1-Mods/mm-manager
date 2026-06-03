@@ -237,9 +237,6 @@ class FastScrollerListView @JvmOverloads constructor(
             stateList.addState(pressed, ColorDrawable(0))
             stateList.addState(selected, transition)
             stateList.addState(intArrayOf(), ColorDrawable(0))
-            if (android.os.Build.VERSION.SDK_INT >= 23) {
-                stateList.exitFadeDuration = 300
-            }
 
             return stateList
         }
