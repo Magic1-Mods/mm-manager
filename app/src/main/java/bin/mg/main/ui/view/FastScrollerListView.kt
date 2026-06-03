@@ -58,12 +58,8 @@ class FastScrollerListView @JvmOverloads constructor(
 
         setOnScrollListener(InternalScrollListener(this))
 
-        // Save parent's fast scroll state before disabling system scroller
-        val parentHadFastScroll = super<AbsListView>.isFastScrollEnabled
-        if (parentHadFastScroll) {
-            isFastScrollEnabled = true
-        }
-        super<AbsListView>.setFastScrollEnabled(false)
+        // Disable system fast scroll — we draw our own
+        isFastScrollEnabled = false
 
         if (!isInEditMode) {
             selector = createListSelector(context)
