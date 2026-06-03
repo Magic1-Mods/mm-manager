@@ -57,8 +57,4 @@ class LayoutEngine(private val textPaint: TextPaint) {
     fun measureTextWidth(text: String): Float {
         return textPaint.measureText(text)
     }
-
-    fun getLineHeight(): Float = lineHeight
-
-    fun getGutterWidth(): Float = gutterWidth
 }
