@@ -39,7 +39,8 @@ class MmsxSyntaxEngine(private val context: Context) {
         private set
     var onSyntaxesLoaded: (() -> Unit)? = null
 
-    private var isHighlighting = false
+    @Volatile var isHighlighting = false
+        private set
 
     // Hardcoded fallback: extension → syntax name (used when .mmsx files haven't loaded yet)
     private val builtinExtMap = mapOf(
