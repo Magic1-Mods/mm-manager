@@ -441,19 +441,25 @@ class TextEditorActivity : AppCompatActivity(),
         popup.menu.add(0, 1, 0, "Copy line")
         popup.menu.add(0, 2, 1, "Cut line")
         popup.menu.add(0, 3, 2, "Delete line")
-        popup.menu.add(0, 4, 3, "Duplicate line")
-        popup.menu.add(0, 5, 4, "Toggle comment")
-        popup.menu.add(0, 6, 5, "Increase indent")
-        popup.menu.add(0, 7, 6, "Decrease indent")
+        popup.menu.add(0, 4, 3, "Empty line")
+        popup.menu.add(0, 5, 4, "Replace line")
+        popup.menu.add(0, 6, 5, "Duplicate line")
+        popup.menu.add(0, 7, 6, "Convert to uppercase")
+        popup.menu.add(0, 8, 7, "Convert to lowercase")
+        popup.menu.add(0, 9, 8, "Increase indent")
+        popup.menu.add(0, 10, 9, "Decrease indent")
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 1 -> { copyCurrentLine(); true }
                 2 -> { cutCurrentLine(); true }
                 3 -> { deleteCurrentLine(); true }
-                4 -> { duplicateCurrentLine(); true }
-                5 -> { toggleComment(); true }
-                6 -> { indentLine(); true }
-                7 -> { unindentLine(); true }
+                4 -> { emptyCurrentLine(); true }
+                5 -> { replaceCurrentLine(); true }
+                6 -> { duplicateCurrentLine(); true }
+                7 -> { convertCase(true); true }
+                8 -> { convertCase(false); true }
+                9 -> { indentLine(); true }
+                10 -> { unindentLine(); true }
                 else -> false
             }
         }
@@ -608,79 +614,132 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun deleteCurrentLine() {
         val editor = codeEditor ?: return
-        val line = editor.buffer.cursorManager.cursor.line
-        val lineCount = editor.buffer.getLineCount()
-        val lineText = editor.buffer.getLineText(line)
+        val buffer = editor.buffer
+        val line = buffer.cursorManager.cursor.line
+        val lineCount = buffer.getLineCount()
         when {
             lineCount <= 1 -> {
                 editor.setText("")
             }
             line == lineCount - 1 -> {
-                // Last line: delete from end of previous line to end of this line
                 val prevLine = line - 1
-                val prevLen = editor.buffer.getLineText(prevLine).length
-                editor.setSelection(prevLine, prevLen, line, lineText.length)
-                editor.buffer.deleteSelection()
+                val prevLen = buffer.getLineText(prevLine).length
+                val lineStart = buffer.lineStartOffset(line)
+                val lineText = buffer.getLineText(line)
+                val totalLen = lineText.length
+                if (lineStart > 0 && lineStart - 1 < buffer.length()) {
+                    editor.setSelection(prevLine, prevLen, prevLine, prevLen)
+                    buffer.cursorManager.moveTo(prevLine, prevLen)
+                    val deleteOffset = (lineStart - 1).coerceAtMost(buffer.length())
+                    val deleteLen = (totalLen + 1).coerceAtMost(buffer.length() - deleteOffset)
+                    buffer.delete(deleteOffset, deleteLen)
+                }
             }
             else -> {
-                // Middle line: delete from start of this line to start of next line
-                val nextLineStart = lineText.length + 1 // +1 for the newline
-                editor.setSelection(line, 0, line + 1, 0)
-                editor.buffer.deleteSelection()
+                val lineStart = buffer.lineStartOffset(line)
+                val nextLineStart = buffer.lineStartOffset(line + 1)
+                val deleteLen = (nextLineStart - lineStart).coerceAtMost(buffer.length() - lineStart)
+                buffer.delete(lineStart, deleteLen)
             }
         }
         editor.invalidate()
         handleUndoRedoState()
     }
 
+    private fun emptyCurrentLine() {
+        val editor = codeEditor ?: return
+        val buffer = editor.buffer
+        val line = buffer.cursorManager.cursor.line
+        val lineStart = buffer.lineStartOffset(line)
+        val lineText = buffer.getLineText(line)
+        val deleteLen = lineText.length
+        if (deleteLen > 0) {
+            buffer.delete(lineStart, deleteLen)
+            buffer.cursorManager.moveTo(line, 0)
+        }
+        editor.invalidate()
+        handleUndoRedoState()
+    }
+
+    private fun replaceCurrentLine() {
+        val editor = codeEditor ?: return
+        val buffer = editor.buffer
+        val line = buffer.cursorManager.cursor.line
+        val input = EditText(this)
+        input.hint = "New line content"
+        input.setText(buffer.getLineText(line))
+        input.selectAll()
+        AlertDialog.Builder(this)
+            .setTitle("Replace line")
+            .setView(input)
+            .setPositiveButton("Replace") { _, _ ->
+                val newText = input.text.toString()
+                val lineStart = buffer.lineStartOffset(line)
+                val oldLen = buffer.getLineText(line).length
+                if (oldLen > 0) buffer.delete(lineStart, oldLen)
+                buffer.insert(lineStart, newText)
+                buffer.cursorManager.moveTo(line, newText.length)
+                editor.invalidate()
+                handleUndoRedoState()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun duplicateCurrentLine() {
         val editor = codeEditor ?: return
-        val line = editor.buffer.cursorManager.cursor.line
-        val lineText = editor.buffer.getLineText(line)
-        val col = lineText.length
-        editor.buffer.cursorManager.moveTo(line, col)
-        editor.buffer.insertText("\n$lineText")
+        val buffer = editor.buffer
+        val line = buffer.cursorManager.cursor.line
+        val lineText = buffer.getLineText(line)
+        val lineStart = buffer.lineStartOffset(line)
+        val insertOffset = (lineStart + lineText.length).coerceAtMost(buffer.length())
+        buffer.insert(insertOffset, "\n$lineText")
         editor.invalidate()
     }
 
-    private fun toggleComment() {
+    private fun convertCase(toUpper: Boolean) {
         val editor = codeEditor ?: return
-        val line = editor.buffer.cursorManager.cursor.line
-        val s = editor.buffer.getLineText(line)
-        val i = s.indexOfFirst { !it.isWhitespace() }
-        if (i < 0) return
-        if (s[i] == '#') {
-            val end = if (i + 1 < s.length && s[i + 1] == ' ') i + 2 else i + 1
-            editor.setSelection(line, i, line, end)
-            editor.buffer.deleteSelection()
+        val buffer = editor.buffer
+        val cursor = buffer.cursorManager.cursor
+        val selection = buffer.cursorManager.selection
+
+        if (selection.isValid && !selection.isCollapsed()) {
+            val s = selection.normalizedStart()
+            val e = selection.normalizedEnd()
+            val startOffset = buffer.lineColumnToOffset(s.line, s.column)
+            val endOffset = buffer.lineColumnToOffset(e.line, e.column)
+            val selected = buffer.substring(startOffset, endOffset - startOffset)
+            val changed = if (toUpper) selected.uppercase() else selected.lowercase()
+            buffer.replace(startOffset, endOffset - startOffset, changed)
         } else {
-            editor.buffer.cursorManager.moveTo(line, i)
-            editor.buffer.insertText("# ")
+            val line = cursor.line
+            val lineText = buffer.getLineText(line)
+            val lineStart = buffer.lineStartOffset(line)
+            val changed = if (toUpper) lineText.uppercase() else lineText.lowercase()
+            buffer.replace(lineStart, lineText.length, changed)
         }
         editor.invalidate()
+        handleUndoRedoState()
     }
 
     private fun indentLine() {
         val editor = codeEditor ?: return
-        val line = editor.buffer.cursorManager.cursor.line
-        editor.buffer.cursorManager.moveTo(line, 0)
-        editor.buffer.insertText("    ")
+        val buffer = editor.buffer
+        val line = buffer.cursorManager.cursor.line
+        val lineStart = buffer.lineStartOffset(line)
+        buffer.insert(lineStart, "    ")
         editor.invalidate()
     }
 
     private fun unindentLine() {
         val editor = codeEditor ?: return
-        val line = editor.buffer.cursorManager.cursor.line
-        val s = editor.buffer.getLineText(line)
+        val buffer = editor.buffer
+        val line = buffer.cursorManager.cursor.line
+        val lineText = buffer.getLineText(line)
+        val lineStart = buffer.lineStartOffset(line)
         when {
-            s.startsWith("    ") -> {
-                editor.setSelection(line, 0, line, 4)
-                editor.buffer.deleteSelection()
-            }
-            s.startsWith("\t") -> {
-                editor.setSelection(line, 0, line, 1)
-                editor.buffer.deleteSelection()
-            }
+            lineText.startsWith("    ") -> buffer.delete(lineStart, 4)
+            lineText.startsWith("\t") -> buffer.delete(lineStart, 1)
         }
         editor.invalidate()
     }
