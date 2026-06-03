@@ -284,38 +284,123 @@ class TextEditorActivity : AppCompatActivity(),
         })
     }
 
+    // ─── Symbol Drawer (bottom sheet with 3 rows) ──────────────────────────────
+
+    private var symbolBarExpanded = false
+    private lateinit var symbolRow1: android.widget.LinearLayout
+    private lateinit var symbolRow2: android.widget.LinearLayout
+    private lateinit var symbolRow3: android.widget.LinearLayout
+    private var symbolDragStartY = 0f
+
     private fun setupSymbolBar() {
         val container = symbolInput ?: return
         container.removeAllViews()
         container.orientation = android.widget.LinearLayout.VERTICAL
-        container.setPadding(0, 4.dp, 0, 4.dp)
+        container.setPadding(0, 0, 0, 0)
 
         val isDark = ThemeManager.isDarkMode(this)
         val textColor = if (isDark) 0xFFCCCCCC.toInt() else 0xFF333333.toInt()
         val bgColor = if (isDark) 0xFF1A1A1A.toInt() else 0xFFE8E8E8.toInt()
         val dividerColor = if (isDark) 0xFF333333.toInt() else 0xFFCCCCCC.toInt()
+        val handleColor = if (isDark) 0xFF666666.toInt() else 0xFF999999.toInt()
 
         container.setBackgroundColor(bgColor)
 
+        // Drag handle indicator at top
+        val handle = View(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(40.dp, 4.dp).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                topMargin = 6.dp
+                bottomMargin = 4.dp
+            }
+            setBackgroundColor(handleColor)
+            val radius = 2.dp.toFloat()
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                setColor(handleColor)
+                cornerRadius = radius
+            }
+        }
+        container.addView(handle)
+
+        // Drag handle touch area (larger touch target)
+        val handleTouch = View(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                24.dp
+            )
+            setOnTouchListener { _, event ->
+                when (event.action) {
+                    android.view.MotionEvent.ACTION_DOWN -> {
+                        symbolDragStartY = event.rawY
+                        true
+                    }
+                    android.view.MotionEvent.ACTION_UP -> {
+                        val dy = symbolDragStartY - event.rawY
+                        if (dy > 30.dp) {
+                            // Swiped up → expand
+                            expandSymbolBar()
+                        } else if (dy < -30.dp) {
+                            // Swiped down → collapse
+                            collapseSymbolBar()
+                        }
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }
+        container.addView(handleTouch)
+
         // Row 1: → / + - * = <
         val row1Symbols = arrayOf("\u2192", "/", "+", "-", "*", "=", "<")
-        addSymbolRow(container, row1Symbols, textColor, dividerColor)
+        symbolRow1 = createSymbolRow(row1Symbols, textColor, dividerColor)
+        container.addView(symbolRow1)
 
         // Row 2: > " ' ; | \ _
         val row2Symbols = arrayOf(">", "\"", "'", ";", "|", "\\", "_")
-        addSymbolRow(container, row2Symbols, textColor, dividerColor)
+        symbolRow2 = createSymbolRow(row2Symbols, textColor, dividerColor)
+        symbolRow2.visibility = View.GONE
+        container.addView(symbolRow2)
 
         // Row 3: ( ) [ ] { } ...
         val row3Symbols = arrayOf("(", ")", "[", "]", "{", "}", "...")
-        addSymbolRow(container, row3Symbols, textColor, dividerColor)
+        symbolRow3 = createSymbolRow(row3Symbols, textColor, dividerColor)
+        symbolRow3.visibility = View.GONE
+        container.addView(symbolRow3)
+
+        // Divider at bottom
+        val bottomDivider = View(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 1
+            )
+            setBackgroundColor(dividerColor)
+        }
+        container.addView(bottomDivider)
     }
 
-    private fun addSymbolRow(container: android.widget.LinearLayout, symbols: Array<String>, textColor: Int, dividerColor: Int) {
+    private fun expandSymbolBar() {
+        if (symbolBarExpanded) return
+        symbolBarExpanded = true
+        symbolRow2.visibility = View.VISIBLE
+        symbolRow3.visibility = View.VISIBLE
+        symbolInput?.invalidate()
+    }
+
+    private fun collapseSymbolBar() {
+        if (!symbolBarExpanded) return
+        symbolBarExpanded = false
+        symbolRow2.visibility = View.GONE
+        symbolRow3.visibility = View.GONE
+        symbolInput?.invalidate()
+    }
+
+    private fun createSymbolRow(symbols: Array<String>, textColor: Int, dividerColor: Int): android.widget.LinearLayout {
         val row = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.HORIZONTAL
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                40.dp
             )
         }
 
@@ -328,10 +413,9 @@ class TextEditorActivity : AppCompatActivity(),
                 gravity = Gravity.CENTER
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     0,
-                    40.dp,
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                     1f
                 )
-                setPadding(4.dp, 4.dp, 4.dp, 4.dp)
                 isClickable = true
                 isFocusable = true
                 setBackgroundResource(android.R.drawable.list_selector_background)
@@ -342,7 +426,6 @@ class TextEditorActivity : AppCompatActivity(),
             }
             row.addView(btn)
 
-            // Add divider between symbols (not after last)
             if (index < symbols.size - 1) {
                 val divider = View(this).apply {
                     layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -355,17 +438,7 @@ class TextEditorActivity : AppCompatActivity(),
             }
         }
 
-        container.addView(row)
-
-        // Add thin divider between rows
-        val rowDivider = View(this).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                1
-            )
-            setBackgroundColor(dividerColor)
-        }
-        container.addView(rowDivider)
+        return row
     }
 
     private val Int.dp: Int get() = (this * resources.displayMetrics.density).toInt()
