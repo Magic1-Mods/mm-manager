@@ -1,9 +1,9 @@
 package bin.mg.editor.rendering.input
 
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
+import android.view.inputmethod.InputContentInfo
 import bin.mg.editor.core.document.EditorBuffer
 
 class EditorInputConnection(
@@ -109,7 +109,9 @@ class EditorInputConnection(
         val text = buffer.getText()
         if (text.isNotEmpty()) {
             buffer.cursorManager.moveTo(0, 0)
-            buffer.cursorManager.selection.set(0, 0, buffer.getLineCount() - 1, buffer.getLineText(buffer.getLineCount() - 1).length)
+            val lastLine = buffer.getLineCount() - 1
+            val lastCol = buffer.getLineText(lastLine).length
+            buffer.cursorManager.selection.set(0, 0, lastLine, lastCol)
             buffer.deleteSelection()
         }
         onUpdate()
@@ -120,27 +122,32 @@ class EditorInputConnection(
 
     override fun getTextBeforeCursor(n: Int, flags: Int): CharSequence? {
         val c = buffer.cursorManager.cursor
-        val startOffset = (buffer.lineColumnToOffset(c.line, c.column) - n).coerceAtLeast(0)
-        val length = buffer.lineColumnToOffset(c.line, c.column) - startOffset
+        val offset = buffer.lineColumnToOffset(c.line, c.column)
+        val startOffset = (offset - n).coerceAtLeast(0)
+        val length = offset - startOffset
         return buffer.getText().substring(startOffset, startOffset + length)
     }
 
     override fun getTextAfterCursor(n: Int, flags: Int): CharSequence? {
         val c = buffer.cursorManager.cursor
-        val startOffset = buffer.lineColumnToOffset(c.line, c.column)
-        val length = n.coerceAtMost(buffer.getText().length - startOffset)
-        return buffer.getText().substring(startOffset, startOffset + length)
+        val offset = buffer.lineColumnToOffset(c.line, c.column)
+        val length = n.coerceAtMost(buffer.getText().length - offset)
+        return buffer.getText().substring(offset, offset + length)
     }
 
     override fun getSelectedText(flags: Int): CharSequence? = null
 
-    override fun clearMetaKeyStates(states: Int) {}
+    override fun clearMetaKeyStates(states: Int): Boolean {
+        return true
+    }
 
     override fun reportFullscreenMode(enabled: Boolean): Boolean = true
 
     override fun performContextMenuAction(id: Int): Boolean = false
 
-    override fun requestCursorUpdates(cursorUpdateMode: Int) {}
+    override fun requestCursorUpdates(cursorUpdateMode: Int): Boolean {
+        return true
+    }
 
     override fun commitCorrection(info: android.view.inputmethod.CorrectionInfo?): Boolean = false
 
@@ -148,5 +155,5 @@ class EditorInputConnection(
 
     override fun closeConnection() {}
 
-    override fun commitContent(inputContentInfo: android.view.inputmethod.InputContentInfo?, flags: Int, opts: Bundle?): Boolean = false
+    override fun commitContent(inputContentInfo: InputContentInfo, flags: Int, opts: Bundle?): Boolean = false
 }

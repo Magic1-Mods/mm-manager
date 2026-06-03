@@ -40,6 +40,12 @@ class EditorBuffer(initialText: String = "") {
 
     fun getLineText(line: Int): String = buffer.getLineText(line)
 
+    fun lineColumnToOffset(line: Int, column: Int): Int = buffer.lineColumnToOffset(line, column)
+
+    fun offsetToLine(offset: Int): Int = buffer.offsetToLine(offset)
+
+    fun offsetToColumn(offset: Int): Int = buffer.offsetToColumn(offset)
+
     fun insertText(text: String) {
         val cursor = cursorManager.cursor
         val offset = buffer.lineColumnToOffset(cursor.line, cursor.column)

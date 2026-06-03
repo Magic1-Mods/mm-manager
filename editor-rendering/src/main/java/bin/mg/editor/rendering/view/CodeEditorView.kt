@@ -7,14 +7,13 @@ import android.graphics.Typeface
 import android.text.InputType
 import android.text.TextPaint
 import android.util.AttributeSet
-import android.view.InputConnection
+import android.view.inputmethod.InputConnection
 import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import bin.mg.editor.core.buffer.TextSpan
 import bin.mg.editor.core.document.EditorBuffer
-import bin.mg.editor.core.document.DocumentListener
 import bin.mg.editor.core.cursor.CursorManager
 import bin.mg.editor.rendering.input.EditorInputConnection
 import bin.mg.editor.rendering.input.TouchHandler
@@ -56,7 +55,7 @@ class CodeEditorView @JvmOverloads constructor(
 
         scrollController.onScrollChanged = { _, _ -> invalidate() }
 
-        buffer.addDocumentListener(object : DocumentListener {
+        buffer.addDocumentListener(object : EditorBuffer.DocumentListener {
             override fun onContentChanged(startLine: Int, endLine: Int, newLineCount: Int) {
                 layoutEngine.invalidateRange(startLine, endLine)
                 updateScrollBounds()

@@ -16,10 +16,10 @@ class LayoutEngine(private val textPaint: TextPaint) {
         private set
     var gutterDigitCount: Int = 0
 
-    fun configure(fontSize: Float, tabSize: Int = 4) {
+    fun configure(fontSize: Float, newTabSize: Int = 4) {
         textPaint.textSize = fontSize
-        this.tabSize = tabSize
-        tabWidth = textPaint.measureText(" ").repeat(tabSize)
+        tabSize = newTabSize
+        tabWidth = textPaint.measureText("    ")
         val fm = textPaint.fontMetrics
         lineHeight = (fm.descent - fm.ascent) * 1.1f
         lineCache.clear()
@@ -33,7 +33,8 @@ class LayoutEngine(private val textPaint: TextPaint) {
         val newDigitCount = lineCount.coerceAtLeast(1).toString().length.coerceAtLeast(3)
         if (newDigitCount != gutterDigitCount) {
             gutterDigitCount = newDigitCount
-            gutterWidth = textPaint.measureText("0".repeat(gutterDigitCount)) + 48f
+            val zeros = "0".repeat(gutterDigitCount)
+            gutterWidth = textPaint.measureText(zeros) + 48f
         }
     }
 
