@@ -81,6 +81,10 @@ class EditorInputConnection(
         return true
     }
 
+    override fun deleteSurroundingTextInCodePoints(beforeLength: Int, afterLength: Int): Boolean {
+        return deleteSurroundingText(beforeLength, afterLength)
+    }
+
     override fun setSelection(start: Int, end: Int): Boolean {
         buffer.cursorManager.moveTo(start / 100000, start % 100000)
         buffer.cursorManager.selection.set(start / 100000, start % 100000, end / 100000, end % 100000)
