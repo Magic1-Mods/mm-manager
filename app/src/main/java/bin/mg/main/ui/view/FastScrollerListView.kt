@@ -59,7 +59,7 @@ class FastScrollerListView @JvmOverloads constructor(
         setOnScrollListener(InternalScrollListener(this))
 
         // Handle system fast scroll conflict
-        if (super.isFastScrollEnabled) {
+        if (android.os.Build.VERSION.SDK_INT >= 11 && super.isFastScrollEnabled) {
             isFastScrollEnabled = true
         }
         super.setFastScrollEnabled(false)
@@ -69,7 +69,7 @@ class FastScrollerListView @JvmOverloads constructor(
         }
 
         val density = context.resources.displayMetrics.density
-        thumbColor = 0xDD777777
+        thumbColor = 0xDD777777.toInt()
         trackColor = 0x39777777
         thumbWidth = 8.0f * density
         thumbHeight = 48.0f * density
@@ -114,7 +114,7 @@ class FastScrollerListView @JvmOverloads constructor(
         // Draw Track
         val trackAlpha = (Color.alpha(trackColor) * alphaMultiplier).toInt()
         if (!transparentTrackBackground) {
-            paint.color = (trackAlpha shl 24) or (trackColor and 0x00FFFFFF)
+            paint.color = (trackAlpha shl 24) or (trackColor and 0x00FFFFFF.toInt())
         } else {
             paint.color = Color.TRANSPARENT
         }
@@ -123,9 +123,9 @@ class FastScrollerListView @JvmOverloads constructor(
         canvas.drawRect(trackLeft, 0f, width.toFloat(), height.toFloat(), paint)
 
         // Draw Thumb
-        val activeThumbColor = if (isDragging) 0xFF1E88E5 else thumbColor
+        val activeThumbColor = if (isDragging) 0xFF1E88E5.toInt() else thumbColor
         val thumbAlpha = (Color.alpha(activeThumbColor) * alphaMultiplier).toInt()
-        paint.color = (thumbAlpha shl 24) or (activeThumbColor and 0x00FFFFFF)
+        paint.color = (thumbAlpha shl 24) or (activeThumbColor and 0x00FFFFFF.toInt())
 
         val thumbTop = ((height - thumbHeight) / scrollableRange) * firstVisiblePosition
         val thumbBottom = thumbTop + thumbHeight
@@ -237,7 +237,9 @@ class FastScrollerListView @JvmOverloads constructor(
             stateList.addState(pressed, ColorDrawable(0))
             stateList.addState(selected, transition)
             stateList.addState(intArrayOf(), ColorDrawable(0))
-            stateList.exitFadeDuration = 300
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                stateList.exitFadeDuration = 300
+            }
 
             return stateList
         }

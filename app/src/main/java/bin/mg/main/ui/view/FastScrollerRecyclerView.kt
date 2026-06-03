@@ -41,7 +41,7 @@ class FastScrollerRecyclerView @JvmOverloads constructor(
 
     init {
         val density = context.resources.displayMetrics.density
-        thumbColor = 0xDD666666
+        thumbColor = 0xDD666666.toInt()
         thumbWidth = 8.0f * density
         thumbHeight = 48.0f * density
 
@@ -124,14 +124,14 @@ class FastScrollerRecyclerView @JvmOverloads constructor(
         // 1. Draw Track
         val trackColor = 0x11000000 // Very faint track
         val trackAlpha = (Color.alpha(trackColor) * alphaMultiplier).toInt()
-        scrollerPaint.color = (trackAlpha shl 24) or (trackColor and 0x00FFFFFF)
+        scrollerPaint.color = (trackAlpha shl 24) or (trackColor and 0x00FFFFFF.toInt())
         val trackLeft = width - (thumbWidth * alphaMultiplier)
         canvas.drawRect(trackLeft, 0f, width.toFloat(), height.toFloat(), scrollerPaint)
 
         // 2. Draw Thumb
-        val activeColor = if (isDragging) 0xFF1E88E5 else thumbColor // Blue if dragging
+        val activeColor = if (isDragging) 0xFF1E88E5.toInt() else thumbColor // Blue if dragging
         val thumbAlpha = (Color.alpha(activeColor) * alphaMultiplier).toInt()
-        scrollerPaint.color = (thumbAlpha shl 24) or (activeColor and 0x00FFFFFF)
+        scrollerPaint.color = (thumbAlpha shl 24) or (activeColor and 0x00FFFFFF.toInt())
 
         val thumbTop = (offset.toFloat() / scrollableRange) * (height - thumbHeight)
         val thumbBottom = thumbTop + thumbHeight

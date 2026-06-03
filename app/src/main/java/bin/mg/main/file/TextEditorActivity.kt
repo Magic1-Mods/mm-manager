@@ -578,6 +578,8 @@ class TextEditorActivity : AppCompatActivity(),
         lineNoEncodingText?.text = "${cursor.leftLine + 1}:${cursor.leftColumn + 1}   UTF-8"
     }
 
+    private fun updateInfoBar() { updateCursorPosition(); updateFilenameTab() }
+
     private fun updateFilenameTab() {
         val name = currentFilePath?.let { File(it).name } ?: "untitled"
         filenameText?.text = if (isModified) "*$name" else name
