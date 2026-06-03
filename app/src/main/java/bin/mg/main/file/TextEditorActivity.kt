@@ -86,6 +86,7 @@ class TextEditorActivity : AppCompatActivity(),
 
     private var openFileAdapter: OpenFileAdapter? = null
     private lateinit var syntaxEngine: MmsxSyntaxEngine
+    private var syntaxLoadPending = false
 
     private val prefs by lazy { getSharedPreferences("editor_prefs", MODE_PRIVATE) }
 
@@ -96,6 +97,18 @@ class TextEditorActivity : AppCompatActivity(),
         setContentView(R.layout.activity_file_editor)
 
         syntaxEngine = MmsxSyntaxEngine(this)
+        syntaxEngine.onSyntaxesLoaded = {
+            // After syntaxes load, if we have a pending syntax to apply, do it now
+            if (syntaxLoadPending) {
+                syntaxLoadPending = false
+                val path = currentFilePath
+                if (path != null) {
+                    currentSyntax = syntaxEngine.getSyntaxForFile(path) ?: detectSyntaxFallback(path)
+                    fileSyntaxes[path] = currentSyntax
+                    loadLanguageForSyntax(currentSyntax)
+                }
+            }
+        }
         executor.execute { syntaxEngine.loadAllSyntaxes() }
 
         initViews()
@@ -278,10 +291,15 @@ class TextEditorActivity : AppCompatActivity(),
         codeEditor?.subscribeEvent(ContentChangeEvent::class.java,
             object : EventReceiver<ContentChangeEvent> {
                 override fun onReceive(event: ContentChangeEvent, unsubscribe: Unsubscribe) {
-                    if (!justSaved) { isModified = true; updateInfoBar() }
+                    if (!justSaved && !syntaxEngine.isHighlighting) {
+                        isModified = true
+                        updateInfoBar()
+                    }
                     justSaved = false
                     handleUndoRedoState()
-                    if (currentSyntax != "text") syntaxEngine.highlight(codeEditor!!, currentSyntax)
+                    if (currentSyntax != "text" && !syntaxEngine.isHighlighting) {
+                        syntaxEngine.highlight(codeEditor!!, currentSyntax)
+                    }
                 }
             })
 
@@ -661,6 +679,14 @@ class TextEditorActivity : AppCompatActivity(),
     private fun openFile(path: String) {
         val existing = openFiles.indexOf(path)
         if (existing >= 0) { switchToFile(existing); return }
+        // Save current file state before switching
+        if (currentFileIndex >= 0 && currentFileIndex < openFiles.size) {
+            val old = openFiles[currentFileIndex]
+            fileContents[old] = codeEditor?.text?.toString() ?: ""
+            val c = codeEditor?.cursor
+            if (c != null) filePositions[old] = Pair(c.leftLine, c.leftColumn)
+            fileSyntaxes[old] = currentSyntax
+        }
         openFiles.add(path)
         currentFileIndex = openFiles.size - 1
         currentFilePath  = path
@@ -671,25 +697,32 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun switchToFile(index: Int) {
         if (index < 0 || index >= openFiles.size || index == currentFileIndex) return
+        // Save current file state
         if (currentFileIndex >= 0 && currentFileIndex < openFiles.size) {
             val old = openFiles[currentFileIndex]
             fileContents[old] = codeEditor?.text?.toString() ?: ""
             val c = codeEditor?.cursor
             if (c != null) filePositions[old] = Pair(c.leftLine, c.leftColumn)
+            fileSyntaxes[old] = currentSyntax
         }
         currentFileIndex = index
         val path = openFiles[index]
         currentFilePath = path
-        currentSyntax   = fileSyntaxes[path] ?: detectSyntaxForFile(path)
+        currentSyntax = fileSyntaxes[path] ?: detectSyntaxForFile(path)
         filenameText?.text = File(path).name
+        justSaved = true
         val content = fileContents[path]
         if (content != null) {
             codeEditor?.setText(content)
-            filePositions[path]?.let { codeEditor?.setSelection(it.first, it.second) }
-            loadLanguageForSyntax(currentSyntax)
-            isModified = false; justSaved = true
+            filePositions[path]?.let { pos ->
+                if (pos.first < codeEditor?.lineCount ?: 0) {
+                    codeEditor?.setSelection(pos.first, pos.second.coerceAtMost(codeEditor?.text?.getColumnCount(pos.first) ?: 0))
+                }
+            }
+            isModified = false
             handleUndoRedoState()
             updateInfoBar()
+            if (currentSyntax != "text") syntaxEngine.highlight(codeEditor!!, currentSyntax)
         } else {
             loadFile()
         }
@@ -710,28 +743,63 @@ class TextEditorActivity : AppCompatActivity(),
     private fun updateDrawerList() { openFileAdapter?.setFiles(openFiles, currentFileIndex) }
 
     private fun detectSyntaxForFile(path: String): String {
+        // First try the loaded .mmsx syntaxes
         syntaxEngine.getSyntaxForFile(path)?.let { return it }
+        // Fallback to hardcoded mapping
+        return detectSyntaxFallback(path)
+    }
+
+    private fun detectSyntaxFallback(path: String): String {
         return when (path.substringAfterLast(".", "").lowercase()) {
             "java"              -> "java"
-            "kt"                -> "kotlin"
-            "py"                -> "python"
-            "js"                -> "javascript"
+            "kt", "kts"         -> "kotlin"
+            "py", "pyw"         -> "python"
+            "js", "es", "mjs"   -> "javascript"
+            "ts", "tsx"          -> "typescript"
             "html", "htm"       -> "html"
-            "css"               -> "css"
-            "xml"               -> "xml"
+            "css", "scss", "less" -> "css"
+            "xml", "svg"        -> "xml"
             "json"              -> "json"
-            "sh", "bash"        -> "shell"
+            "sh", "bash", "zsh" -> "shell"
+            "c", "h"            -> "c"
+            "cpp", "cc", "cxx", "hpp" -> "cpp"
+            "cs"                -> "cs"
+            "go"                -> "go"
+            "rs"                -> "rust"
+            "swift"             -> "swift"
+            "rb"                -> "ruby"
+            "php"               -> "php"
+            "sql"               -> "sql"
+            "lua"               -> "lua"
+            "dart"              -> "dart"
+            "groovy"            -> "groovy"
+            "toml"              -> "toml"
+            "yml", "yaml"       -> "yml"
+            "md", "markdown"    -> "markdown"
             "smali"             -> "smali"
+            "nix"               -> "nix"
+            "zig"               -> "zig"
+            "bat", "cmd"        -> "bat"
+            "diff"              -> "diff"
+            "glsl", "hlsl"      -> "glsl"
+            "asm", "s", "S"     -> "asm"
             else                -> "text"
         }
     }
 
     private fun detectSyntaxAndLoad() {
         val path = currentFilePath ?: return
-        currentSyntax = detectSyntaxForFile(path)
-        if (currentFileIndex >= 0 && currentFileIndex < openFiles.size)
+        if (syntaxEngine.isLoaded) {
+            currentSyntax = detectSyntaxForFile(path)
             fileSyntaxes[path] = currentSyntax
-        loadFile()
+            loadFile()
+        } else {
+            // Syntaxes still loading — use fallback for now, re-apply after load
+            currentSyntax = detectSyntaxFallback(path)
+            fileSyntaxes[path] = currentSyntax
+            syntaxLoadPending = true
+            loadFile()
+        }
     }
 
     private fun loadFile() {
@@ -747,12 +815,13 @@ class TextEditorActivity : AppCompatActivity(),
                 val content = sb.toString()
                 mainHandler.post {
                     dialog.dismiss()
+                    justSaved = true
                     codeEditor?.setText(content)
                     fileContents[path] = content
-                    loadLanguageForSyntax(currentSyntax)
-                    isModified = false; justSaved = true
+                    isModified = false
                     handleUndoRedoState()
                     updateInfoBar()
+                    if (currentSyntax != "text") syntaxEngine.highlight(codeEditor!!, currentSyntax)
                 }
             } catch (e: Exception) {
                 mainHandler.post { dialog.dismiss(); Toast.makeText(this@TextEditorActivity, "Failed to load file", Toast.LENGTH_SHORT).show() }
