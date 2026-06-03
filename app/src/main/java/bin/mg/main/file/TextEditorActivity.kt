@@ -352,9 +352,13 @@ class TextEditorActivity : AppCompatActivity(),
         }
         container.addView(handleTouch)
 
-        // Row 1: → / + - * = <
+        // Row 1: → / + - * = <  (→ = tab)
         val row1Symbols = arrayOf("\u2192", "/", "+", "-", "*", "=", "<")
-        symbolRow1 = createSymbolRow(row1Symbols, textColor, dividerColor)
+        val row1Actions = arrayOf<Runnable?>({
+            codeEditor?.buffer?.insertText("\t")
+            codeEditor?.requestFocus()
+        }, null, null, null, null, null, null)
+        symbolRow1 = createSymbolRow(row1Symbols, row1Actions, textColor, dividerColor)
         container.addView(symbolRow1)
 
         // Row 2: > " ' ; | \ _
@@ -395,7 +399,7 @@ class TextEditorActivity : AppCompatActivity(),
         symbolInput?.invalidate()
     }
 
-    private fun createSymbolRow(symbols: Array<String>, textColor: Int, dividerColor: Int): android.widget.LinearLayout {
+    private fun createSymbolRow(symbols: Array<String>, actions: Array<Runnable?>? = null, textColor: Int, dividerColor: Int): android.widget.LinearLayout {
         val row = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.HORIZONTAL
             layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -420,8 +424,13 @@ class TextEditorActivity : AppCompatActivity(),
                 isFocusable = true
                 setBackgroundResource(android.R.drawable.list_selector_background)
                 setOnClickListener {
-                    codeEditor?.buffer?.insertText(sym)
-                    codeEditor?.requestFocus()
+                    val custom = actions?.getOrNull(index)
+                    if (custom != null) {
+                        custom.run()
+                    } else {
+                        codeEditor?.buffer?.insertText(sym)
+                        codeEditor?.requestFocus()
+                    }
                 }
             }
             row.addView(btn)
