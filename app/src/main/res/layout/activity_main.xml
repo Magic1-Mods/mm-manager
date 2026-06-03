@@ -102,7 +102,7 @@
                 android:layout_weight="1"
                 android:background="?attr/panelBg">
 
-                <com.fastrecyclerview.FastScrollerRecyclerView
+                <bin.mg.main.ui.view.FastScrollerRecyclerView
                     android:id="@+id/list_left"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -128,7 +128,7 @@
                 android:layout_weight="1"
                 android:background="?attr/panelBg">
 
-                <com.fastrecyclerview.FastScrollerRecyclerView
+                <bin.mg.main.ui.view.FastScrollerRecyclerView
                     android:id="@+id/list_right"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
