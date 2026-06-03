@@ -41,7 +41,7 @@ class PieceTable(initialText: String = "") {
     fun lineEndOffset(line: Int): Int {
         if (line < 0) return 0
         if (line + 1 >= lineStarts.size) return totalLength
-        return lineStarts[line + 1]
+        return lineStarts[line + 1].coerceAtMost(totalLength)
     }
 
     fun offsetToLine(offset: Int): Int {
@@ -80,10 +80,11 @@ class PieceTable(initialText: String = "") {
     }
 
     fun substring(offset: Int, length: Int): String {
-        if (length <= 0) return ""
-        val end = (offset + length).coerceAtMost(totalLength)
-        val sb = StringBuilder(end - offset)
-        var pos = offset
+        if (length <= 0 || offset >= totalLength) return ""
+        val safeOffset = offset.coerceIn(0, totalLength)
+        val end = (safeOffset + length).coerceAtMost(totalLength)
+        val sb = StringBuilder(end - safeOffset)
+        var pos = safeOffset
         while (pos < end) {
             val idx = findPieceIndex(pos)
             val piece = pieces[idx]
@@ -101,8 +102,9 @@ class PieceTable(initialText: String = "") {
 
     fun getLineText(line: Int): String {
         if (line < 0 || line >= lineStarts.size) return ""
-        val start = lineStarts[line]
-        val end = lineEndOffset(line)
+        val start = lineStarts[line].coerceAtMost(totalLength)
+        val end = lineEndOffset(line).coerceAtMost(totalLength)
+        if (start >= end) return ""
         return substring(start, end - start).trimEnd('\r', '\n')
     }
 
@@ -312,7 +314,7 @@ class PieceTable(initialText: String = "") {
         }
     }
 
-    private fun rebuildLineIndex() {
+    fun rebuildLineIndex() {
         lineStarts.clear()
         if (totalLength == 0) {
             lineStarts.add(0)

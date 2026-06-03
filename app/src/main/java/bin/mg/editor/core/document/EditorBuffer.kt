@@ -29,6 +29,7 @@ class EditorBuffer(initialText: String = "") {
     fun setText(text: String) {
         buffer.delete(0, buffer.length())
         buffer.insert(0, text)
+        buffer.rebuildLineIndex()
         cursorManager.moveTo(0, 0)
         undoManager.clear()
         notifyContentChanged(0, buffer.lineCount() - 1, buffer.lineCount())
