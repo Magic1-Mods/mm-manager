@@ -20,7 +20,7 @@
 -dontusemixedcaseclassnames
 
 # ==========================================
-# ANDROID COMPONENTS — class + ctor only
+# ANDROID COMPONENTS
 # ==========================================
 -keep public class * extends android.app.Activity { public <init>(...); }
 -keep public class * extends android.app.Application { public <init>(...); }
@@ -72,7 +72,7 @@
 }
 
 # ==========================================
-# SORA EDITOR — only public API we call directly
+# SORA EDITOR — minimal API surface
 # ==========================================
 -keep public class io.github.rosemoe.sora.widget.CodeEditor { public *; }
 -keep public class io.github.rosemoe.sora.widget.SymbolInputView { public *; }
@@ -87,7 +87,7 @@
 -dontwarn io.github.rosemoe.sora.**
 
 # ==========================================
-# TM4E — only what sora-editor TextMate calls
+# TM4E — TextMate grammar engine
 # ==========================================
 -keep public class org.eclipse.tm4e.core.registry.IGrammarSource { public *; }
 -keep public class org.eclipse.tm4e.core.registry.IThemeSource { public *; }
@@ -95,15 +95,12 @@
 -dontwarn org.eclipse.tm4e.**
 
 # ==========================================
-# DEXLIB2 — only keep public API
+# DEXLIB2 — vendored source, minimal entry points
 # ==========================================
 -keep public class org.jf.dexlib2.DexFileFactory { public *; }
 -keep public class org.jf.dexlib2.writer.pool.DexPool { public *; }
 -keep public class org.jf.dexlib2.builder.DexBuilder { public *; }
 -dontwarn org.jf.dexlib2.**
-
-# ==========================================
-# SUPPRESS WARNINGS
-# ==========================================
--dontwarn **
--ignorewarnings
+-dontwarn com.google.common.**
+-dontwarn javax.annotation.**
+-dontwarn javax.lang.model.**

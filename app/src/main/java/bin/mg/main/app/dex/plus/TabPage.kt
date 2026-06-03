@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.*
 import androidx.viewpager.widget.PagerAdapter
 import bin.mg.main.R
 import bin.mg.main.app.dex.plus.clickeffect.T_a
-import com.fastrecyclerview.FastScrollerRecyclerView
+import bin.mg.main.ui.view.FastScrollerRecyclerView
 import java.util.*
 
 class TabPage(

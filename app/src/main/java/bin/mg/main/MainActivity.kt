@@ -37,7 +37,7 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.fastrecyclerview.FastScrollerRecyclerView
+import bin.mg.main.ui.view.FastScrollerRecyclerView
 import bin.mg.main.model.FileItem
 import bin.mg.main.ui.adapter.FileAdapter
 import bin.mg.main.file.TextEditorActivity
