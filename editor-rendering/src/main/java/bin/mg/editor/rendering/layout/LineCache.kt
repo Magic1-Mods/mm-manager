@@ -53,12 +53,12 @@ class LineCache(private val maxCapacity: Int = 300) {
         cache.evictAll()
     }
 
+    fun getMaxCapacity(): Int = maxCapacity
+
     private fun computeCharOffsets(text: String, paint: TextPaint, tabWidth: Float, tabSize: Int): FloatArray {
         if (text.isEmpty()) return FloatArray(0)
         val offsets = FloatArray(text.length)
         var x = 0f
-        var measured = 0f
-        var tabStop = tabWidth * tabSize
         for (i in text.indices) {
             offsets[i] = x
             val c = text[i]
@@ -70,9 +70,5 @@ class LineCache(private val maxCapacity: Int = 300) {
             }
         }
         return offsets
-    }
-
-    fun getEstimatedMemoryBytes(): Int {
-        return cache.size() * 256
     }
 }

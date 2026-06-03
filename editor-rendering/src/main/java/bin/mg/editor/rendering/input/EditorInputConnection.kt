@@ -88,49 +88,65 @@ class EditorInputConnection(
         val et = android.view.inputmethod.ExtractedText()
         et.text = buffer.getText()
         et.startOffset = 0
-        et.length = buffer.length()
+        et.length = buffer.getText().length
         return et
     }
 
-    override fun performEditorAction(actionCode: Int, event: KeyEvent?): Boolean {
-        if (actionCode == EditorInfo.IME_ACTION_SEND || actionCode == EditorInfo.IME_ACTION_DONE) {
-            finishComposingText()
-            return true
-        }
-        return false
+    override fun performEditorAction(actionCode: Int): Boolean {
+        finishComposingText()
+        return true
     }
 
-    private fun getCurrentIndent(): String {
-        val line = buffer.getLineText(buffer.cursorManager.cursor.line)
-        val sb = StringBuilder()
-        for (c in line) {
-            if (c == ' ' || c == '\t') sb.append(c) else break
-        }
-        return sb.toString()
+    override fun clearComposition(): Boolean {
+        composingText = ""
+        composingStart = -1
+        composingEnd = -1
+        onUpdate()
+        return true
     }
 
-    override fun closeConnection() {}
-    override fun reportFullscreenMode(enabled: Boolean): Boolean = true
-    override fun performContextMenuAction(id: Int): Boolean = false
-    override fun performPrivateCommand(action: String?, extras: Bundle?): Boolean = false
-    override fun clearMetaKeyStates(states: Int) {}
-    override fun clearComposition() = finishComposingText()
-    override fun deleteAllText(): Boolean = true
+    override fun deleteAllText(): Boolean {
+        val text = buffer.getText()
+        if (text.isNotEmpty()) {
+            buffer.cursorManager.moveTo(0, 0)
+            buffer.cursorManager.selection.set(0, 0, buffer.getLineCount() - 1, buffer.getLineText(buffer.getLineCount() - 1).length)
+            buffer.deleteSelection()
+        }
+        onUpdate()
+        return true
+    }
+
     override fun getCursorCapsMode(reqModes: Int): Int = 0
+
     override fun getTextBeforeCursor(n: Int, flags: Int): CharSequence? {
         val c = buffer.cursorManager.cursor
         val startOffset = (buffer.lineColumnToOffset(c.line, c.column) - n).coerceAtLeast(0)
         val length = buffer.lineColumnToOffset(c.line, c.column) - startOffset
         return buffer.getText().substring(startOffset, startOffset + length)
     }
+
     override fun getTextAfterCursor(n: Int, flags: Int): CharSequence? {
         val c = buffer.cursorManager.cursor
         val startOffset = buffer.lineColumnToOffset(c.line, c.column)
-        val length = n.coerceAtMost(buffer.length() - startOffset)
+        val length = n.coerceAtMost(buffer.getText().length - startOffset)
         return buffer.getText().substring(startOffset, startOffset + length)
     }
+
     override fun getSelectedText(flags: Int): CharSequence? = null
+
+    override fun clearMetaKeyStates(states: Int) {}
+
+    override fun reportFullscreenMode(enabled: Boolean): Boolean = true
+
+    override fun performContextMenuAction(id: Int): Boolean = false
+
     override fun requestCursorUpdates(cursorUpdateMode: Int) {}
+
     override fun commitCorrection(info: android.view.inputmethod.CorrectionInfo?): Boolean = false
+
+    override fun performPrivateCommand(action: String?, extras: Bundle?): Boolean = false
+
+    override fun closeConnection() {}
+
     override fun commitContent(inputContentInfo: android.view.inputmethod.InputContentInfo?, flags: Int, opts: Bundle?): Boolean = false
 }

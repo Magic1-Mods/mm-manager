@@ -1,9 +1,7 @@
 package bin.mg.editor.syntax.highlight
 
 import android.graphics.Color
-import bin.mg.editor.syntax.tokenizer.Token
 import bin.mg.editor.syntax.tokenizer.TokenType
-import bin.mg.editor.rendering.render.EditorRenderer
 
 class EditorTheme(
     val name: String = "Dark",

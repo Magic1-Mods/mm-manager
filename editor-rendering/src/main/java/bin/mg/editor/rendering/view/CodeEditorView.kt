@@ -2,18 +2,19 @@ package bin.mg.editor.rendering.view
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.text.InputType
 import android.text.TextPaint
 import android.util.AttributeSet
-import android.view.GestureDetector
 import android.view.InputConnection
 import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import bin.mg.editor.core.buffer.TextSpan
 import bin.mg.editor.core.document.EditorBuffer
+import bin.mg.editor.core.document.DocumentListener
 import bin.mg.editor.core.cursor.CursorManager
 import bin.mg.editor.rendering.input.EditorInputConnection
 import bin.mg.editor.rendering.input.TouchHandler
@@ -21,7 +22,6 @@ import bin.mg.editor.rendering.layout.LayoutEngine
 import bin.mg.editor.rendering.render.EditorRenderer
 import bin.mg.editor.rendering.scroll.ScrollController
 import kotlin.math.ceil
-import kotlin.math.min
 
 class CodeEditorView @JvmOverloads constructor(
     context: Context,
@@ -45,7 +45,7 @@ class CodeEditorView @JvmOverloads constructor(
     private var lineSpacingExtra = 2f
     private var lineSpacingMultiplier = 1.1f
 
-    private var textSpans: Map<Int, List<EditorRenderer.TextSpan>> = emptyMap()
+    private var textSpans: Map<Int, List<TextSpan>> = emptyMap()
 
     var onContentChanged: ((String) -> Unit)? = null
     var onCursorMoved: ((Int, Int) -> Unit)? = null
@@ -56,7 +56,7 @@ class CodeEditorView @JvmOverloads constructor(
 
         scrollController.onScrollChanged = { _, _ -> invalidate() }
 
-        buffer.addDocumentListener(object : bin.mg.editor.core.document.DocumentListener {
+        buffer.addDocumentListener(object : DocumentListener {
             override fun onContentChanged(startLine: Int, endLine: Int, newLineCount: Int) {
                 layoutEngine.invalidateRange(startLine, endLine)
                 updateScrollBounds()
@@ -117,7 +117,7 @@ class CodeEditorView @JvmOverloads constructor(
 
     fun getText(): String = buffer.getText()
 
-    fun setTextSyntaxSpans(spans: Map<Int, List<EditorRenderer.TextSpan>>) {
+    fun setTextSyntaxSpans(spans: Map<Int, List<TextSpan>>) {
         textSpans = spans
         invalidate()
     }
@@ -181,11 +181,6 @@ class CodeEditorView @JvmOverloads constructor(
     fun setSelection(startLine: Int, startCol: Int, endLine: Int, endCol: Int) {
         buffer.cursorManager.moveTo(startLine, startCol)
         buffer.cursorManager.selection.set(startLine, startCol, endLine, endCol)
-        invalidate()
-    }
-
-    fun setTextSpans(spans: Map<Int, List<EditorRenderer.TextSpan>>) {
-        textSpans = spans
         invalidate()
     }
 

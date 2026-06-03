@@ -2,7 +2,8 @@ package bin.mg.editor.rendering.render
 
 import android.graphics.Canvas
 import android.text.TextPaint
-import bin.mg.editor.rendering.layout.LineLayout
+import bin.mg.editor.core.buffer.TextSpan
+import bin.mg.editor.core.document.EditorBuffer
 import bin.mg.editor.rendering.layout.LayoutEngine
 
 class EditorRenderer(
@@ -51,7 +52,7 @@ class EditorRenderer(
 
     fun render(
         canvas: Canvas,
-        buffer: bin.mg.editor.core.document.EditorBuffer,
+        buffer: EditorBuffer,
         scrollX: Float,
         scrollY: Float,
         firstVisibleLine: Int,
@@ -66,7 +67,6 @@ class EditorRenderer(
     ) {
         val totalWidth = canvas.width.toFloat()
         val totalHeight = canvas.height.toFloat()
-        val gutterWidth = layoutEngine.getGutterWidth()
         val lineHeight = layoutEngine.getLineHeight()
         val lineCount = buffer.getLineCount()
 
@@ -161,7 +161,7 @@ class EditorRenderer(
         canvas: Canvas,
         x: Float,
         y: Float,
-        layout: LineLayout,
+        layout: bin.mg.editor.rendering.layout.LineLayout,
         spans: List<TextSpan>?,
         contentWidth: Float
     ) {
@@ -200,12 +200,4 @@ class EditorRenderer(
     }
 
     private fun defaultTextColor(): Int = 0xFFA9B7C6.toInt()
-
-    data class TextSpan(
-        val start: Int,
-        val end: Int,
-        val color: Int,
-        val bold: Boolean = false,
-        val italic: Boolean = false
-    )
 }

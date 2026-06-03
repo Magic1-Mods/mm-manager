@@ -1,8 +1,6 @@
 package bin.mg.editor.rendering.layout
 
-import android.graphics.Paint
 import android.text.TextPaint
-import bin.mg.editor.core.buffer.PieceTable
 
 class LayoutEngine(private val textPaint: TextPaint) {
 
@@ -43,8 +41,6 @@ class LayoutEngine(private val textPaint: TextPaint) {
         return lineCache.getLineLayout(line, text, textPaint, tabWidth, tabSize)
     }
 
-    fun getLineCount(): Int = lineCache.maxCapacity()
-
     fun invalidateLine(line: Int) {
         lineCache.invalidate(line)
     }
@@ -64,8 +60,4 @@ class LayoutEngine(private val textPaint: TextPaint) {
     fun getLineHeight(): Float = lineHeight
 
     fun getGutterWidth(): Float = gutterWidth
-
-    fun getAvailableContentWidth(totalWidth: Float): Float {
-        return totalWidth - gutterWidth
-    }
 }
