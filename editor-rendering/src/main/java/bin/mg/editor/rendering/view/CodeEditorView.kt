@@ -31,7 +31,7 @@ class CodeEditorView @JvmOverloads constructor(
     val buffer = EditorBuffer()
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val layoutEngine = LayoutEngine(textPaint)
-    private val renderer = EditorRenderer(textPaint, layoutEngine)
+    val renderer = EditorRenderer(textPaint, layoutEngine)
     private val scrollController = ScrollController(context)
     private var touchHandler: TouchHandler? = null
 
