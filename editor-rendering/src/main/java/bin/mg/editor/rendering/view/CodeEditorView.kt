@@ -100,7 +100,7 @@ class CodeEditorView @JvmOverloads constructor(
 
     private fun updateScrollBounds() {
         val lineCount = buffer.getLineCount()
-        val lineHeight = layoutEngine.getLineHeight()
+        val lineHeight = layoutEngine.lineHeight
         val contentHeight = lineCount * lineHeight
         val maxScrollY = (contentHeight - height).coerceAtLeast(0f)
         scrollController.updateMaxScroll(0f, maxScrollY)
@@ -183,20 +183,20 @@ class CodeEditorView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun getFirstVisibleLine(): Int = (scrollController.scrollY / layoutEngine.getLineHeight()).toInt()
+    fun getFirstVisibleLine(): Int = (scrollController.scrollY / layoutEngine.lineHeight).toInt()
 
-    fun getVisibleLineCount(): Int = ceil(height.toFloat() / layoutEngine.getLineHeight()).toInt() + 1
+    fun getVisibleLineCount(): Int = ceil(height.toFloat() / layoutEngine.lineHeight).toInt() + 1
 
     fun scrollToLine(line: Int) {
-        val targetY = (line * layoutEngine.getLineHeight() - height / 2f).coerceAtLeast(0f)
+        val targetY = (line * layoutEngine.lineHeight - height / 2f).coerceAtLeast(0f)
         scrollController.smoothScrollTo(0f, targetY)
         invalidate()
     }
 
     private fun ensureCursorVisible() {
         val cursorLine = buffer.cursorManager.cursor.line
-        val lineHeight = layoutEngine.getLineHeight()
-        scrollController.ensureCursorVisible(cursorLine, lineHeight, height.toFloat(), layoutEngine.getGutterWidth())
+        val lineHeight = layoutEngine.lineHeight
+        scrollController.ensureCursorVisible(cursorLine, lineHeight, height.toFloat(), layoutEngine.gutterWidth)
         invalidate()
     }
 

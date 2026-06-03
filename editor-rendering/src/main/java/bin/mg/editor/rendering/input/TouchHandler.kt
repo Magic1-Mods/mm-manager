@@ -131,8 +131,8 @@ class TouchHandler(
     }
 
     private fun hitTest(x: Float, y: Float): Pair<Int, Int>? {
-        val gutterWidth = layoutEngine.getGutterWidth()
-        val lineHeight = layoutEngine.getLineHeight()
+        val gutterWidth = layoutEngine.gutterWidth
+        val lineHeight = layoutEngine.lineHeight
         val contentX = x - gutterWidth + scrollController.scrollX
         val contentY = y + scrollController.scrollY
 

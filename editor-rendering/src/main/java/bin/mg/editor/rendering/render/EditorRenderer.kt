@@ -67,7 +67,7 @@ class EditorRenderer(
     ) {
         val totalWidth = canvas.width.toFloat()
         val totalHeight = canvas.height.toFloat()
-        val lineHeight = layoutEngine.getLineHeight()
+        val lineHeight = layoutEngine.lineHeight
         val lineCount = buffer.getLineCount()
 
         // Background
@@ -75,7 +75,7 @@ class EditorRenderer(
 
         // Gutter
         layoutEngine.updateGutterWidth(lineCount)
-        val effectiveGutterWidth = layoutEngine.getGutterWidth()
+        val effectiveGutterWidth = layoutEngine.gutterWidth
 
         gutterRenderer.draw(
             canvas,
