@@ -83,8 +83,8 @@ class MmsxSyntaxEngine(private val context: Context) {
         "bf" to "brainfuck", "brainfuck" to "brainfuck"
     )
 
-    // Night theme colors from styles.mmsx
-    private val styleColors = mapOf(
+    // Dark theme colors (IntelliJ Darcula)
+    private val darkColors = mapOf(
         "default" to Color.parseColor("#BBBBBB"),
         "string" to Color.parseColor("#6A8759"),
         "strEscape" to Color.parseColor("#CC7832"),
@@ -105,6 +105,31 @@ class MmsxSyntaxEngine(private val context: Context) {
         "namespace" to Color.parseColor("#9876AA"),
         "error" to Color.parseColor("#BC3F3C")
     )
+
+    // Light theme colors (IntelliJ Light)
+    private val lightColors = mapOf(
+        "default" to Color.parseColor("#333333"),
+        "string" to Color.parseColor("#067D17"),
+        "strEscape" to Color.parseColor("#C41A16"),
+        "comment" to Color.parseColor("#8C8C8C"),
+        "meta" to Color.parseColor("#808000"),
+        "number" to Color.parseColor("#1C00CF"),
+        "keyword" to Color.parseColor("#AF001A"),
+        "keyword2" to Color.parseColor("#7A3E9D"),
+        "constant" to Color.parseColor("#233F9E"),
+        "type" to Color.parseColor("#233F9E"),
+        "label" to Color.parseColor("#1750EB"),
+        "variable" to Color.parseColor("#0070C1"),
+        "operator" to Color.parseColor("#333333"),
+        "propKey" to Color.parseColor("#AF001A"),
+        "propVal" to Color.parseColor("#067D17"),
+        "tagName" to Color.parseColor("#116644"),
+        "attrName" to Color.parseColor("#7A3E9D"),
+        "namespace" to Color.parseColor("#233F9E"),
+        "error" to Color.parseColor("#A61717")
+    )
+
+    private fun getColors(isDark: Boolean): Map<String, Int> = if (isDark) darkColors else lightColors
 
     fun loadAllSyntaxes() {
         try {
@@ -267,9 +292,10 @@ class MmsxSyntaxEngine(private val context: Context) {
      * Tokenize a single line into TextSpan objects using this syntax definition.
      * This does NOT call setText — it only returns span data for the renderer.
      */
-    fun tokenizeLine(line: String, def: SyntaxDef): List<TextSpan> {
+    fun tokenizeLine(line: String, def: SyntaxDef, isDark: Boolean = true): List<TextSpan> {
         if (line.isEmpty()) return emptyList()
         val spans = mutableListOf<TextSpan>()
+        val colors = getColors(isDark)
 
         // Priority order: keywords, keyword2, strings, numbers, annotations, constants, meta, comments
         val taken = BooleanArray(line.length) { false }
@@ -293,44 +319,44 @@ class MmsxSyntaxEngine(private val context: Context) {
         // Comments (highest priority — they eat everything after them)
         if (def.commentLine != null) {
             val lineCommentPattern = Pattern.compile(Pattern.quote(def.commentLine) + ".*$", Pattern.MULTILINE)
-            addSpans(lineCommentPattern, styleColors["comment"]!!, italic = true)
+            addSpans(lineCommentPattern, colors["comment"]!!, italic = true)
         }
         if (def.commentBlockStart != null && def.commentBlockEnd != null) {
             val blockPattern = Pattern.compile(
                 Pattern.quote(def.commentBlockStart) + "[\\s\\S]*?" + Pattern.quote(def.commentBlockEnd),
                 Pattern.DOTALL
             )
-            addSpans(blockPattern, styleColors["comment"]!!, italic = true)
+            addSpans(blockPattern, colors["comment"]!!, italic = true)
         }
 
         // Strings
         for (pattern in def.stringPatterns) {
-            addSpans(pattern, styleColors["string"]!!)
+            addSpans(pattern, colors["string"]!!)
         }
 
         // Keywords
         if (def.keywords.isNotEmpty()) {
             val keywordPattern = Pattern.compile("\\b(${def.keywords.joinToString("|") { Pattern.quote(it) }})\\b")
-            addSpans(keywordPattern, styleColors["keyword"]!!, bold = true)
+            addSpans(keywordPattern, colors["keyword"]!!, bold = true)
         }
 
         if (def.keyword2.isNotEmpty()) {
             val keyword2Pattern = Pattern.compile("\\b(${def.keyword2.joinToString("|") { Pattern.quote(it) }})\\b")
-            addSpans(keyword2Pattern, styleColors["keyword2"]!!)
+            addSpans(keyword2Pattern, colors["keyword2"]!!)
         }
 
         // Numbers
-        def.numberPattern?.let { addSpans(it, styleColors["number"]!!) }
+        def.numberPattern?.let { addSpans(it, colors["number"]!!) }
 
         // Annotations
-        def.annotationPattern?.let { addSpans(it, styleColors["meta"]!!) }
+        def.annotationPattern?.let { addSpans(it, colors["meta"]!!) }
 
         // Constants
-        def.constantPattern?.let { addSpans(it, styleColors["constant"]!!) }
+        def.constantPattern?.let { addSpans(it, colors["constant"]!!) }
 
         // Meta patterns
         for (pattern in def.metaPatterns) {
-            addSpans(pattern, styleColors["meta"]!!)
+            addSpans(pattern, colors["meta"]!!)
         }
 
         return spans
@@ -340,7 +366,7 @@ class MmsxSyntaxEngine(private val context: Context) {
      * Highlight the entire document. Produces a Map<lineIndex, List<TextSpan>>
      * and calls editor.setTextSyntaxSpans() without modifying content.
      */
-    fun highlight(editor: CodeEditorView, syntaxName: String?) {
+    fun highlight(editor: CodeEditorView, syntaxName: String?, isDark: Boolean = true) {
         if (syntaxName == null || syntaxName == "text") {
             editor.setTextSyntaxSpans(emptyMap())
             return
@@ -349,11 +375,11 @@ class MmsxSyntaxEngine(private val context: Context) {
         val def = loadedDefs[syntaxName] ?: return
 
         highlightRunnable?.let { mainHandler.removeCallbacks(it) }
-        highlightRunnable = Runnable { performHighlight(editor, def) }
+        highlightRunnable = Runnable { performHighlight(editor, def, isDark) }
         mainHandler.postDelayed(highlightRunnable!!, 150)
     }
 
-    private fun performHighlight(editor: CodeEditorView, def: SyntaxDef) {
+    private fun performHighlight(editor: CodeEditorView, def: SyntaxDef, isDark: Boolean) {
         if (isHighlighting) return
         isHighlighting = true
         try {
@@ -364,7 +390,7 @@ class MmsxSyntaxEngine(private val context: Context) {
             for (lineIdx in 0 until lineCount) {
                 val lineText = buffer.getLineText(lineIdx)
                 if (lineText.isNotEmpty()) {
-                    val lineSpans = tokenizeLine(lineText, def)
+                    val lineSpans = tokenizeLine(lineText, def, isDark)
                     if (lineSpans.isNotEmpty()) {
                         spansMap[lineIdx] = lineSpans
                     }

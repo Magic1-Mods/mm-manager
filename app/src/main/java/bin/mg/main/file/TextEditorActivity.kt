@@ -99,7 +99,7 @@ class TextEditorActivity : AppCompatActivity(),
                 if (path != null) {
                     currentSyntax = syntaxEngine.getSyntaxForFile(path) ?: detectSyntaxFallback(path)
                     fileSyntaxes[path] = currentSyntax
-                    syntaxEngine.highlight(codeEditor!!, currentSyntax)
+                    syntaxEngine.highlight(codeEditor!!, currentSyntax, ThemeManager.isDarkMode(this))
                 }
             }
         }
@@ -250,7 +250,7 @@ class TextEditorActivity : AppCompatActivity(),
             justSaved = false
             handleUndoRedoState()
             if (currentSyntax != "text" && !syntaxEngine.isHighlighting) {
-                syntaxEngine.highlight(codeEditor!!, currentSyntax)
+                syntaxEngine.highlight(codeEditor!!, currentSyntax, ThemeManager.isDarkMode(this))
             }
         }
 
@@ -677,7 +677,7 @@ class TextEditorActivity : AppCompatActivity(),
         currentSyntax = syntaxName
         if (currentFileIndex >= 0 && currentFileIndex < openFiles.size)
             fileSyntaxes[openFiles[currentFileIndex]] = syntaxName
-        syntaxEngine.highlight(codeEditor!!, currentSyntax)
+        syntaxEngine.highlight(codeEditor!!, currentSyntax, ThemeManager.isDarkMode(this))
     }
 
     private fun showPreferencesDialog() { EditorPreferencesFragment().show(supportFragmentManager, "prefs") }
@@ -960,7 +960,7 @@ class TextEditorActivity : AppCompatActivity(),
             isModified = false
             handleUndoRedoState()
             updateInfoBar()
-            syntaxEngine.highlight(codeEditor!!, currentSyntax)
+            syntaxEngine.highlight(codeEditor!!, currentSyntax, ThemeManager.isDarkMode(this))
         } else {
             loadFile()
         }
@@ -1056,7 +1056,7 @@ class TextEditorActivity : AppCompatActivity(),
                     isModified = false
                     handleUndoRedoState()
                     updateInfoBar()
-                    syntaxEngine.highlight(codeEditor!!, currentSyntax)
+                    syntaxEngine.highlight(codeEditor!!, currentSyntax, ThemeManager.isDarkMode(this))
                 }
             } catch (e: Exception) {
                 mainHandler.post { dialog.dismiss(); Toast.makeText(this@TextEditorActivity, "Failed to load file", Toast.LENGTH_SHORT).show() }
