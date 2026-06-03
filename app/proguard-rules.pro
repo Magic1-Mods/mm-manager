@@ -106,22 +106,17 @@
 -dontwarn org.eclipse.tm4e.**
 
 # ==========================================
-# DEXLIB2 — vendored source, R8 can analyze
+# DEXLIB2 — vendored source, R8 analyzes it
+# Only keep absolute minimum entry points
 # ==========================================
 -keep class org.jf.dexlib2.DexFileFactory { *; }
--keep class org.jf.dexlib2.dexbacked.DexBackedDexFile { public *; }
 -keep class org.jf.dexlib2.writer.pool.DexPool { public *; }
 -keep class org.jf.dexlib2.builder.DexBuilder { public *; }
 -dontwarn org.jf.dexlib2.**
 
 # ==========================================
-# GUAVA — minimal
+# GUAVA — only what dexlib2 actually uses
 # ==========================================
--keep class com.google.common.base.** { *; }
--keep class com.google.common.collect.** { *; }
--keep class com.google.common.io.** { *; }
--keep class com.google.common.cache.** { *; }
--keep class com.google.common.primitives.** { *; }
 -dontwarn com.google.common.**
 -dontwarn javax.annotation.**
 -dontwarn javax.lang.model.**
