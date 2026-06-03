@@ -17,3 +17,6 @@ dependencyResolutionManagement {
 rootProject.name = "Magic Manager"
 
 include(":app")
+include(":editor-core")
+include(":editor-rendering")
+include(":editor-syntax")
