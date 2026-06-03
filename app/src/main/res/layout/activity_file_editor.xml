@@ -4,103 +4,111 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/editor_drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#1E1E1E">
+    android:layout_height="match_parent">
 
-    <!-- Main Content -->
+    <!-- ═══════════════════════════════════════ MAIN CONTENT ═══════════════════════════════════════ -->
     <LinearLayout
         android:id="@+id/editor_main_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="#1E1E1E">
+        android:orientation="vertical">
 
-        <!-- Toolbar -->
+        <!-- ── Toolbar ── -->
         <LinearLayout
+            android:id="@+id/editor_toolbar"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="#1A1A1A"
+            android:layout_height="52dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="2dp">
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp">
 
+            <!-- Menu / hamburger -->
             <ImageView
                 android:id="@+id/btn_menu"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:padding="9dp"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:padding="11dp"
                 android:src="@drawable/ic_menu"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#CCCCCC" />
+                app:tint="#FFFFFF" />
 
+            <!-- Pin / Search toggle -->
             <ImageView
                 android:id="@+id/btn_pin"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:padding="9dp"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:padding="11dp"
                 android:src="@drawable/ic_push_pin"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#CCCCCC" />
+                app:tint="#FFFFFF" />
 
+            <!-- Undo -->
             <ImageView
                 android:id="@+id/btn_undo"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:padding="9dp"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:padding="11dp"
                 android:src="@drawable/ic_undo"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#CCCCCC" />
+                app:tint="#FFFFFF" />
 
+            <!-- Redo -->
             <ImageView
                 android:id="@+id/btn_redo"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:padding="9dp"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:padding="11dp"
                 android:src="@drawable/ic_redo"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#CCCCCC" />
+                app:tint="#FFFFFF" />
 
+            <!-- Save -->
             <ImageView
                 android:id="@+id/btn_save"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:padding="9dp"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:padding="11dp"
                 android:src="@drawable/ic_save"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#CCCCCC" />
+                app:tint="#FFFFFF" />
 
+            <!-- Edit-mode actions -->
             <ImageView
                 android:id="@+id/btn_edit_mode"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:padding="9dp"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:padding="11dp"
                 android:src="@drawable/ic_edit"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#CCCCCC" />
+                app:tint="#FFFFFF" />
 
+            <!-- Spacer -->
             <View
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
+            <!-- Overflow -->
             <ImageView
                 android:id="@+id/btn_overflow"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:padding="9dp"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:padding="11dp"
                 android:src="@drawable/ic_more_vert"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#CCCCCC" />
+                app:tint="#FFFFFF" />
         </LinearLayout>
 
-        <!-- Tab Strip (filename + cursor position + encoding) -->
+        <!-- ── Info bar: filename  •  cursor pos + encoding ── -->
         <LinearLayout
+            android:id="@+id/editor_info_bar"
             android:layout_width="match_parent"
-            android:layout_height="32dp"
-            android:background="#252525"
+            android:layout_height="30dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="12dp">
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
 
             <TextView
                 android:id="@+id/textview_filename"
@@ -108,31 +116,35 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="untitled"
-                android:textColor="#CCCCCC"
-                android:textSize="13sp"
+                android:textSize="12sp"
+                android:textStyle="bold"
                 android:singleLine="true"
-                android:ellipsize="middle"
-                android:textStyle="bold" />
+                android:ellipsize="middle" />
 
             <TextView
                 android:id="@+id/textview_lineno_encoding"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="1:1   UTF-8"
-                android:textColor="#888888"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Search Bar (hidden by default) -->
+        <!-- ── 1 dp divider under info bar ── -->
+        <View
+            android:id="@+id/editor_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+
+        <!-- ── Search Bar (hidden by default) ── -->
         <LinearLayout
             android:id="@+id/search_bar"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="#1A1A1A"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="8dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="4dp"
             android:visibility="gone">
 
             <EditText
@@ -141,52 +153,48 @@
                 android:layout_height="32dp"
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
-                android:hint="Search..."
-                android:textColorHint="#666666"
-                android:textColor="#FFFFFF"
+                android:hint="Search…"
                 android:textSize="14sp"
                 android:singleLine="true"
                 android:inputType="text"
-                android:paddingHorizontal="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="4dp"
                 android:imeOptions="actionSearch" />
 
             <TextView
                 android:id="@+id/search_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#888888"
                 android:textSize="12sp"
-                android:paddingHorizontal="4dp" />
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp" />
 
             <ImageView
                 android:id="@+id/btn_search_prev"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="4dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:padding="5dp"
                 android:src="@drawable/ic_chevron_left"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#888888" />
+                android:background="?attr/selectableItemBackgroundBorderless" />
 
             <ImageView
                 android:id="@+id/btn_search_next"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="4dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:padding="5dp"
                 android:src="@drawable/ic_chevron_right"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#888888" />
+                android:background="?attr/selectableItemBackgroundBorderless" />
 
             <ImageView
                 android:id="@+id/btn_search_close"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="4dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:padding="5dp"
                 android:src="@drawable/ic_close"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#888888" />
+                android:background="?attr/selectableItemBackgroundBorderless" />
         </LinearLayout>
 
-        <!-- Code Editor (sora-editor) -->
+        <!-- ── Code Editor (sora-editor) ── -->
         <io.github.rosemoe.sora.widget.CodeEditor
             android:id="@+id/code_editor"
             android:layout_width="match_parent"
@@ -195,12 +203,11 @@
             app:lnPanelPosition="left"
             app:lnPanelPositionMode="follow" />
 
-        <!-- Symbol Bar -->
+        <!-- ── Symbol / shortcut bar ── -->
         <LinearLayout
             android:id="@+id/symbol_bar"
             android:layout_width="match_parent"
             android:layout_height="44dp"
-            android:background="#1A1A1A"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
@@ -210,26 +217,27 @@
                 android:layout_height="44dp"
                 android:layout_weight="1" />
         </LinearLayout>
+
     </LinearLayout>
 
-    <!-- Left Drawer (Open Files Panel) -->
+    <!-- ═══════════════════════════════════════ LEFT DRAWER ═══════════════════════════════════════ -->
     <LinearLayout
         android:id="@+id/editor_drawer"
-        android:layout_width="280dp"
+        android:layout_width="285dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:orientation="vertical"
-        android:background="#FFFFFF"
         android:elevation="8dp">
 
-        <!-- Drawer Header -->
+        <!-- Drawer header (title + icons) -->
         <LinearLayout
+            android:id="@+id/drawer_header"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:background="#212121"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="4dp">
 
             <TextView
                 android:layout_width="0dp"
@@ -242,24 +250,24 @@
 
             <ImageView
                 android:id="@+id/btn_drawer_edit"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:padding="8dp"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:padding="9dp"
                 android:src="@drawable/ic_edit"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#CCCCCC" />
+                app:tint="#FFFFFF" />
 
             <ImageView
                 android:id="@+id/btn_drawer_overflow"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:padding="8dp"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:padding="9dp"
                 android:src="@drawable/ic_more_vert"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="#CCCCCC" />
+                app:tint="#FFFFFF" />
         </LinearLayout>
 
-        <!-- File List -->
+        <!-- File list -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_open_files"
             android:layout_width="match_parent"
@@ -268,17 +276,20 @@
             android:clipToPadding="false"
             android:paddingTop="4dp" />
 
-        <!-- Minimize Button -->
+        <!-- Minimize button -->
         <Button
             android:id="@+id/btn_minimize"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:layout_margin="16dp"
+            android:layout_margin="12dp"
             android:text="MINIMIZE"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             android:backgroundTint="#42A5F5"
-            android:textAllCaps="true" />
+            android:textAllCaps="true"
+            android:elevation="2dp" />
+
     </LinearLayout>
+
 </androidx.drawerlayout.widget.DrawerLayout>
