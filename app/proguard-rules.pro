@@ -1,7 +1,10 @@
 # ==========================================
-# R8 FULL MODE — Aggressive shrinking
+# R8 FULL MODE — Maximum shrinking + renaming
 # ==========================================
 -allowaccessmodification
+-optimizationpasses 5
+-optimizations !code/simplification/arithmetic,!code/simplification/cast
+
 -assumenosideeffects class android.util.Log {
     public static int v(...);
     public static int d(...);
@@ -10,24 +13,35 @@
 }
 
 # ==========================================
-# OBFUSCATION
+# OBFUSCATION — max obfuscation
 # ==========================================
 -repackageclasses ''
 -flattenpackagehierarchy ''
 -overloadaggressively
 -useuniqueclassmembernames
+-dontusemixedcaseclassnames
 
 # ==========================================
-# ANDROID COMPONENTS (keep minimal)
+# ANDROID COMPONENTS — keep class name only
 # ==========================================
--keep public class * extends android.app.Activity
--keep public class * extends android.app.Application
--keep public class * extends android.app.Service
--keep public class * extends android.content.BroadcastReceiver
--keep public class * extends android.content.ContentProvider
+-keep public class * extends android.app.Activity {
+    public <init>(...);
+}
+-keep public class * extends android.app.Application {
+    public <init>(...);
+}
+-keep public class * extends android.app.Service {
+    public <init>(...);
+}
+-keep public class * extends android.content.BroadcastReceiver {
+    public <init>(...);
+}
+-keep public class * extends android.content.ContentProvider {
+    public <init>(...);
+}
 
 # ==========================================
-# APP-SPECIFIC — only what反射 needs
+# APP ENTRY POINTS — keep class + members
 # ==========================================
 -keep class bin.mg.main.MainActivity { *; }
 -keep class bin.mg.main.AppMain { *; }
@@ -38,7 +52,7 @@
 -keep class bin.mg.main.app.dex.plus.DexActivity { *; }
 
 # ==========================================
-# VIEWS inflated from XML
+# VIEWS inflated from XML (reflection)
 # ==========================================
 -keepclasseswithmembers class * {
     public <init>(android.content.Context, android.util.AttributeSet);
@@ -70,7 +84,7 @@
 }
 
 # ==========================================
-# SORA EDITOR — keep only public API
+# SORA EDITOR — minimal public API
 # ==========================================
 -keep public class io.github.rosemoe.sora.widget.CodeEditor { public *; }
 -keep public class io.github.rosemoe.sora.widget.SymbolInputView { public *; }
@@ -86,7 +100,7 @@
 -dontwarn io.github.rosemoe.sora.**
 
 # ==========================================
-# TM4E (TextMate grammar engine)
+# TM4E — TextMate grammar engine
 # ==========================================
 -keep class org.eclipse.tm4e.core.registry.** { public *; }
 -keep class org.eclipse.tm4e.core.internal.** { *; }
@@ -94,24 +108,29 @@
 -dontwarn org.eclipse.tm4e.**
 
 # ==========================================
-# DEXLIB2 — keep only what JNI/reflection needs
+# DEXLIB2 — vendored source, R8 can analyze
+# Only keep entry points, let R8 strip rest
 # ==========================================
--keep class org.jf.dexlib2.** { *; }
--keep class org.jf.util.** { *; }
+-keep class org.jf.dexlib2 DexFileFactory { *; }
+-keep class org.jf.dexlib2.dexbacked.DexBackedDexFile { public *; }
+-keep class org.jf.dexlib2.writer.pool.DexPool { public *; }
+-keep class org.jf.dexlib2.builder.DexBuilder { public *; }
 -dontwarn org.jf.dexlib2.**
--dontwarn org.jf.util.**
 
 # ==========================================
-# GUAVA — strip unused aggressively
+# GUAVA — minimal, only core classes
 # ==========================================
 -keep class com.google.common.base.** { *; }
 -keep class com.google.common.collect.** { *; }
+-keep class com.google.common.io.** { *; }
+-keep class com.google.common.cache.** { *; }
+-keep class com.google.common.primitives.** { *; }
 -dontwarn com.google.common.**
 -dontwarn javax.annotation.**
 -dontwarn javax.lang.model.**
 
 # ==========================================
-# GSON — keep only what serialization needs
+# GSON — annotation-based only
 # ==========================================
 -keepclassmembers class * {
     @com.google.gson.annotations.SerializedName <fields>;
@@ -127,8 +146,7 @@
 -dontwarn com.bumptech.glide.**
 
 # ==========================================
-# ANDROIDX — let consumer rules do their job
-# Don't keep entire packages, only suppress warnings
+# SUPPRESS WARNINGS
 # ==========================================
--dontwarn androidx.**
--dontwarn com.google.android.material.**
+-dontwarn **
+-ignorewarnings

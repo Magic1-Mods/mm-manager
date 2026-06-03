@@ -14,6 +14,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
+import android.view.Window
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -133,6 +134,9 @@ class TextEditorActivity : AppCompatActivity(),
         val infoBg       = if (isDark) darkenSurface(toolbarBg, 0.15f)
                            else darkenSurface(toolbarBg, 0.08f)
         val dividerColor = ThemeManager.dividerColor(this)
+        
+        val window: Window = window
+        window.statusBarColor = toolbarBg
 
         // Icon / text tint on toolbar — always white (toolbar is always coloured/dark)
         val toolbarIconTint = 0xFFFFFFFF.toInt()
