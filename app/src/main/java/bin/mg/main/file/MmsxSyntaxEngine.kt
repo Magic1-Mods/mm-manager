@@ -85,7 +85,7 @@ class MmsxSyntaxEngine(private val context: Context) {
 
     // Night theme colors from styles.mmsx
     private val styleColors = mapOf(
-        "default" to Color.parseColor("#A9B7C6"),
+        "default" to Color.parseColor("#BBBBBB"),
         "string" to Color.parseColor("#6A8759"),
         "strEscape" to Color.parseColor("#CC7832"),
         "comment" to Color.parseColor("#808080"),

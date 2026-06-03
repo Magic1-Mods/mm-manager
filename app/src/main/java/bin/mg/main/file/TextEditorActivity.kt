@@ -194,13 +194,13 @@ class TextEditorActivity : AppCompatActivity(),
         val editor = codeEditor ?: return
         if (isDark) {
             editor.renderer.backgroundColor = Color.parseColor("#1E1E1E")
-            editor.renderer.textColor = Color.parseColor("#A9B7C6")
+            editor.renderer.textColor = Color.parseColor("#BBBBBB")
             editor.renderer.lineNumberColor = Color.parseColor("#606366")
             editor.renderer.lineNumberCurrentColor = Color.parseColor("#A0A0A0")
             editor.renderer.gutterBgColor = Color.parseColor("#1E1E1E")
             editor.renderer.currentLineColor = Color.parseColor("#2A2D2E")
             editor.renderer.selectionColor = Color.parseColor("#214283")
-            editor.renderer.cursorColor = Color.parseColor("#A9B7C6")
+            editor.renderer.cursorColor = Color.parseColor("#BBBBBB")
             editor.renderer.separatorColor = Color.parseColor("#333333")
         } else {
             editor.renderer.backgroundColor = Color.parseColor("#FAFAFA")
@@ -354,22 +354,31 @@ class TextEditorActivity : AppCompatActivity(),
 
         // Row 1: → / + - * = <  (→ = tab)
         val row1Symbols = arrayOf("\u2192", "/", "+", "-", "*", "=", "<")
-        val row1Actions = arrayOf<Runnable?>({
-            codeEditor?.buffer?.insertText("\t")
+        symbolRow1 = createSymbolRow(row1Symbols, textColor, dividerColor) { index ->
+            if (index == 0) {
+                codeEditor?.buffer?.insertText("\t")
+            } else {
+                codeEditor?.buffer?.insertText(row1Symbols[index])
+            }
             codeEditor?.requestFocus()
-        }, null, null, null, null, null, null)
-        symbolRow1 = createSymbolRow(row1Symbols, row1Actions, textColor, dividerColor)
+        }
         container.addView(symbolRow1)
 
         // Row 2: > " ' ; | \ _
         val row2Symbols = arrayOf(">", "\"", "'", ";", "|", "\\", "_")
-        symbolRow2 = createSymbolRow(row2Symbols, textColor, dividerColor)
+        symbolRow2 = createSymbolRow(row2Symbols, textColor, dividerColor) { index ->
+            codeEditor?.buffer?.insertText(row2Symbols[index])
+            codeEditor?.requestFocus()
+        }
         symbolRow2.visibility = View.GONE
         container.addView(symbolRow2)
 
         // Row 3: ( ) [ ] { } ...
         val row3Symbols = arrayOf("(", ")", "[", "]", "{", "}", "...")
-        symbolRow3 = createSymbolRow(row3Symbols, textColor, dividerColor)
+        symbolRow3 = createSymbolRow(row3Symbols, textColor, dividerColor) { index ->
+            codeEditor?.buffer?.insertText(row3Symbols[index])
+            codeEditor?.requestFocus()
+        }
         symbolRow3.visibility = View.GONE
         container.addView(symbolRow3)
 
@@ -399,7 +408,7 @@ class TextEditorActivity : AppCompatActivity(),
         symbolInput?.invalidate()
     }
 
-    private fun createSymbolRow(symbols: Array<String>, actions: Array<Runnable?>? = null, textColor: Int, dividerColor: Int): android.widget.LinearLayout {
+    private fun createSymbolRow(symbols: Array<String>, textColor: Int, dividerColor: Int, onSymbolClick: ((Int) -> Unit)? = null): android.widget.LinearLayout {
         val row = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.HORIZONTAL
             layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -424,9 +433,8 @@ class TextEditorActivity : AppCompatActivity(),
                 isFocusable = true
                 setBackgroundResource(android.R.drawable.list_selector_background)
                 setOnClickListener {
-                    val custom = actions?.getOrNull(index)
-                    if (custom != null) {
-                        custom.run()
+                    if (onSymbolClick != null) {
+                        onSymbolClick(index)
                     } else {
                         codeEditor?.buffer?.insertText(sym)
                         codeEditor?.requestFocus()

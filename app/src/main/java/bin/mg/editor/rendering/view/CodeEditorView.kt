@@ -84,7 +84,8 @@ class CodeEditorView @JvmOverloads constructor(
         touchHandler = TouchHandler(
             context, buffer, layoutEngine, scrollController,
             { invalidate() },
-            { ensureCursorVisible() }
+            { ensureCursorVisible() },
+            { showKeyboard() }
         )
         configureEditor()
         updateScrollBounds()

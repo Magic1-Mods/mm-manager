@@ -17,7 +17,8 @@ class TouchHandler(
     private val layoutEngine: LayoutEngine,
     private val scrollController: ScrollController,
     private val invalidate: () -> Unit,
-    private val ensureCursorVisible: () -> Unit
+    private val ensureCursorVisible: () -> Unit,
+    private val showKeyboard: (() -> Unit)? = null
 ) {
 
     private var lastTapTime = 0L
@@ -43,6 +44,7 @@ class TouchHandler(
                 buffer.cursorManager.selectWordAt(lineCol.first, lineCol.second)
                 invalidate()
                 ensureCursorVisible()
+                showKeyboard?.invoke()
                 return true
             }
 
@@ -51,6 +53,7 @@ class TouchHandler(
             buffer.cursorManager.moveTo(lineCol.first, lineCol.second)
             invalidate()
             ensureCursorVisible()
+            showKeyboard?.invoke()
             return true
         }
 

@@ -199,5 +199,5 @@ class EditorRenderer(
         }
     }
 
-    private fun defaultTextColor(): Int = 0xFFA9B7C6.toInt()
+    private fun defaultTextColor(): Int = 0xFFBBBBBB.toInt()
 }
