@@ -13,6 +13,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -463,7 +464,7 @@ class TextEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         editor.setTypefaceLineNumber(typeface)
 
         // Dark theme color scheme matching MT Manager
-        val scheme = EditorColorScheme(editor)
+        val scheme = EditorColorScheme()
         scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, Color.parseColor("#1E1E1E"))
         scheme.setColor(EditorColorScheme.CURRENT_LINE, Color.parseColor("#2A2D2E"))
         scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, Color.parseColor("#1E1E1E"))
@@ -471,13 +472,11 @@ class TextEditorActivity : AppCompatActivity(), EditorPreferencesFragment.OnPref
         scheme.setColor(EditorColorScheme.LINE_NUMBER_CURRENT, Color.parseColor("#A0A0A0"))
         scheme.setColor(EditorColorScheme.TEXT_NORMAL, Color.parseColor("#A9B7C6"))
         scheme.setColor(EditorColorScheme.TEXT_SELECTED, Color.parseColor("#214283"))
-        scheme.setColor(EditorColorScheme.SELECTION_BACKGROUND, Color.parseColor("#214283"))
+        scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#214283"))
         scheme.setColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND, Color.parseColor("#32593A"))
-        scheme.setColor(EditorColorScheme.UNMATCHED_TEXT_BACKGROUND, Color.parseColor("#5F3232"))
         scheme.setColor(EditorColorScheme.FUNCTION_NAME, Color.parseColor("#FFC66D"))
         scheme.setColor(EditorColorScheme.KEYWORD, Color.parseColor("#CC7832"))
-        scheme.setColor(EditorColorScheme.STRING, Color.parseColor("#6A8759"))
-        scheme.setColor(EditorColorScheme.NUMBER, Color.parseColor("#6897BB"))
+        scheme.setColor(EditorColorScheme.LITERAL, Color.parseColor("#6A8759"))
         scheme.setColor(EditorColorScheme.ANNOTATION, Color.parseColor("#BBB529"))
         scheme.setColor(EditorColorScheme.COMMENT, Color.parseColor("#808080"))
         editor.setColorScheme(scheme)
