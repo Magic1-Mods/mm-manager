@@ -85,7 +85,7 @@ class TextEditorActivity : AppCompatActivity(),
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private var openFileAdapter: OpenFileAdapter? = null
-    private lateinit var syntaxEngine: MtsxSyntaxEngine
+    private lateinit var syntaxEngine: MmsxSyntaxEngine
 
     private val prefs by lazy { getSharedPreferences("editor_prefs", MODE_PRIVATE) }
 
@@ -95,7 +95,7 @@ class TextEditorActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_file_editor)
 
-        syntaxEngine = MtsxSyntaxEngine(this)
+        syntaxEngine = MmsxSyntaxEngine(this)
         executor.execute { syntaxEngine.loadAllSyntaxes() }
 
         initViews()
@@ -298,6 +298,14 @@ class TextEditorActivity : AppCompatActivity(),
             arrayOf("\u2192", "/", "+", "-", "*", "=", "<", ">"),
             arrayOf("\u2192", "/", "+", "-", "*", "=", "<", ">")
         )
+
+        filenameText?.setOnClickListener {
+            currentFilePath?.let { path ->
+                val clip = android.content.ClipData.newPlainText("filename", File(path).name)
+                getSystemService(android.content.ClipboardManager::class.java)?.setPrimaryClip(clip)
+                Toast.makeText(this, "Filename copied", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     // ─── Drawer ───────────────────────────────────────────────────────────────
@@ -556,10 +564,11 @@ class TextEditorActivity : AppCompatActivity(),
     private fun handleUndoRedoState() {
         val undoEnabled = codeEditor?.canUndo() == true
         val redoEnabled = codeEditor?.canRedo() == true
-        // Dim icons when action unavailable
         val dimAlpha = 0.28f
         findViewById<ImageView>(R.id.btn_undo).alpha = if (undoEnabled) 1f else dimAlpha
         findViewById<ImageView>(R.id.btn_redo).alpha = if (redoEnabled) 1f else dimAlpha
+        findViewById<ImageView>(R.id.btn_save).alpha = if (isModified) 1f else dimAlpha
+        updateFilenameTab()
     }
 
     // ─── Info bar ─────────────────────────────────────────────────────────────
@@ -569,7 +578,10 @@ class TextEditorActivity : AppCompatActivity(),
         lineNoEncodingText?.text = "${cursor.leftLine + 1}:${cursor.leftColumn + 1}   UTF-8"
     }
 
-    private fun updateInfoBar() { updateCursorPosition() }
+    private fun updateFilenameTab() {
+        val name = currentFilePath?.let { File(it).name } ?: "untitled"
+        filenameText?.text = if (isModified) "*$name" else name
+    }
 
     // ─── File I/O ─────────────────────────────────────────────────────────────
 
@@ -584,6 +596,7 @@ class TextEditorActivity : AppCompatActivity(),
                 mainHandler.post {
                     dialog.dismiss()
                     justSaved = true; isModified = false
+                    handleUndoRedoState()
                     updateInfoBar()
                     Toast.makeText(this@TextEditorActivity, "Saved", Toast.LENGTH_SHORT).show()
                 }
@@ -673,7 +686,8 @@ class TextEditorActivity : AppCompatActivity(),
             filePositions[path]?.let { codeEditor?.setSelection(it.first, it.second) }
             loadLanguageForSyntax(currentSyntax)
             isModified = false; justSaved = true
-            updateInfoBar(); handleUndoRedoState()
+            handleUndoRedoState()
+            updateInfoBar()
         } else {
             loadFile()
         }
@@ -735,7 +749,8 @@ class TextEditorActivity : AppCompatActivity(),
                     fileContents[path] = content
                     loadLanguageForSyntax(currentSyntax)
                     isModified = false; justSaved = true
-                    updateInfoBar(); handleUndoRedoState()
+                    handleUndoRedoState()
+                    updateInfoBar()
                 }
             } catch (e: Exception) {
                 mainHandler.post { dialog.dismiss(); Toast.makeText(this@TextEditorActivity, "Failed to load file", Toast.LENGTH_SHORT).show() }

@@ -14,7 +14,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.regex.Pattern
 
-class MtsxSyntaxEngine(private val context: Context) {
+class MmsxSyntaxEngine(private val context: Context) {
 
     data class SyntaxDef(
         val name: String,
@@ -42,7 +42,7 @@ class MtsxSyntaxEngine(private val context: Context) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var highlightRunnable: Runnable? = null
 
-    // Night theme colors from styles.mtsx
+    // Night theme colors from styles.mmsx
     private val styleColors = mapOf(
         "default" to Color.parseColor("#A9B7C6"),
         "string" to Color.parseColor("#6A8759"),
@@ -68,12 +68,14 @@ class MtsxSyntaxEngine(private val context: Context) {
     fun loadAllSyntaxes() {
         try {
             val syntaxDir = context.assets.list("syntax") ?: return
-            for (name in syntaxDir) {
-                if (name == "init" || name == "internal") continue
-                val filePath = "syntax/$name.mtsx"
+            for (fileName in syntaxDir) {
+                if (fileName == "init" || fileName == "internal") continue
+                if (!fileName.endsWith(".mmsx")) continue
+                val name = fileName.removeSuffix(".mmsx")
+                val filePath = "syntax/$fileName"
                 try {
                     val content = context.assets.open(filePath).bufferedReader().use { it.readText() }
-                    val def = parseMtsx(name, content)
+                    val def = parseSyntax(name, content)
                     if (def != null) {
                         loadedDefs[name] = def
                         for (ext in def.extensions) {
@@ -92,9 +94,9 @@ class MtsxSyntaxEngine(private val context: Context) {
 
     fun getDef(name: String): SyntaxDef? = loadedDefs[name]
 
-    private fun parseMtsx(name: String, content: String): SyntaxDef? {
+    private fun parseSyntax(name: String, content: String): SyntaxDef? {
         try {
-            val cleaned = cleanMtsx(content)
+            val cleaned = cleanSyntax(content)
             val languageName = extractStringField(cleaned, "name") ?: name
             val extensions = extractExtensions(cleaned)
             val commentLine = extractCommentLine(cleaned)
@@ -127,7 +129,7 @@ class MtsxSyntaxEngine(private val context: Context) {
         }
     }
 
-    private fun cleanMtsx(content: String): String {
+    private fun cleanSyntax(content: String): String {
         val sb = StringBuilder()
         var inString = false
         var escape = false

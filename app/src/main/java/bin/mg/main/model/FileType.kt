@@ -40,7 +40,7 @@ enum class FileType {
             addCompound("tar.lz4", ARCHIVE)
             addCompound("tar.lzo", ARCHIVE)
             map(ARCHIVE, "zip", "tar", "7z", "rar", "gz", "xz", "bz2", "lz4", "zst", "zstd", "lzop", "bzip2", "gzip", "lzma")
-            map(SCRIPT, "c", "cpp", "xml", "h", "hpp", "cxx", "cs", "a", "s", "ts", "js", "sh", "gradle", "gradle.kts")
+            map(SCRIPT, "mtsx", "mmsx", "c", "cpp", "xml", "h", "hpp", "cxx", "cs", "a", "s", "ts", "js", "sh", "gradle", "gradle.kts")
             map(TEXT, "txt", "md", "properties", "css", "SF", "MF", "log", "json")
             map(JAVA, "java")
             map(KOTLIN, "kt")
