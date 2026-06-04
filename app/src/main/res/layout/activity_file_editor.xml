@@ -201,13 +201,15 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- ── Symbol / shortcut bar ── -->
+        <!-- ── Symbol / shortcut bar (bottom bar above nav) ── -->
         <LinearLayout
             android:id="@+id/symbol_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:background="#1A1A1A"
+            android:elevation="4dp">
 
             <LinearLayout
                 android:id="@+id/symbol_input"

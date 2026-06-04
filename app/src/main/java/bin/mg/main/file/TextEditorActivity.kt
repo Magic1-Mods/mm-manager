@@ -191,31 +191,168 @@ class TextEditorActivity : AppCompatActivity(),
         editor.setTypeface(Typeface.MONOSPACE)
     }
 
-    // ─── Symbol bar ───────────────────────────────────────────────────────────
+    // ─── Symbol bar (bottom bar with keyboard awareness) ──────────────────────
+
+    private var symbolBarExpanded = false
+    private var isKeyboardVisible = false
+    private lateinit var symbolRow1: LinearLayout
+    private lateinit var symbolRow2: LinearLayout
+    private lateinit var symbolRow3: LinearLayout
+    private lateinit var symbolBarContainer: LinearLayout
+    private var symbolDragStartY = 0f
 
     private fun setupSymbolBar() {
         val container = symbolInput ?: return
         container.removeAllViews()
-        container.orientation = LinearLayout.HORIZONTAL
 
         val isDark = ThemeManager.isDarkMode(this)
         val textColor = if (isDark) 0xFFCCCCCC.toInt() else 0xFF333333.toInt()
         val bgColor = if (isDark) 0xFF1A1A1A.toInt() else 0xFFE8E8E8.toInt()
         val dividerColor = if (isDark) 0xFF333333.toInt() else 0xFFCCCCCC.toInt()
+        val handleColor = if (isDark) 0xFF666666.toInt() else 0xFF999999.toInt()
 
-        container.setBackgroundColor(bgColor)
+        // Main vertical container
+        symbolBarContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(bgColor)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        container.addView(symbolBarContainer)
 
-        // MH-TextEditor symbol bar: -> {} () , . ; " ? + - * / < > [ ] :
-        val symbols = arrayOf("->", "{", "}", "(", ")", ",", ".", ";", "\"", "?",
-                              "+", "-", "*", "/", "<", ">", "[", "]", ":")
-        val insertTexts = arrayOf("\t", "{}", "}", "(", ")", ",", ".", ";", "\"", "?",
-                                  "+", "-", "*", "/", "<", ">", "[", "]", ":")
+        // Drag handle area at top (only used when keyboard is hidden to expand)
+        val handleArea = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (12 * resources.displayMetrics.density).toInt()
+            )
+            setOnTouchListener { _, event ->
+                when (event.action) {
+                    android.view.MotionEvent.ACTION_DOWN -> {
+                        symbolDragStartY = event.rawY
+                        true
+                    }
+                    android.view.MotionEvent.ACTION_UP -> {
+                        val dy = symbolDragStartY - event.rawY
+                        if (dy > 40 && !symbolBarExpanded && !isKeyboardVisible) {
+                            expandSymbolBar()
+                        } else if (dy < -40 && symbolBarExpanded) {
+                            collapseSymbolBar()
+                        }
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }
+        symbolBarContainer.addView(handleArea)
 
-        for (i in symbols.indices) {
+        // Handle bar visual (small line indicator)
+        val handleBar = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                (40 * resources.displayMetrics.density).toInt(),
+                (3 * resources.displayMetrics.density).toInt()
+            ).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                topMargin = (4 * resources.displayMetrics.density).toInt()
+                bottomMargin = (4 * resources.displayMetrics.density).toInt()
+            }
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                setColor(handleColor)
+                cornerRadius = (2 * resources.displayMetrics.density)
+            }
+        }
+        symbolBarContainer.addView(handleBar)
+
+        // Row 1: -> { } ( ) , .   (main symbols always visible)
+        val row1Symbols = arrayOf("->", "{", "}", "(", ")", ",", ".")
+        val row1Inserts = arrayOf("\t", "{}", "}", "(", ")", ",", ".")
+        symbolRow1 = createSymbolRow(row1Symbols, row1Inserts, textColor, dividerColor)
+        symbolBarContainer.addView(symbolRow1)
+
+        // Row 2: ; " ? + - * /   (visible when expanded or keyboard open)
+        val row2Symbols = arrayOf(";", "\"", "?", "+", "-", "*", "/")
+        val row2Inserts = arrayOf(";", "\"", "?", "+", "-", "*", "/")
+        symbolRow2 = createSymbolRow(row2Symbols, row2Inserts, textColor, dividerColor)
+        symbolRow2.visibility = View.GONE
+        symbolBarContainer.addView(symbolRow2)
+
+        // Row 3: < > [ ] : tab   (visible when expanded)
+        val row3Symbols = arrayOf("<", ">", "[", "]", ":", "tab")
+        val row3Inserts = arrayOf("<", ">", "[", "]", ":", "\t")
+        symbolRow3 = createSymbolRow(row3Symbols, row3Inserts, textColor, dividerColor)
+        symbolRow3.visibility = View.GONE
+        symbolBarContainer.addView(symbolRow3)
+
+        // Watch keyboard visibility
+        setupKeyboardListener()
+    }
+
+    private fun setupKeyboardListener() {
+        val rootView = findViewById<View>(android.R.id.content)
+        rootView.viewTreeObserver.addOnGlobalLayoutListener {
+            val rect = android.graphics.Rect()
+            rootView.getWindowVisibleDisplayFrame(rect)
+            val screenHeight = rootView.rootView.height
+            val visibleHeight = rect.height()
+            val heightDiff = screenHeight - visibleHeight
+            val keyboardVisible = heightDiff > screenHeight * 0.15
+
+            if (keyboardVisible != isKeyboardVisible) {
+                isKeyboardVisible = keyboardVisible
+                updateSymbolBarForKeyboard()
+            }
+        }
+    }
+
+    private fun updateSymbolBarForKeyboard() {
+        if (isKeyboardVisible) {
+            // Keyboard visible: show row 1 and 2, push bar above keyboard
+            symbolRow2.visibility = View.VISIBLE
+            symbolRow3.visibility = View.GONE
+        } else {
+            // Keyboard hidden: show row 1, optionally row 2 and 3 if expanded
+            symbolRow2.visibility = if (symbolBarExpanded) View.VISIBLE else View.GONE
+            symbolRow3.visibility = if (symbolBarExpanded) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun expandSymbolBar() {
+        if (symbolBarExpanded) return
+        symbolBarExpanded = true
+        symbolRow2.visibility = View.VISIBLE
+        symbolRow3.visibility = View.VISIBLE
+    }
+
+    private fun collapseSymbolBar() {
+        if (!symbolBarExpanded) return
+        symbolBarExpanded = false
+        symbolRow2.visibility = View.GONE
+        symbolRow3.visibility = View.GONE
+    }
+
+    private fun createSymbolRow(
+        symbols: Array<String>,
+        insertTexts: Array<String>,
+        textColor: Int,
+        dividerColor: Int
+    ): LinearLayout {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (44 * resources.displayMetrics.density).toInt()
+            )
+        }
+
+        for ((index, sym) in symbols.withIndex()) {
             val btn = TextView(this).apply {
-                text = symbols[i]
+                text = sym
                 setTextColor(textColor)
-                textSize = 14f
+                textSize = 15f
                 typeface = Typeface.MONOSPACE
                 gravity = Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(
@@ -227,13 +364,13 @@ class TextEditorActivity : AppCompatActivity(),
                 isFocusable = true
                 setBackgroundResource(android.R.drawable.list_selector_background)
                 setOnClickListener {
-                    codeEditor?.insertText(insertTexts[i])
+                    codeEditor?.insertText(insertTexts[index])
                     codeEditor?.requestFocus()
                 }
             }
-            container.addView(btn)
+            row.addView(btn)
 
-            if (i < symbols.size - 1) {
+            if (index < symbols.size - 1) {
                 val divider = View(this).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         1,
@@ -241,9 +378,11 @@ class TextEditorActivity : AppCompatActivity(),
                     )
                     setBackgroundColor(dividerColor)
                 }
-                container.addView(divider)
+                row.addView(divider)
             }
         }
+
+        return row
     }
 
     // ─── Drawer ───────────────────────────────────────────────────────────────
