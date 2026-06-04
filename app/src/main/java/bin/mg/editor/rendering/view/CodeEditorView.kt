@@ -102,8 +102,9 @@ class CodeEditorView @JvmOverloads constructor(
     private fun updateScrollBounds() {
         val lineCount = buffer.getLineCount()
         val lineHeight = layoutEngine.lineHeight
-        val contentHeight = lineCount * lineHeight
-        val maxScrollY = (contentHeight - height).coerceAtLeast(0f)
+        val contentHeight = lineCount * lineHeight + 100f
+        val viewHeight = height.toFloat()
+        val maxScrollY = (contentHeight - viewHeight).coerceAtLeast(0f)
         scrollController.updateMaxScroll(0f, maxScrollY)
     }
 

@@ -106,24 +106,24 @@ class MmsxSyntaxEngine(private val context: Context) {
         "error" to Color.parseColor("#BC3F3C")
     )
 
-    // Light theme colors (IntelliJ Light)
+    // Light theme colors (IntelliJ Light + MT Manager light style)
     private val lightColors = mapOf(
-        "default" to Color.parseColor("#333333"),
-        "string" to Color.parseColor("#067D17"),
-        "strEscape" to Color.parseColor("#C41A16"),
-        "comment" to Color.parseColor("#8C8C8C"),
+        "default" to Color.parseColor("#1A1A1A"),
+        "string" to Color.parseColor("#008000"),
+        "strEscape" to Color.parseColor("#CC7832"),
+        "comment" to Color.parseColor("#7A7A7A"),
         "meta" to Color.parseColor("#808000"),
         "number" to Color.parseColor("#1C00CF"),
-        "keyword" to Color.parseColor("#AF001A"),
+        "keyword" to Color.parseColor("#0000FF"),
         "keyword2" to Color.parseColor("#7A3E9D"),
         "constant" to Color.parseColor("#233F9E"),
-        "type" to Color.parseColor("#233F9E"),
+        "type" to Color.parseColor("#0000FF"),
         "label" to Color.parseColor("#1750EB"),
         "variable" to Color.parseColor("#0070C1"),
-        "operator" to Color.parseColor("#333333"),
-        "propKey" to Color.parseColor("#AF001A"),
-        "propVal" to Color.parseColor("#067D17"),
-        "tagName" to Color.parseColor("#116644"),
+        "operator" to Color.parseColor("#1A1A1A"),
+        "propKey" to Color.parseColor("#0000FF"),
+        "propVal" to Color.parseColor("#008000"),
+        "tagName" to Color.parseColor("#1A1A1A"),
         "attrName" to Color.parseColor("#7A3E9D"),
         "namespace" to Color.parseColor("#233F9E"),
         "error" to Color.parseColor("#A61717")

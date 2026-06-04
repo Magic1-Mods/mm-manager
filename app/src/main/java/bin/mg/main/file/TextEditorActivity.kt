@@ -18,8 +18,6 @@ import android.view.Window
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
-import android.view.ViewTreeObserver
-import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -260,28 +258,17 @@ class TextEditorActivity : AppCompatActivity(),
             saveCursorPosition()
         }
 
-        // Keyboard visibility listener
-        setupKeyboardVisibility()
-
         filenameText?.setOnClickListener {
-            currentFilePath?.let { path ->
-                val clip = android.content.ClipData.newPlainText("filename", File(path).name)
-                getSystemService(android.content.ClipboardManager::class.java)?.setPrimaryClip(clip)
-                Toast.makeText(this, "Filename copied", Toast.LENGTH_SHORT).show()
+            if (totalPages > 1) {
+                showPagingDialog()
+            } else {
+                currentFilePath?.let { path ->
+                    val clip = android.content.ClipData.newPlainText("filename", File(path).name)
+                    getSystemService(android.content.ClipboardManager::class.java)?.setPrimaryClip(clip)
+                    Toast.makeText(this, "Filename copied", Toast.LENGTH_SHORT).show()
+                }
             }
         }
-    }
-
-    private fun setupKeyboardVisibility() {
-        val rootView = findViewById<View>(android.R.id.content)
-        rootView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                val heightDiff = rootView.rootView.height - rootView.height
-                val isKeyboardVisible = heightDiff > 150
-                val symbolBar = findViewById<LinearLayout>(R.id.symbol_bar) ?: return
-                symbolBar.visibility = if (isKeyboardVisible) View.GONE else View.VISIBLE
-            }
-        })
     }
 
     // ─── Symbol Drawer (bottom sheet with 3 rows) ──────────────────────────────
@@ -734,7 +721,8 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun updateFilenameTab() {
         val name = currentFilePath?.let { File(it).name } ?: "untitled"
-        filenameText?.text = if (isModified) "*$name" else name
+        val displayName = if (totalPages > 1) "($currentPage/$totalPages) $name" else name
+        filenameText?.text = if (isModified) "*$displayName" else displayName
     }
 
     // ─── File I/O ─────────────────────────────────────────────────────────────
@@ -744,9 +732,23 @@ class TextEditorActivity : AppCompatActivity(),
         val dialog = ProgressDialog.show(this, "Saving", "Writing file…", true)
         executor.execute {
             try {
-                val content = codeEditor?.getText() ?: ""
-                Files.write(Paths.get(path), content.toByteArray(StandardCharsets.UTF_8))
-                fileContents[path] = content
+                val contentToWrite = if (totalPages > 1) {
+                    val sb = StringBuilder()
+                    for (i in 1..totalPages) {
+                        val pageContent = if (i == currentPage) codeEditor?.getText() ?: ""
+                        else pagesContent[i] ?: ""
+                        sb.append(pageContent)
+                        if (i < totalPages) sb.append("\n")
+                    }
+                    sb.toString()
+                } else {
+                    codeEditor?.getText() ?: ""
+                }
+                Files.write(Paths.get(path), contentToWrite.toByteArray(StandardCharsets.UTF_8))
+                fileContents[path] = contentToWrite
+                if (totalPages > 1) {
+                    pagesContent[currentPage] = codeEditor?.getText() ?: ""
+                }
                 mainHandler.post {
                     dialog.dismiss()
                     justSaved = true; isModified = false
@@ -945,11 +947,18 @@ class TextEditorActivity : AppCompatActivity(),
         val path = openFiles[index]
         currentFilePath = path
         currentSyntax = fileSyntaxes[path] ?: detectSyntaxForFile(path)
-        filenameText?.text = File(path).name
         justSaved = true
         val content = fileContents[path]
         if (content != null) {
-            codeEditor?.setText(content)
+            val totalLines = content.count { it == '\n' } + 1
+            if (totalLines > MAX_LINES_PER_PAGE) {
+                setupPaging(path, content, totalLines)
+                val pageContent = pagesContent[currentPage] ?: content
+                codeEditor?.setText(pageContent)
+            } else {
+                clearPaging()
+                codeEditor?.setText(content)
+            }
             filePositions[path]?.let { pos ->
                 val lineCount = codeEditor?.buffer?.getLineCount() ?: 0
                 if (pos.first < lineCount) {
@@ -1042,15 +1051,41 @@ class TextEditorActivity : AppCompatActivity(),
         val dialog = ProgressDialog.show(this, "Loading", "Reading file…", true)
         executor.execute {
             try {
+                val file = File(path)
+                val fileSize = file.length()
+                val content: String
+
+                if (fileSize > 2L * 1024 * 1024) {
+                    content = "File too large (${fileSize / 1024} KB). Max supported: 2 MB."
+                    mainHandler.post {
+                        dialog.dismiss()
+                        codeEditor?.setText(content)
+                        fileContents[path] = content
+                        isModified = false
+                        handleUndoRedoState()
+                        updateInfoBar()
+                    }
+                    return@execute
+                }
+
                 val sb = StringBuilder()
                 BufferedReader(FileReader(path)).use { br ->
                     var line: String?
                     while (br.readLine().also { line = it } != null) sb.append(line).append("\n")
                 }
-                val content = sb.toString()
+                content = sb.toString()
+
                 mainHandler.post {
                     dialog.dismiss()
                     justSaved = true
+                    val totalLines = content.count { it == '\n' } + 1
+
+                    if (totalLines > MAX_LINES_PER_PAGE) {
+                        setupPaging(path, content, totalLines)
+                    } else {
+                        clearPaging()
+                    }
+
                     codeEditor?.setText(content)
                     fileContents[path] = content
                     isModified = false
@@ -1062,6 +1097,63 @@ class TextEditorActivity : AppCompatActivity(),
                 mainHandler.post { dialog.dismiss(); Toast.makeText(this@TextEditorActivity, "Failed to load file", Toast.LENGTH_SHORT).show() }
             }
         }
+    }
+
+    // ─── Paging support (like MT Manager) ────────────────────────────────────
+
+    private var currentPage = 1
+    private var totalPages = 1
+    private val pagesContent = mutableMapOf<Int, String>()
+
+    companion object {
+        private const val MAX_LINES_PER_PAGE = 5000
+        private const val MAX_FILE_SIZE_BYTES = 2L * 1024 * 1024
+    }
+
+    private fun setupPaging(path: String, fullContent: String, totalLines: Int) {
+        pagesContent.clear()
+        val lines = fullContent.split("\n")
+        val pages = (lines.size + MAX_LINES_PER_PAGE - 1) / MAX_LINES_PER_PAGE
+        totalPages = pages
+        currentPage = 1
+
+        for (i in 0 until pages) {
+            val from = i * MAX_LINES_PER_PAGE
+            val to = minOf(from + MAX_LINES_PER_PAGE, lines.size)
+            val pageContent = lines.subList(from, to).joinToString("\n")
+            pagesContent[i + 1] = pageContent
+        }
+        updatePageIndicator()
+    }
+
+    private fun clearPaging() {
+        currentPage = 1
+        totalPages = 1
+        pagesContent.clear()
+        updatePageIndicator()
+    }
+
+    private fun updatePageIndicator() {
+        val name = currentFilePath?.let { File(it).name } ?: "untitled"
+        val displayName = if (totalPages > 1) "($currentPage/$totalPages) $name" else name
+        filenameText?.text = if (isModified) "*$displayName" else displayName
+    }
+
+    private fun showPagingDialog() {
+        if (totalPages <= 1) return
+        val items = (1..totalPages).map { "Page $it" }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("Paging editing")
+            .setSingleChoiceItems(items, currentPage - 1) { dialog, which ->
+                currentPage = which + 1
+                val pageContent = pagesContent[currentPage] ?: ""
+                codeEditor?.setText(pageContent)
+                updatePageIndicator()
+                syntaxEngine.highlight(codeEditor!!, currentSyntax, ThemeManager.isDarkMode(this))
+                dialog.dismiss()
+            }
+            .setNegativeButton("CLOSE", null)
+            .show()
     }
 
     // ─── Close guard ─────────────────────────────────────────────────────────

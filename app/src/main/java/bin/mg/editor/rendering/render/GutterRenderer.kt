@@ -57,8 +57,9 @@ class GutterRenderer {
 
         // Line numbers
         val textY = lineStartOffset
-        for (i in 0..visibleLineCount) {
+        for (i in 0 until visibleLineCount) {
             val line = firstVisibleLine + i
+            if (line < 0) continue
             val y = textY + i * lineHeightPx
 
             // Current line highlight in gutter

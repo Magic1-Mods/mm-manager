@@ -3,7 +3,7 @@ package bin.mg.editor.rendering.layout
 import android.util.LruCache
 import android.text.TextPaint
 
-class LineCache(private val maxCapacity: Int = 300) {
+class LineCache(private val maxCapacity: Int = 500) {
 
     private val cache = LruCache<Int, LineLayout>(maxCapacity)
     private var lineSpacingExtra: Float = 0f
