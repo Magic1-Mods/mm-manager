@@ -49,7 +49,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
-import modder.hub.editor.R;
+import bin.mg.main.R;
 import modder.hub.editor.EditView;
 
 /** Magnifier specially designed for EditView */
