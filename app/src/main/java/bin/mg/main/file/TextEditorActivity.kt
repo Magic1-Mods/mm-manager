@@ -1105,11 +1105,6 @@ class TextEditorActivity : AppCompatActivity(),
     private var totalPages = 1
     private val pagesContent = mutableMapOf<Int, String>()
 
-    companion object {
-        private const val MAX_LINES_PER_PAGE = 5000
-        private const val MAX_FILE_SIZE_BYTES = 2L * 1024 * 1024
-    }
-
     private fun setupPaging(path: String, fullContent: String, totalLines: Int) {
         pagesContent.clear()
         val lines = fullContent.split("\n")
@@ -1183,6 +1178,9 @@ class TextEditorActivity : AppCompatActivity(),
     // ─── Static helpers ───────────────────────────────────────────────────────
 
     companion object {
+        private const val MAX_LINES_PER_PAGE = 5000
+        private const val MAX_FILE_SIZE_BYTES = 2L * 1024 * 1024
+
         @JvmStatic
         fun start(context: Activity, filePath: String) {
             context.startActivity(
