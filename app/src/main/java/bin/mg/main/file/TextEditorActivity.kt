@@ -78,10 +78,6 @@ class TextEditorActivity : AppCompatActivity(),
 
     private val prefs by lazy { getSharedPreferences("editor_prefs", MODE_PRIVATE) }
 
-    companion object {
-        private const val MAX_FILE_SIZE_BYTES = 2L * 1024 * 1024
-    }
-
     // ─── Lifecycle ────────────────────────────────────────────────────────────
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -582,6 +578,8 @@ class TextEditorActivity : AppCompatActivity(),
     // ─── Static helpers ───────────────────────────────────────────────────────
 
     companion object {
+        private const val MAX_FILE_SIZE_BYTES = 2L * 1024 * 1024
+
         @JvmStatic
         fun start(context: Activity, filePath: String) {
             context.startActivity(
