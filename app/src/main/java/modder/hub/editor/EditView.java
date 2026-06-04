@@ -332,6 +332,7 @@ public class EditView extends View {
 
         requestFocus();
         setFocusable(true);
+        setFocusableInTouchMode(true);
         postDelayed(blinkAction, BLINK_TIMEOUT);
 
         mAutoCompletePopup = new ListPopupWindow(getContext());
@@ -1039,6 +1040,17 @@ public class EditView extends View {
         return mCursorIndex;
     }
 
+    // Get cursor line number (1-based)
+    public int getCursorLine() {
+        return mCursorLine;
+    }
+
+    // Get cursor column number (1-based)
+    public int getCursorColumn() {
+        int lineStart = getLineStart(mCursorLine);
+        return mCursorIndex - lineStart + 1;
+    }
+
     // Get selected text string
     public String getSelectedText() {
         if (isSelectMode && selectionStart < selectionEnd) {
@@ -1054,6 +1066,7 @@ public class EditView extends View {
             mCursorIndex += text.length();
             adjustCursorPosition();
             scrollToVisable();
+            onTextChanged();
             postInvalidate();
         }
     }

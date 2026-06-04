@@ -267,22 +267,22 @@ class TextEditorActivity : AppCompatActivity(),
         }
         symbolBarContainer.addView(handleBar)
 
-        // Row 1: -> { } ( ) , .   (main symbols always visible)
-        val row1Symbols = arrayOf("->", "{", "}", "(", ")", ",", ".")
-        val row1Inserts = arrayOf("\t", "{}", "}", "(", ")", ",", ".")
+        // Row 1: → / + - * = <   (always visible)
+        val row1Symbols = arrayOf("\u2192", "/", "+", "-", "*", "=", "<")
+        val row1Inserts = arrayOf("\t", "/", "+", "-", "*", "=", "<")
         symbolRow1 = createSymbolRow(row1Symbols, row1Inserts, textColor, dividerColor)
         symbolBarContainer.addView(symbolRow1)
 
-        // Row 2: ; " ? + - * /   (visible when expanded or keyboard open)
-        val row2Symbols = arrayOf(";", "\"", "?", "+", "-", "*", "/")
-        val row2Inserts = arrayOf(";", "\"", "?", "+", "-", "*", "/")
+        // Row 2: > " ' ; | \ -   (visible when keyboard open or expanded)
+        val row2Symbols = arrayOf(">", "\"", "'", ";", "|", "\\", "-")
+        val row2Inserts = arrayOf(">", "\"", "'", ";", "|", "\\", "-")
         symbolRow2 = createSymbolRow(row2Symbols, row2Inserts, textColor, dividerColor)
         symbolRow2.visibility = View.GONE
         symbolBarContainer.addView(symbolRow2)
 
-        // Row 3: < > [ ] : tab   (visible when expanded)
-        val row3Symbols = arrayOf("<", ">", "[", "]", ":", "tab")
-        val row3Inserts = arrayOf("<", ">", "[", "]", ":", "\t")
+        // Row 3: () [] {} ...     (visible when keyboard open or expanded)
+        val row3Symbols = arrayOf("()", "[]", "{}", "...")
+        val row3Inserts = arrayOf("()", "[]", "{}", "...")
         symbolRow3 = createSymbolRow(row3Symbols, row3Inserts, textColor, dividerColor)
         symbolRow3.visibility = View.GONE
         symbolBarContainer.addView(symbolRow3)
@@ -310,11 +310,11 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun updateSymbolBarForKeyboard() {
         if (isKeyboardVisible) {
-            // Keyboard visible: show row 1 and 2, push bar above keyboard
+            // Keyboard visible: show all 3 rows above keyboard
             symbolRow2.visibility = View.VISIBLE
-            symbolRow3.visibility = View.GONE
+            symbolRow3.visibility = View.VISIBLE
         } else {
-            // Keyboard hidden: show row 1, optionally row 2 and 3 if expanded
+            // Keyboard hidden: show row 1, optionally rows 2 and 3 if expanded
             symbolRow2.visibility = if (symbolBarExpanded) View.VISIBLE else View.GONE
             symbolRow3.visibility = if (symbolBarExpanded) View.VISIBLE else View.GONE
         }
@@ -449,6 +449,11 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun updateInfoBar() {
         updateFilenameTab()
+        val lineNoEncoding = lineNoEncodingText ?: return
+        val line = codeEditor?.getCursorLine() ?: 1
+        val col = codeEditor?.getCursorColumn() ?: 1
+        val encoding = mDefaultCharset?.name()?.uppercase() ?: "UTF-8"
+        lineNoEncoding.text = "$line:$col   $encoding"
     }
 
     private fun updateFilenameTab() {
@@ -676,6 +681,8 @@ class TextEditorActivity : AppCompatActivity(),
                     isModified = false
                     handleUndoRedoState()
                     updateInfoBar()
+                    codeEditor?.requestFocus()
+                    codeEditor?.showSoftInput(true)
                 }
             } catch (e: Exception) {
                 mainHandler.post { dialog.dismiss(); Toast.makeText(this@TextEditorActivity, "Failed to load file", Toast.LENGTH_SHORT).show() }

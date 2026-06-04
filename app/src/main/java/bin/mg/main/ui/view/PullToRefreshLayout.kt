@@ -251,7 +251,8 @@ class PullToRefreshLayout @JvmOverloads constructor(
 
                     if (
                         view.translationY >= triggerHeight &&
-                        refreshListener != null
+                        refreshListener != null &&
+                        !canChildScrollUp()
                     ) {
                         refreshListener?.onRefresh(this)
                     }
