@@ -47,6 +47,7 @@ import android.view.animation.AlphaAnimation;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import bin.mg.main.R;
 
 /**
  * A custom selection menu aim to be implement in the EditView but due to lack of some which i dont
