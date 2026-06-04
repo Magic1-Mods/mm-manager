@@ -8,8 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import bin.mg.main.R
-import bin.mg.main.handlers.FileClickHandler
-import bin.mg.main.handlers.FileClickHandlerRegistry
 import bin.mg.main.model.FileItem
 import bin.mg.main.ui.view.ViewHolder
 import bin.mg.main.utils.file.FileSystemHelper
@@ -23,7 +21,6 @@ class FileAdapter(private val context: Context) : RecyclerView.Adapter<ViewHolde
     private val dateFormat = SimpleDateFormat("yy-MM-dd HH:mm", Locale.getDefault())
     private val mainHandler = Handler(Looper.getMainLooper())
     private val fileHelper = FileSystemHelper.getInstance(context)
-    private var handlerRegistry = FileClickHandlerRegistry.instance
     private var themeColor = 0
     private var isDarkMode = false
     private var clickListener: OnItemClickListener? = null
@@ -35,10 +32,6 @@ class FileAdapter(private val context: Context) : RecyclerView.Adapter<ViewHolde
 
     fun setOnItemClickListener(listener: OnItemClickListener?) {
         clickListener = listener
-    }
-
-    fun setHandlerRegistry(registry: FileClickHandlerRegistry) {
-        handlerRegistry = registry
     }
 
     fun setThemeColor(color: Int, isDarkMode: Boolean) {
@@ -67,24 +60,7 @@ class FileAdapter(private val context: Context) : RecyclerView.Adapter<ViewHolde
         holder.bind(item, isDarkMode)
 
         holder.itemView.setOnClickListener { v ->
-            val handler = handlerRegistry.getHandler(item)
-
-            if (handler != null) {
-                handler.onClick(context, item, v)
-            } else {
-                clickListener?.onItemClick(v, position, item)
-            }
-        }
-
-        holder.itemView.setOnLongClickListener { v ->
-            val handler = handlerRegistry.getHandler(item)
-
-            if (handler != null) {
-                handler.onLongClick(context, item, v)
-                true
-            } else {
-                false
-            }
+            clickListener?.onItemClick(v, position, item)
         }
     }
 

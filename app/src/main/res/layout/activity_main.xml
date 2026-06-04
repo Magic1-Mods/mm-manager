@@ -95,25 +95,31 @@
             android:layout_weight="1"
             android:orientation="horizontal">
 
-            <FrameLayout
-                android:id="@+id/panel_left"
+            <bin.mg.main.ui.view.PullToRefreshLayout
+                android:id="@+id/refresh_left"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="?attr/panelBg">
+                android:layout_weight="1">
 
-                <bin.mg.main.ui.view.FastScrollerRecyclerView
-                    android:id="@+id/list_left"
+                <FrameLayout
+                    android:id="@+id/panel_left"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:overScrollMode="always" />
+                    android:background="?attr/panelBg">
 
-                <View
-                    android:layout_width="4dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="end"
-                    android:background="@drawable/panel_shadow" />
-            </FrameLayout>
+                    <bin.mg.main.ui.view.FastScrollerRecyclerView
+                        android:id="@+id/list_left"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:overScrollMode="always" />
+
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="end"
+                        android:background="@drawable/panel_shadow" />
+                </FrameLayout>
+            </bin.mg.main.ui.view.PullToRefreshLayout>
 
             <View
             android:id="@+id/divider"
@@ -121,19 +127,25 @@
                 android:layout_height="match_parent"
                 android:background="?attr/dividerColor" />
 
-            <FrameLayout
-                android:id="@+id/panel_right"
+            <bin.mg.main.ui.view.PullToRefreshLayout
+                android:id="@+id/refresh_right"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="?attr/panelBg">
+                android:layout_weight="1">
 
-                <bin.mg.main.ui.view.FastScrollerRecyclerView
-                    android:id="@+id/list_right"
+                <FrameLayout
+                    android:id="@+id/panel_right"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:overScrollMode="always" />
-            </FrameLayout>
+                    android:background="?attr/panelBg">
+
+                    <bin.mg.main.ui.view.FastScrollerRecyclerView
+                        android:id="@+id/list_right"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:overScrollMode="always" />
+                </FrameLayout>
+            </bin.mg.main.ui.view.PullToRefreshLayout>
         </LinearLayout>
 
         <LinearLayout

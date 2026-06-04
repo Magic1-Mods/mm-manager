@@ -38,6 +38,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import bin.mg.main.ui.view.FastScrollerRecyclerView
+import bin.mg.main.ui.view.PullToRefreshLayout
 import bin.mg.main.model.FileItem
 import bin.mg.main.ui.adapter.FileAdapter
 import bin.mg.main.file.TextEditorActivity
@@ -58,6 +59,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerRight: FastScrollerRecyclerView
     private var panelLeft: View? = null
     private var panelRight: View? = null
+    private var refreshLeft: PullToRefreshLayout? = null
+    private var refreshRight: PullToRefreshLayout? = null
     private var btnBack: ImageButton? = null
     private var btnForward: ImageButton? = null
     private var btnNew: ImageButton? = null
@@ -121,7 +124,6 @@ class MainActivity : AppCompatActivity() {
         initViews()
         loadCustomPaths()
         initDrawerSections()
-        registerFileHandlers()
         setupAdapters()
         setupListeners()
 
@@ -349,6 +351,10 @@ class MainActivity : AppCompatActivity() {
         recyclerRight = findViewById(R.id.list_right)
         panelLeft = findViewById(R.id.panel_left)
         panelRight = findViewById(R.id.panel_right)
+        refreshLeft = findViewById(R.id.refresh_left)
+        refreshRight = findViewById(R.id.refresh_right)
+
+        setupPullToRefresh()
 
         btnBack = findViewById(R.id.btn_back)
         btnForward = findViewById(R.id.btn_forward)
@@ -763,10 +769,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun registerFileHandlers() {
-        // Click handlers can be registered here
-    }
-
     private fun setupAdapters() {
         adapterLeft = FileAdapter(this)
         adapterRight = FileAdapter(this)
@@ -805,6 +807,21 @@ class MainActivity : AppCompatActivity() {
         }
         lastClickTime.set(currentTime)
         return false
+    }
+
+    private fun setupPullToRefresh() {
+        refreshLeft?.setPullToRefreshListener(object : PullToRefreshLayout.PullToRefreshListener {
+            override fun onRefresh(layout: PullToRefreshLayout) {
+                loadPanel(true)
+                layout.postDelayed({ layout.setRefreshing(false) }, 500)
+            }
+        })
+        refreshRight?.setPullToRefreshListener(object : PullToRefreshLayout.PullToRefreshListener {
+            override fun onRefresh(layout: PullToRefreshLayout) {
+                loadPanel(false)
+                layout.postDelayed({ layout.setRefreshing(false) }, 500)
+            }
+        })
     }
 
     private fun setupListeners() {
