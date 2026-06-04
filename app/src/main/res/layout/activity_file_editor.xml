@@ -194,8 +194,8 @@
                 android:background="?attr/selectableItemBackgroundBorderless" />
         </LinearLayout>
 
-        <!-- ── Code Editor (custom Canvas-based) ── -->
-        <bin.mg.editor.rendering.view.CodeEditorView
+        <!-- ── Code Editor (MH-TextEditor custom Canvas-based) ── -->
+        <modder.hub.editor.EditView
             android:id="@+id/code_editor"
             android:layout_width="match_parent"
             android:layout_height="0dp"
