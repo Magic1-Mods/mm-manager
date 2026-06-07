@@ -195,6 +195,9 @@ public class EditView extends View {
     private final long INPUT_DEBOUNCE_DELAY = 50; // ms
 
     private boolean mAutoIndentEnabled = true; // Default on
+    private boolean mWordWrapEnabled = false;   // Soft word wrap (default off)
+    private boolean mSmoothScrollEnabled = true; // Smooth scroll (default on)
+    private boolean mAutoCompleteEnabled = true; // Autocomplete popup (default on)
 
     private int mFirstSelectedLine = -1;
     private int mSecondSelectedLine = -1;
@@ -1554,7 +1557,7 @@ public class EditView extends View {
         scrollToVisable();
 
         mCurrentPrefix = getCurrentPrefix();
-        if (mCurrentPrefix.isEmpty()) {
+        if (!mAutoCompleteEnabled || mCurrentPrefix.isEmpty()) {
             dismissAutoComplete();
         } else {
             filterAndShowSuggestions(mCurrentPrefix);
@@ -1752,6 +1755,344 @@ public class EditView extends View {
             onTextChanged();
             scrollToVisable();
         }
+    }
+
+    // ---------- Line operations (Edit menu) ----------
+
+    /**
+     * Copy the current cursor line to clipboard (no selection needed).
+     */
+    public void copyLine() {
+        int lineStart = getLineStart(mCursorLine);
+        String lineText = getLine(mCursorLine);
+        // include trailing newline if not the last line
+        String toCopy = (mCursorLine < getLineCount()) ? lineText + "\n" : lineText;
+        ClipData data = ClipData.newPlainText("line", toCopy);
+        mClipboard.setPrimaryClip(data);
+    }
+
+    /**
+     * Cut the current cursor line to clipboard (removes it from the buffer).
+     */
+    public void cutLine() {
+        copyLine();
+        deleteLine();
+    }
+
+    /**
+     * Delete (remove) the current cursor line entirely.
+     */
+    public void deleteLine() {
+        if (getLineCount() == 0) return;
+        int lineStart = getLineStart(mCursorLine);
+        String lineText = getLine(mCursorLine);
+        int lineEnd = lineStart + lineText.length();
+        // include trailing newline character if not last line
+        if (mCursorLine < getLineCount() && lineEnd < mGapBuffer.length()) {
+            lineEnd++; // consume the '\n'
+        }
+        mGapBuffer.delete(lineStart, lineEnd, true);
+        // clamp cursor to valid line
+        int newLine = Math.min(mCursorLine, getLineCount());
+        if (newLine < 1) newLine = 1;
+        mCursorLine = newLine;
+        mCursorIndex = getLineStart(mCursorLine);
+        adjustCursorPosition();
+        scrollToVisable();
+        onTextChanged();
+        postInvalidate();
+    }
+
+    /**
+     * Clear (empty) the current cursor line – keeps the line itself but removes all text.
+     */
+    public void emptyLine() {
+        int lineStart = getLineStart(mCursorLine);
+        String lineText = getLine(mCursorLine);
+        if (lineText.isEmpty()) return;
+        mGapBuffer.delete(lineStart, lineStart + lineText.length(), true);
+        mCursorIndex = lineStart;
+        adjustCursorPosition();
+        scrollToVisable();
+        onTextChanged();
+        postInvalidate();
+    }
+
+    /**
+     * Replace the current cursor line with text from the clipboard.
+     */
+    public void replaceLine() {
+        ClipData clip = mClipboard.getPrimaryClip();
+        if (clip == null || clip.getItemCount() == 0) return;
+        String replacement = clip.getItemAt(0).coerceToText(getContext()).toString();
+        // strip trailing newline from clipboard content so we don't add extra blank line
+        if (replacement.endsWith("\n")) replacement = replacement.substring(0, replacement.length() - 1);
+        int lineStart = getLineStart(mCursorLine);
+        String lineText = getLine(mCursorLine);
+        mGapBuffer.replace(lineStart, lineStart + lineText.length(), replacement, true);
+        mCursorIndex = lineStart + replacement.length();
+        adjustCursorPosition();
+        scrollToVisable();
+        onTextChanged();
+        postInvalidate();
+    }
+
+    /**
+     * Duplicate the current cursor line, inserting a copy on the line below.
+     */
+    public void duplicateLine() {
+        int lineStart = getLineStart(mCursorLine);
+        String lineText = getLine(mCursorLine);
+        int insertPos = lineStart + lineText.length();
+        String toInsert = "\n" + lineText;
+        mGapBuffer.insert(insertPos, toInsert, true);
+        // move cursor to the start of the duplicated line
+        mCursorLine = mCursorLine + 1;
+        mCursorIndex = getLineStart(mCursorLine);
+        adjustCursorPosition();
+        scrollToVisable();
+        onTextChanged();
+        postInvalidate();
+    }
+
+    /**
+     * Convert the selected text (or current line if nothing is selected) to UPPERCASE.
+     */
+    public void convertToUppercase() {
+        if (isSelectMode && selectionStart < selectionEnd) {
+            String selected = mGapBuffer.substring(selectionStart, selectionEnd);
+            String upper = selected.toUpperCase(Locale.getDefault());
+            mGapBuffer.replace(selectionStart, selectionEnd, upper, true);
+            mCursorIndex = selectionStart + upper.length();
+        } else {
+            int lineStart = getLineStart(mCursorLine);
+            String lineText = getLine(mCursorLine);
+            if (lineText.isEmpty()) return;
+            String upper = lineText.toUpperCase(Locale.getDefault());
+            mGapBuffer.replace(lineStart, lineStart + lineText.length(), upper, true);
+            mCursorIndex = lineStart + upper.length();
+        }
+        adjustCursorPosition();
+        scrollToVisable();
+        onTextChanged();
+        postInvalidate();
+    }
+
+    /**
+     * Convert the selected text (or current line if nothing is selected) to lowercase.
+     */
+    public void convertToLowercase() {
+        if (isSelectMode && selectionStart < selectionEnd) {
+            String selected = mGapBuffer.substring(selectionStart, selectionEnd);
+            String lower = selected.toLowerCase(Locale.getDefault());
+            mGapBuffer.replace(selectionStart, selectionEnd, lower, true);
+            mCursorIndex = selectionStart + lower.length();
+        } else {
+            int lineStart = getLineStart(mCursorLine);
+            String lineText = getLine(mCursorLine);
+            if (lineText.isEmpty()) return;
+            String lower = lineText.toLowerCase(Locale.getDefault());
+            mGapBuffer.replace(lineStart, lineStart + lineText.length(), lower, true);
+            mCursorIndex = lineStart + lower.length();
+        }
+        adjustCursorPosition();
+        scrollToVisable();
+        onTextChanged();
+        postInvalidate();
+    }
+
+    /**
+     * Increase indent of the current line (or each selected line) by one tab stop (4 spaces).
+     */
+    public void increaseIndent() {
+        final String TAB = "    "; // 4 spaces
+        if (isSelectMode && selectionStart < selectionEnd) {
+            // indent every line in the selection
+            int startLine = getOffsetLine(selectionStart);
+            int endLine   = getOffsetLine(selectionEnd);
+            // Insert from bottom to top so offsets don't shift
+            for (int l = endLine; l >= startLine; l--) {
+                int ls = getLineStart(l);
+                mGapBuffer.insert(ls, TAB, true);
+            }
+            // adjust selection
+            selectionStart = getLineStart(startLine);
+            selectionEnd   += TAB.length() * (endLine - startLine + 1);
+            mCursorIndex = selectionEnd;
+        } else {
+            int lineStart = getLineStart(mCursorLine);
+            mGapBuffer.insert(lineStart, TAB, true);
+            mCursorIndex += TAB.length();
+        }
+        adjustCursorPosition();
+        scrollToVisable();
+        onTextChanged();
+        postInvalidate();
+    }
+
+    /**
+     * Decrease indent of the current line (or each selected line) by one tab stop (up to 4 spaces).
+     */
+    public void decreaseIndent() {
+        final String TAB = "    ";
+        if (isSelectMode && selectionStart < selectionEnd) {
+            int startLine = getOffsetLine(selectionStart);
+            int endLine   = getOffsetLine(selectionEnd);
+            int removed   = 0;
+            for (int l = endLine; l >= startLine; l--) {
+                int ls = getLineStart(l);
+                String lineText = getLine(l);
+                if (lineText.startsWith(TAB)) {
+                    mGapBuffer.delete(ls, ls + TAB.length(), true);
+                    removed += TAB.length();
+                } else if (lineText.startsWith("\t")) {
+                    mGapBuffer.delete(ls, ls + 1, true);
+                    removed += 1;
+                } else {
+                    // remove up to 4 leading spaces
+                    int spaces = 0;
+                    while (spaces < 4 && spaces < lineText.length() && lineText.charAt(spaces) == ' ') spaces++;
+                    if (spaces > 0) {
+                        mGapBuffer.delete(ls, ls + spaces, true);
+                        removed += spaces;
+                    }
+                }
+            }
+            selectionEnd = Math.max(selectionStart, selectionEnd - removed);
+            mCursorIndex = selectionEnd;
+        } else {
+            int lineStart = getLineStart(mCursorLine);
+            String lineText = getLine(mCursorLine);
+            if (lineText.startsWith(TAB)) {
+                mGapBuffer.delete(lineStart, lineStart + TAB.length(), true);
+                mCursorIndex = Math.max(lineStart, mCursorIndex - TAB.length());
+            } else if (lineText.startsWith("\t")) {
+                mGapBuffer.delete(lineStart, lineStart + 1, true);
+                mCursorIndex = Math.max(lineStart, mCursorIndex - 1);
+            } else {
+                int spaces = 0;
+                while (spaces < 4 && spaces < lineText.length() && lineText.charAt(spaces) == ' ') spaces++;
+                if (spaces > 0) {
+                    mGapBuffer.delete(lineStart, lineStart + spaces, true);
+                    mCursorIndex = Math.max(lineStart, mCursorIndex - spaces);
+                }
+            }
+        }
+        adjustCursorPosition();
+        scrollToVisable();
+        onTextChanged();
+        postInvalidate();
+    }
+
+    /**
+     * Toggle single-line comment on the current line (or every selected line).
+     * Uses "//" for C-style languages; falls back to "#" when the language hints at it.
+     * You can extend this by passing a comment prefix from outside.
+     */
+    public void toggleComment(String commentPrefix) {
+        if (commentPrefix == null || commentPrefix.isEmpty()) commentPrefix = "//";
+        final String prefix = commentPrefix;
+
+        if (isSelectMode && selectionStart < selectionEnd) {
+            int startLine = getOffsetLine(selectionStart);
+            int endLine   = getOffsetLine(selectionEnd);
+            // determine action by checking first line
+            String firstLine = getLine(startLine);
+            String stripped  = firstLine.stripLeading();
+            boolean isCommented = stripped.startsWith(prefix);
+            for (int l = endLine; l >= startLine; l--) {
+                toggleCommentOnLine(l, prefix, isCommented);
+            }
+            mCursorIndex = getLineStart(mCursorLine);
+        } else {
+            String lineText = getLine(mCursorLine);
+            String stripped = lineText.stripLeading();
+            boolean isCommented = stripped.startsWith(prefix);
+            toggleCommentOnLine(mCursorLine, prefix, isCommented);
+            mCursorIndex = getLineStart(mCursorLine) + getLine(mCursorLine).length();
+        }
+        adjustCursorPosition();
+        scrollToVisable();
+        onTextChanged();
+        postInvalidate();
+    }
+
+    /** Helper: add or remove a comment prefix on a single line. */
+    private void toggleCommentOnLine(int line, String prefix, boolean remove) {
+        int lineStart = getLineStart(line);
+        String lineText = getLine(line);
+        if (remove) {
+            // find prefix position (may have leading whitespace before it)
+            int idx = lineText.indexOf(prefix);
+            if (idx >= 0) {
+                mGapBuffer.delete(lineStart + idx, lineStart + idx + prefix.length(), true);
+                // also remove a single trailing space that was after comment marker
+                String updated = getLine(line);
+                if (updated.length() > lineStart + idx &&
+                    idx < updated.length() && updated.charAt(idx) == ' ') {
+                    mGapBuffer.delete(lineStart + idx, lineStart + idx + 1, true);
+                }
+            }
+        } else {
+            // find leading whitespace end position
+            int ws = 0;
+            while (ws < lineText.length() && (lineText.charAt(ws) == ' ' || lineText.charAt(ws) == '\t')) ws++;
+            mGapBuffer.insert(lineStart + ws, prefix + " ", true);
+        }
+    }
+
+    // ---------- Editor mode toggles ----------
+
+    /** Enable or disable soft word wrap. */
+    public void setWordWrap(boolean enabled) {
+        mWordWrapEnabled = enabled;
+        postInvalidate();
+    }
+
+    /** Returns whether soft word wrap is enabled. */
+    public boolean isWordWrapEnabled() {
+        return mWordWrapEnabled;
+    }
+
+    /** Set read-only mode (disables all edits). */
+    public void setReadOnly(boolean readOnly) {
+        isEditedMode = !readOnly;
+    }
+
+    /** Returns whether the editor is in read-only mode. */
+    public boolean isReadOnly() {
+        return !isEditedMode;
+    }
+
+    /** Enable or disable smooth scroll. When disabled, large jumps are instant. */
+    public void setSmoothScrollEnabled(boolean smooth) {
+        mSmoothScrollEnabled = smooth;
+    }
+
+    /** Returns whether smooth scroll is currently enabled. */
+    public boolean isSmoothScrollEnabled() {
+        return mSmoothScrollEnabled;
+    }
+
+    /** Enable or disable the autocomplete popup. */
+    public void setAutoCompleteEnabled(boolean enabled) {
+        mAutoCompleteEnabled = enabled;
+        if (!enabled) dismissAutoComplete();
+    }
+
+    /** Returns whether autocomplete is enabled. */
+    public boolean isAutoCompleteEnabled() {
+        return mAutoCompleteEnabled;
+    }
+
+    /** Enable or disable auto-indent on Enter. */
+    public void setAutoIndentEnabled(boolean enabled) {
+        mAutoIndentEnabled = enabled;
+    }
+
+    /** Returns whether auto-indent is enabled. */
+    public boolean isAutoIndentEnabled() {
+        return mAutoIndentEnabled;
     }
 
     // ---------- Selection handle updates ----------

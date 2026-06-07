@@ -484,40 +484,148 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun showEditMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
-        popup.menu.add(0, 1, 0, "Copy")
-        popup.menu.add(0, 2, 1, "Cut")
-        popup.menu.add(0, 3, 2, "Paste")
-        popup.menu.add(0, 4, 3, "Select all")
+        // Line operations
+        popup.menu.add(0, 10, 0, "Copy line")
+        popup.menu.add(0, 11, 1, "Cut line")
+        popup.menu.add(0, 12, 2, "Delete line")
+        popup.menu.add(0, 13, 3, "Empty line")
+        popup.menu.add(0, 14, 4, "Replace line")
+        popup.menu.add(0, 15, 5, "Duplicate line")
+        // Case conversion
+        popup.menu.add(0, 20, 6, "Convert to uppercase")
+        popup.menu.add(0, 21, 7, "Convert to lowercase")
+        // Indentation
+        popup.menu.add(0, 30, 8, "Increase indent")
+        popup.menu.add(0, 31, 9, "Decrease indent")
+        // Comment
+        popup.menu.add(0, 40, 10, "Toggle comment")
+        // Classic clipboard
+        popup.menu.add(0, 50, 11, "Select all")
+        popup.menu.add(0, 51, 12, "Paste")
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                1 -> { codeEditor?.copy(); true }
-                2 -> { codeEditor?.cut(); true }
-                3 -> { codeEditor?.paste(); true }
-                4 -> { codeEditor?.selectAll(); true }
+                10 -> { codeEditor?.copyLine(); true }
+                11 -> { codeEditor?.cutLine(); true }
+                12 -> { codeEditor?.deleteLine(); true }
+                13 -> { codeEditor?.emptyLine(); true }
+                14 -> { codeEditor?.replaceLine(); true }
+                15 -> { codeEditor?.duplicateLine(); true }
+                20 -> { codeEditor?.convertToUppercase(); true }
+                21 -> { codeEditor?.convertToLowercase(); true }
+                30 -> { codeEditor?.increaseIndent(); true }
+                31 -> { codeEditor?.decreaseIndent(); true }
+                40 -> { codeEditor?.toggleComment(getCommentPrefixForSyntax(currentSyntax)); true }
+                50 -> { codeEditor?.selectAll(); true }
+                51 -> { codeEditor?.paste(); true }
                 else -> false
             }
         }
         popup.show()
     }
 
+    /** Returns the appropriate single-line comment prefix for the current syntax. */
+    private fun getCommentPrefixForSyntax(syntax: String): String = when (syntax) {
+        "java", "xml", "smali" -> "//"
+        "python", "smali" -> "#"
+        "html" -> "<!--"   // simplified — block comments in HTML, kept short
+        else -> "//"
+    }
+
     private fun showOverflowMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
         popup.menu.add(0, 1, 0, "Search")
-        popup.menu.add(0, 2, 1, "Jump to line")
-        popup.menu.add(0, 3, 2, "Syntax")
-        popup.menu.add(0, 4, 3, "Preferences")
-        popup.menu.add(0, 5, 4, "Close file")
+        popup.menu.add(0, 2, 1, "Syntax")
+        val prevLabel = "Previous position"
+        val nextLabel = "Next position"
+        popup.menu.add(0, 3, 2, prevLabel).isEnabled = positionIndex > 0
+        popup.menu.add(0, 4, 3, nextLabel).isEnabled = positionIndex < positionHistory.size - 1
+        popup.menu.add(0, 5, 4, "Jump to line")
+        // Toggle items — show current state in title
+        val wrapState  = if (codeEditor?.isWordWrapEnabled == true) "✓" else " "
+        val roState    = if (codeEditor?.isReadOnly == true)        "✓" else " "
+        val smoothState = if (codeEditor?.isSmoothScrollEnabled == true) "✓" else " "
+        val acState    = if (codeEditor?.isAutoCompleteEnabled == true)  "✓" else " "
+        popup.menu.add(0, 6,  5, "[$wrapState]  Soft wrap")
+        popup.menu.add(0, 7,  6, "[$roState]    Read-only mode")
+        popup.menu.add(0, 8,  7, "[$smoothState] Smooth mode")
+        popup.menu.add(0, 9,  8, "[$acState]    Code completion")
+        popup.menu.add(0, 10, 9, "Preferences")
+        popup.menu.add(0, 11, 10, "Close file")
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                1 -> { toggleSearchBar(); true }
-                2 -> { showJumpToLineDialog(); true }
-                3 -> { showSyntaxSelector(); true }
-                4 -> { showPreferencesDialog(); true }
-                5 -> { confirmClose(); true }
+                1  -> { toggleSearchBar(); true }
+                2  -> { showSyntaxSelector(); true }
+                3  -> { navigatePositionBack(); true }
+                4  -> { navigatePositionForward(); true }
+                5  -> { showJumpToLineDialog(); true }
+                6  -> { toggleWordWrap(); true }
+                7  -> { toggleReadOnly(); true }
+                8  -> { toggleSmoothMode(); true }
+                9  -> { toggleCodeCompletion(); true }
+                10 -> { showPreferencesDialog(); true }
+                11 -> { confirmClose(); true }
                 else -> false
             }
         }
         popup.show()
+    }
+
+    // ─── Editor mode toggles ──────────────────────────────────────────────────
+
+    private fun toggleWordWrap() {
+        val enabled = codeEditor?.isWordWrapEnabled != true
+        codeEditor?.setWordWrap(enabled)
+        Toast.makeText(this, if (enabled) "Soft wrap ON" else "Soft wrap OFF", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun toggleReadOnly() {
+        val readOnly = codeEditor?.isReadOnly != true
+        codeEditor?.setReadOnly(readOnly)
+        isReadOnly = readOnly
+        // Dim the save/edit buttons when in read-only mode
+        handleUndoRedoState()
+        Toast.makeText(this, if (readOnly) "Read-only ON" else "Read-only OFF", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun toggleSmoothMode() {
+        val smooth = codeEditor?.isSmoothScrollEnabled != true
+        codeEditor?.setSmoothScrollEnabled(smooth)
+        Toast.makeText(this, if (smooth) "Smooth mode ON" else "Smooth mode OFF", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun toggleCodeCompletion() {
+        val enabled = codeEditor?.isAutoCompleteEnabled != true
+        codeEditor?.setAutoCompleteEnabled(enabled)
+        Toast.makeText(this, if (enabled) "Code completion ON" else "Code completion OFF", Toast.LENGTH_SHORT).show()
+    }
+
+    // ─── Position history navigation ─────────────────────────────────────────
+
+    private fun pushCurrentPosition() {
+        val line = codeEditor?.getCursorLine() ?: return
+        val col  = codeEditor?.getCursorColumn() ?: return
+        // Trim forward history on new push
+        if (positionIndex < positionHistory.size - 1) {
+            positionHistory = positionHistory.subList(0, positionIndex + 1).toMutableList()
+        }
+        positionHistory.add(Pair(line, col))
+        positionIndex = positionHistory.size - 1
+    }
+
+    private fun navigatePositionBack() {
+        if (positionIndex > 0) {
+            positionIndex--
+            val (line, _) = positionHistory[positionIndex]
+            codeEditor?.gotoLine(line - 1)
+        }
+    }
+
+    private fun navigatePositionForward() {
+        if (positionIndex < positionHistory.size - 1) {
+            positionIndex++
+            val (line, _) = positionHistory[positionIndex]
+            codeEditor?.gotoLine(line - 1)
+        }
     }
 
     // ─── Dialogs ──────────────────────────────────────────────────────────────
@@ -553,7 +661,13 @@ class TextEditorActivity : AppCompatActivity(),
             .setTitle("Jump to line")
             .setView(input)
             .setPositiveButton("Go") { _, _ ->
-                input.text.toString().toIntOrNull()?.let { if (it > 0) codeEditor?.gotoLine(it - 1) }
+                input.text.toString().toIntOrNull()?.let { line ->
+                    if (line > 0) {
+                        pushCurrentPosition()   // remember where we came from
+                        codeEditor?.gotoLine(line - 1)
+                        pushCurrentPosition()   // record the destination too
+                    }
+                }
             }
             .setNegativeButton("Cancel", null)
             .show()
