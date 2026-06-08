@@ -391,4 +391,11 @@ public class XmlCompletionProvider {
         System.arraycopy(b, 0, result, a.length, b.length);
         return result;
     }
+
+    private static String[] concat(String[] a, String[] b, String... c) {
+        String[] result = Arrays.copyOf(a, a.length + b.length + c.length);
+        System.arraycopy(b, 0, result, a.length, b.length);
+        System.arraycopy(c, 0, result, a.length + b.length, c.length);
+        return result;
+    }
 }
