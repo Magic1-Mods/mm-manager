@@ -26,7 +26,7 @@ class SymbolPanel @JvmOverloads constructor(
     }
 
     private var symbolClickListener: OnSymbolClickListener? = null
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<SymbolPanel>
     private lateinit var dragHandle: BottomSheetDragHandleView
     private lateinit var rowsContainer: LinearLayout
     
@@ -178,9 +178,10 @@ class SymbolPanel @JvmOverloads constructor(
     }
 
     private fun updateRowsVisibility(slideOffset: Float) {
-        rowsContainer.children.forEachIndexed { index, view ->
-            if (index > 0) { // Skip first row (index 0)
-                val targetAlpha = slideOffset.coerceIn(0f, 1f)
+        val targetAlpha = slideOffset.coerceIn(0f, 1f)
+        for (i in 0 until rowsContainer.childCount) {
+            if (i > 0) {
+                val view = rowsContainer.getChildAt(i)
                 view.alpha = targetAlpha
                 view.visibility = if (targetAlpha > 0.01f) VISIBLE else GONE
             }
@@ -188,12 +189,14 @@ class SymbolPanel @JvmOverloads constructor(
     }
 
     private fun showAllRows() {
-        rowsContainer.children.forEach { it.visibility = VISIBLE }
+        for (i in 0 until rowsContainer.childCount) {
+            rowsContainer.getChildAt(i).visibility = VISIBLE
+        }
     }
 
     private fun showFirstRowOnly() {
-        rowsContainer.children.forEachIndexed { index, view ->
-            view.visibility = if (index == 0) VISIBLE else GONE
+        for (i in 0 until rowsContainer.childCount) {
+            rowsContainer.getChildAt(i).visibility = if (i == 0) VISIBLE else GONE
         }
     }
 

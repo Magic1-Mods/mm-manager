@@ -1,6 +1,7 @@
 package bin.mg.main.utils.icon
 
 import android.content.Context
+import androidx.core.content.ContextCompat
 import bin.mg.main.R
 import bin.mg.main.model.FileType
 

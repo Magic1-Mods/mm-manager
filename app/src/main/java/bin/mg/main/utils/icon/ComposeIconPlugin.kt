@@ -36,17 +36,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.ViewTreeLifecycleOwner
 import bin.mg.main.model.FileType
 
 class ComposeIconPlugin(context: Context) : IconPlugin {
 
     private val appContext = context.applicationContext
     private val composeView = ComposeView(appContext)
-    private val lifecycleOwner = SimpleLifecycleOwner()
     private val iconCache = HashMap<FileType, Drawable>()
     private val tintCache = HashMap<FileType, Int>()
 
@@ -60,9 +55,6 @@ class ComposeIconPlugin(context: Context) : IconPlugin {
     private val tintMapping = HashMap<FileType, Int>()
 
     init {
-        ViewTreeLifecycleOwner.set(composeView, lifecycleOwner)
-        lifecycleOwner.markResumed()
-
         iconMapping[FileType.FOLDER] = Icons.Default.Folder
         iconMapping[FileType.APK] = Icons.Default.Android
         iconMapping[FileType.XAPK] = Icons.Default.Android
@@ -232,13 +224,5 @@ class ComposeIconPlugin(context: Context) : IconPlugin {
 
     override fun getTint(fileType: FileType, context: Context): Int? {
         return tintMapping[fileType]
-    }
-
-    private class SimpleLifecycleOwner : LifecycleOwner {
-        private val lifecycleRegistry = LifecycleRegistry(this)
-        override fun getLifecycle(): Lifecycle = lifecycleRegistry
-        fun markResumed() {
-            lifecycleRegistry.currentState = Lifecycle.State.RESUMED
-        }
     }
 }
