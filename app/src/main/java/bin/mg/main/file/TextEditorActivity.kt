@@ -25,8 +25,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import bin.mg.main.R
 import bin.mg.main.utils.theme.ThemeManager
-import modder.hub.editor.EditView
-import modder.hub.editor.OnTextChangedListener
+import bin.mg.main.editor.EditView
+import bin.mg.main.editor.OnTextChangedListener
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader

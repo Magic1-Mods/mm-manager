@@ -1,4 +1,4 @@
-package modder.hub.editor;
+package bin.mg.main.editor;
 
 import java.util.LinkedList;
 

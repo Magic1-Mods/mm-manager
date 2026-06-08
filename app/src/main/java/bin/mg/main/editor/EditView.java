@@ -33,7 +33,7 @@
 *     additional information or have any questions
 */
 
-package modder.hub.editor;
+package bin.mg.main.editor;
 
 import android.content.ClipData;
 import android.content.ClipDescription;
@@ -78,9 +78,9 @@ import android.widget.Magnifier;
 import android.widget.OverScroller;
 import android.widget.TextView;
 import bin.mg.main.R;
-import modder.hub.editor.ScreenUtils;
-import modder.hub.editor.component.ClipboardPanel;
-import modder.hub.editor.highlight.MHSyntaxHighlightEngine;
+import bin.mg.main.editor.ScreenUtils;
+import bin.mg.main.editor.component.ClipboardPanel;
+import bin.mg.main.editor.highlight.MHSyntaxHighlightEngine;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

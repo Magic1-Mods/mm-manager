@@ -196,7 +196,7 @@
         </LinearLayout>
 
         <!-- ── Code Editor (MH-TextEditor custom Canvas-based) ── -->
-        <modder.hub.editor.EditView
+        <bin.mg.main.editor.EditView
             android:id="@+id/code_editor"
             android:layout_width="match_parent"
             android:layout_height="0dp"

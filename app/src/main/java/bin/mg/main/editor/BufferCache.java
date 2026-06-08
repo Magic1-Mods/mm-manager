@@ -12,7 +12,7 @@
  * <p>Therefore, _cache[0] is always occupied by the entry (0,0). It is not affected by
  * invalidateCache, cache miss, etc. operations
  */
-package modder.hub.editor;
+package bin.mg.main.editor;
 
 public class BufferCache {
     private final int CACHE_SIZE = 4; // minimum = 1

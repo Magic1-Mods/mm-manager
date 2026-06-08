@@ -1,4 +1,4 @@
-package modder.hub.editor.component;
+package bin.mg.main.editor.component;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

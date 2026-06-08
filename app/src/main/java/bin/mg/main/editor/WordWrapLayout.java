@@ -33,11 +33,11 @@
 *     additional information or have any questions
 */
 
-package modder.hub.editor;
+package bin.mg.main.editor;
 
 import android.util.Log;
-import modder.hub.editor.EditView;
-import modder.hub.editor.GapBuffer;
+import bin.mg.main.editor.EditView;
+import bin.mg.main.editor.GapBuffer;
 import java.util.ArrayList;
 import java.util.List;
 

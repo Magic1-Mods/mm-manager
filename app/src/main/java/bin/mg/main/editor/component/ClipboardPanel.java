@@ -33,7 +33,7 @@
  *     additional information or have any questions
  */
 
-package modder.hub.editor.component;
+package bin.mg.main.editor.component;
 
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -45,7 +45,7 @@ import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import modder.hub.editor.EditView;
+import bin.mg.main.editor.EditView;
 
 /* Author @MrIkso */
 /* Optmization done by Chat GPT */

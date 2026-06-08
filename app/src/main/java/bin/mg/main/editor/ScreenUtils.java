@@ -33,7 +33,7 @@
 *     additional information or have any questions
 */
 
-package modder.hub.editor;
+package bin.mg.main.editor;
 
 import android.content.Context;
 import android.util.DisplayMetrics;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package modder.hub.editor;
+package bin.mg.main.editor;
 
 import java.util.Objects;
 

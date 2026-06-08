@@ -34,7 +34,7 @@
  */
 
 
-package modder.hub.editor.component;
+package bin.mg.main.editor.component;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
@@ -50,7 +50,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import bin.mg.main.R;
-import modder.hub.editor.EditView;
+import bin.mg.main.editor.EditView;
 
 /** Magnifier specially designed for EditView */
 // Originally repicated from Sora Code Editor for Android

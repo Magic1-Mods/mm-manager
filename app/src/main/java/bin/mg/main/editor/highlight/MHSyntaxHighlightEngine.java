@@ -33,7 +33,7 @@
 *     additional information or have any questions
 */
 
-package modder.hub.editor.highlight;
+package bin.mg.main.editor.highlight;
 
 import android.content.Context;
 import android.graphics.Canvas;
