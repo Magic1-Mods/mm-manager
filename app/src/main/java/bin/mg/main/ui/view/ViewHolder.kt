@@ -95,13 +95,7 @@ class ViewHolder(
         } else {
             icon.visibility = View.VISIBLE
             icon.scaleType = ImageView.ScaleType.CENTER_INSIDE
-            icon.colorFilter = null
-            val drawable = IconManager.getIconDrawable(fileType, context)
-            if (drawable != null) {
-                icon.setImageDrawable(drawable)
-            } else {
-                icon.setImageResource(IconManager.getIconResource(fileType))
-            }
+            icon.setImageResource(IconManager.getIconResource(fileType))
         }
 
         val dateStr = formatDate(item.lastModified)
