@@ -166,8 +166,8 @@ class PreferencesActivity : AppCompatActivity() {
             prefs.edit().putBoolean("keep_word_wrap", checked).apply()
         }
         addPrefItem(container, "Threshold for enabling smooth mode",
-            "When opening the file, if the text length exceeds the specified length, the smooth mode will be automatically turned on.",
-            prefs.getInt("smooth_threshold", 10000).toString(), false) {
+            "When opening the file, if the text length exceeds the specified length, the smooth mode will be automatically turned on.\nCurrent: ${prefs.getInt("smooth_threshold", 10000)}",
+            false) {
             showSmoothThresholdDialog()
         }
 
