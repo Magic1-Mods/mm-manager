@@ -104,13 +104,13 @@ class DefaultIconPlugin : IconPlugin {
     override fun getIcon(fileType: FileType, context: Context): IconResult? {
         val resId = iconMap[fileType] ?: return null
         return IconResult(
-            drawable = if (resId != 0) android.content.ContextCompat.getDrawable(context, resId) else null,
+            drawable = if (resId != 0) ContextCompat.getDrawable(context, resId) else null,
             tintColor = tintMap[fileType]
         )
     }
 
     override fun getTint(fileType: FileType, context: Context): Int? {
         val resId = tintMap[fileType] ?: return null
-        return android.content.ContextCompat.getColor(context, resId)
+        return ContextCompat.getColor(context, resId)
     }
 }
