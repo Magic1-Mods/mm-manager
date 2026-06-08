@@ -223,6 +223,7 @@ public class SymbolPanel extends LinearLayout {
 
         for (int i = 1; i < childCount; i++) {
             final View row = rowsContainer.getChildAt(i);
+            final int index = i;
             if (showAll) {
                 row.setVisibility(View.VISIBLE);
                 row.setAlpha(0f);
@@ -231,11 +232,10 @@ public class SymbolPanel extends LinearLayout {
                     .setDuration(ANIMATION_DURATION)
                     .setInterpolator(new DecelerateInterpolator())
                     .withEndAction(() -> {
-                        if (i == childCount - 1) isAnimating = false;
+                        if (index == childCount - 1) isAnimating = false;
                     })
                     .start();
             } else {
-                final int index = i;
                 row.animate()
                     .alpha(0f)
                     .setDuration(ANIMATION_DURATION)
