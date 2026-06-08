@@ -11,15 +11,16 @@
         android:id="@+id/editor_main_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:fitsSystemWindows="true">
 
         <!-- ── Toolbar ── -->
         <LinearLayout
             android:id="@+id/editor_toolbar"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:gravity="center_vertical"
             android:orientation="horizontal"
+   																			 android:gravity="center"
             android:paddingStart="2dp"
             android:paddingEnd="2dp">
 
@@ -104,11 +105,11 @@
         <LinearLayout
             android:id="@+id/editor_info_bar"
             android:layout_width="match_parent"
-            android:layout_height="30dp"
+            android:layout_height="24dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp">
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp">
 
             <TextView
                 android:id="@+id/textview_filename"
@@ -116,9 +117,9 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="untitled"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                android:singleLine="true"
+                android:maxLines="true"
                 android:ellipsize="middle" />
 
             <TextView
@@ -126,7 +127,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="1:1   UTF-8"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -203,23 +204,13 @@
             android:focusable="true"
             android:focusableInTouchMode="true" />
 
-        <!-- ── Symbol / shortcut bar (bottom bar above nav) ── -->
-        <LinearLayout
-            android:id="@+id/symbol_bar"
+        <!-- ── Symbol Panel (draggable bottom sheet) ── -->
+        <bin.mg.main.file.SymbolPanel
+            android:id="@+id/symbol_panel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_vertical"
             android:background="#1A1A1A"
-            android:elevation="4dp">
-
-            <LinearLayout
-                android:id="@+id/symbol_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center_vertical" />
-        </LinearLayout>
+            android:elevation="4dp" />
 
     </LinearLayout>
 

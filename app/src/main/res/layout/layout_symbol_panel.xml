@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/symbol_panel_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1A1A1A">
+
+    <!-- Drag handle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingTop="6dp"
+        android:paddingBottom="4dp">
+
+        <View
+            android:id="@+id/symbol_drag_handle"
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:background="@drawable/bg_symbol_handle" />
+    </LinearLayout>
+
+    <!-- Symbol rows container -->
+    <LinearLayout
+        android:id="@+id/symbol_rows_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="4dp" />
+
+</LinearLayout>

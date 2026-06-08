@@ -34,9 +34,9 @@
 -keep class bin.mg.main.MainActivity { *; }
 -keep class bin.mg.main.AppMain { *; }
 -keep class bin.mg.main.file.TextEditorActivity { *; }
--keep class bin.mg.main.file.EditorPreferencesFragment { *; }
--keep class bin.mg.main.file.TextEditorPreferencesFragment { *; }
+-keep class bin.mg.main.file.PreferencesActivity { *; }
 -keep class bin.mg.main.file.SyntaxSelectorFragment { *; }
+-keep class bin.mg.main.file.SymbolPanel { *; }
 -keep class bin.mg.main.app.dex.plus.DexActivity { *; }
 
 # ==========================================

@@ -180,8 +180,10 @@ public class EditView extends View {
     private ArrayAdapter<String> mAutoCompleteAdapter;
 
     private static final Pattern WORD_PATTERN = Pattern.compile("\\w+");
-    private static final int MIN_WORD_LEN = 2; // Filter short words
-    private static final int WORD_UPDATE_DELAY = 200; // ms throttle
+    private static final int MIN_WORD_LEN = 2;
+    private static final int WORD_UPDATE_DELAY = 300; // ms throttle
+    private static final int MAX_WORD_SET_SIZE = 20000; // cap for large files
+    private static final int WORD_SCAN_WINDOW = 100000; // scan 100KB around cursor for words
     private Runnable mWordUpdateRunnable = new Runnable() {
         @Override
         public void run() {
@@ -198,6 +200,23 @@ public class EditView extends View {
     private boolean mWordWrapEnabled = false;   // Soft word wrap (default off)
     private boolean mSmoothScrollEnabled = true; // Smooth scroll (default on)
     private boolean mAutoCompleteEnabled = true; // Autocomplete popup (default on)
+
+    // IME composing region tracking
+    private int mComposingStart = -1;
+    private int mComposingEnd = -1;
+
+    // Reusable buffer for glyph widths in setCursorPosition (avoids allocation per touch)
+    private float[] mTempWidths = new float[256];
+
+    // Cached colors for drawing loops (avoid Color.parseColor per frame)
+    private static final int COLOR_LINE_NUMBER_BG = Color.parseColor("#F8F8F8");
+    private static final int COLOR_SEPARATOR = Color.parseColor("#E4E4E4");
+    private static final int COLOR_LINE_NUMBER_TEXT = Color.parseColor("#B0B0B0");
+    private static final int COLOR_CURRENT_LINE_BG = Color.parseColor("#FFFAE3");
+    private static final int COLOR_SELECTION_BG = Color.parseColor("#B3DBFB");
+    private static final int COLOR_LINE_SELECT_BG = Color.parseColor("#E3F2FD");
+    private static final int COLOR_MATCH_HIGHLIGHT = Color.parseColor("#FFFD54");
+    private static final int COLOR_MATCH_CURRENT = Color.YELLOW;
 
     private int mFirstSelectedLine = -1;
     private int mSecondSelectedLine = -1;
@@ -460,7 +479,7 @@ public class EditView extends View {
     // Draw current line background or selection highlight
     public void drawLineBackground(Canvas canvas) {
         if (mIsLineSelectionMode && mStartSelectionLine > 0 && mEndSelectionLine > 0) {
-            mPaint.setColor(Color.parseColor("#E3F2FD")); // Light blue background
+            mPaint.setColor(COLOR_LINE_SELECT_BG);
             int lineNumberWidth = getLineNumberWidth() + SPACEING * 2;
 
             for (int i = mStartSelectionLine; i <= mEndSelectionLine; i++) {
@@ -474,7 +493,7 @@ public class EditView extends View {
 
         if (!isSelectMode) {
             // draw current line background
-            mPaint.setColor(Color.parseColor("#FFFAE3"));
+            mPaint.setColor(COLOR_CURRENT_LINE_BG);
             int left = getPaddingLeft() + getLineNumberWidth() + SPACEING;
             canvas.drawRect(left,
                     getPaddingTop() + mCursorPosY,
@@ -483,7 +502,7 @@ public class EditView extends View {
                     mPaint);
         } else {
             // draw select text background - BLOCK STYLE (like before)
-            mPaint.setColor(Color.parseColor("#B3DBFB"));
+            mPaint.setColor(COLOR_SELECTION_BG);
 
             int left = getLeftSpace();
             int lineHeight = getLineHeight();
@@ -580,9 +599,9 @@ public class EditView extends View {
                 int end = mReplaceList.get(i).second;
 
                 if (start == selectionStart && end == selectionEnd)
-                    mPaint.setColor(Color.YELLOW);
+                    mPaint.setColor(COLOR_MATCH_CURRENT);
                 else
-                    mPaint.setColor(Color.parseColor("#FFFD54"));
+                    mPaint.setColor(COLOR_MATCH_HIGHLIGHT);
 
                 int line = mGapBuffer.findLineNumber(start);
                 int lineStart = getLineStart(line);
@@ -639,7 +658,7 @@ public class EditView extends View {
         int totalContentHeight = getLineCount() * getLineHeight();
 
         // Draw full-height line number bar background
-        mPaint.setColor(Color.parseColor("#F8F8F8"));
+        mPaint.setColor(COLOR_LINE_NUMBER_BG);
         canvas.drawRect(
                 getPaddingLeft(),
                 0,
@@ -651,7 +670,7 @@ public class EditView extends View {
         // Draw separator line
         int separatorWidth = 2;
         int separatorX = getPaddingLeft() + lineNumberWidth + SPACEING * 2 - separatorWidth;
-        mPaint.setColor(Color.parseColor("#E4E4E4"));
+        mPaint.setColor(COLOR_SEPARATOR);
         mPaint.setStrokeWidth(separatorWidth);
         canvas.drawLine(
                 separatorX,
@@ -755,7 +774,6 @@ public class EditView extends View {
         }
 
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
-            Log.d(TAG, "onKeyDown: keyCode=" + keyCode + ", unicode=" + event.getUnicodeChar());
 
             switch (keyCode) {
                 case KeyEvent.KEYCODE_ENTER:
@@ -1282,9 +1300,6 @@ public class EditView extends View {
                 adjustedX = Math.max(50, Math.min(adjustedX, getWidth() - 50));
                 adjustedY = Math.max(50, Math.min(adjustedY, getHeight() - 50));
 
-                // Debug logging
-                Log.d(TAG, "showMagnifier: x=" + adjustedX + ", y=" + adjustedY + ", rawX=" + x + ", rawY=" + y + ", scrollY=" + getScrollY() + ", lineHeight=" + lineHeight);
-
                 mMagnifier.show(adjustedX, adjustedY);
                 mMagnifierX = adjustedX;
                 mMagnifierY = adjustedY;
@@ -1319,8 +1334,6 @@ public class EditView extends View {
 
                 // Smooth update only if significant movement
                 if (Math.abs(adjustedX - mMagnifierX) > 1 || Math.abs(adjustedY - mMagnifierY) > 1) {
-                    Log.d(TAG, "updateMagnifier: x=" + adjustedX + ", y=" + adjustedY + ", rawX=" + x + ", rawY=" + y + ", scrollY=" + getScrollY() + ", lineHeight=" + lineHeight);
-
                     mMagnifier.show(adjustedX, adjustedY);
                     mMagnifierX = adjustedX;
                     mMagnifierY = adjustedY;
@@ -1440,7 +1453,7 @@ public class EditView extends View {
     // Call this method whenever the text content changes
     public void onTextChanged() {
         clearSyntaxCache(); // keep cache fresh
-        mTextListener.onTextChanged();
+        if (mTextListener != null) mTextListener.onTextChanged();
     }
 
     // ---------- Insert / Delete with handling ----------
@@ -1470,7 +1483,6 @@ public class EditView extends View {
         // Handle auto-complete
         if (!text.trim().isEmpty()) {
             if (!mCurrentPrefix.isEmpty()) {
-                Log.d(TAG, "Prefix: " + mCurrentPrefix);
                 filterAndShowSuggestions(mCurrentPrefix + text);
             } else {
                 dismissAutoComplete();
@@ -1659,15 +1671,18 @@ public class EditView extends View {
         scrollToFindPosition(next);
     }
 
-    // Find all matches for regex in buffer
+    // Find all matches for regex in buffer (capped for large files)
     public void find(String regex) {
         if (!mReplaceList.isEmpty())
             mReplaceList.clear();
 
-        Matcher matcher = Pattern.compile(regex).matcher(mGapBuffer.toString());
-
-        while (matcher.find()) {
-            mReplaceList.add(new Pair<Integer, Integer>(matcher.start(), matcher.end()));
+        try {
+            Matcher matcher = Pattern.compile(regex).matcher(mGapBuffer.toString());
+            while (matcher.find() && mReplaceList.size() < 5000) {
+                mReplaceList.add(new Pair<Integer, Integer>(matcher.start(), matcher.end()));
+            }
+        } catch (Exception e) {
+            // Invalid regex - ignore silently
         }
     }
 
@@ -2198,9 +2213,7 @@ public class EditView extends View {
         if (mCursorPosY > bottom - getLineHeight())
             mCursorPosY = bottom - getLineHeight();
 
-        // estimate the cursor x position
         int left = getLeftSpace();
-
         int prev = left;
         int next = left;
 
@@ -2210,28 +2223,29 @@ public class EditView extends View {
         String text = getLine(mCursorLine);
         int length = text.length();
 
-        float[] widths = new float[length];
-        mTextPaint.getTextWidths(text, widths);
+        // Reuse width buffer to avoid allocation per touch event
+        if (length > mTempWidths.length) {
+            mTempWidths = new float[length];
+        }
+        mTextPaint.getTextWidths(text, 0, length, mTempWidths);
 
         for (int i = 0; next < x && i < length; ++i) {
             if (i > 0) {
-                prev += widths[i - 1];
+                prev += mTempWidths[i - 1];
             }
-            next += widths[i];
+            next += mTempWidths[i];
         }
         onCursorOrSelectionChanged();
 
-        // calculation the cursor x coordinate
         if (Math.abs(x - prev) <= Math.abs(next - x)) {
             mCursorPosX = prev;
         } else {
             mCursorPosX = next;
         }
 
-        // calculation the cursor index
         if (mCursorPosX > left) {
             for (int j = 0; left < mCursorPosX && j < length; ++j) {
-                left += widths[j];
+                left += (int) mTempWidths[j];
                 ++mCursorIndex;
             }
         }
@@ -2248,7 +2262,7 @@ public class EditView extends View {
     }
 
     // ---------- Autocomplete / Word extraction ----------
-    // Update word set from buffer asynchronously
+    // Update word set from buffer asynchronously - scans a window around cursor for large files
     private void updateWordSet() {
         removeCallbacks(mWordUpdateRunnable);
         if (!isEditedMode) return;
@@ -2256,22 +2270,38 @@ public class EditView extends View {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                // Off UI for large files
-                String fullText = mGapBuffer.toString();
+                int bufLen = mGapBuffer.length();
                 final Set<String> words = new HashSet<>();
-                java.util.regex.Matcher matcher = WORD_PATTERN.matcher(fullText);
 
-                while (matcher.find()) {
-                    String word = matcher.group();
-                    if (word.length() >= MIN_WORD_LEN) {
-                        words.add(word);
+                if (bufLen <= WORD_SCAN_WINDOW * 2) {
+                    // Small file: scan entire buffer
+                    String fullText = mGapBuffer.toString();
+                    java.util.regex.Matcher matcher = WORD_PATTERN.matcher(fullText);
+                    while (matcher.find()) {
+                        String word = matcher.group();
+                        if (word.length() >= MIN_WORD_LEN) {
+                            words.add(word);
+                            if (words.size() > MAX_WORD_SET_SIZE) break;
+                        }
+                    }
+                } else {
+                    // Large file: scan window around cursor
+                    int start = Math.max(0, mCursorIndex - WORD_SCAN_WINDOW);
+                    int end = Math.min(bufLen, mCursorIndex + WORD_SCAN_WINDOW);
+                    String windowText = mGapBuffer.substring(start, end);
+                    java.util.regex.Matcher matcher = WORD_PATTERN.matcher(windowText);
+                    while (matcher.find()) {
+                        String word = matcher.group();
+                        if (word.length() >= MIN_WORD_LEN) {
+                            words.add(word);
+                            if (words.size() > MAX_WORD_SET_SIZE) break;
+                        }
                     }
                 }
 
                 post(new Runnable() {
                     @Override
                     public void run() {
-                        // Back to UI
                         mWordSet = words;
                         if (!mCurrentPrefix.isEmpty()) {
                             showAutoComplete(mCurrentPrefix);
@@ -2313,16 +2343,17 @@ public class EditView extends View {
             return;
         }
 
+        String lowerPrefix = prefix.toLowerCase();
         List<String> priorityList = new ArrayList<>();
         List<String> containsList = new ArrayList<>();
 
         for (String word : mWordSet) {
+            if (word.equals(prefix)) continue;
             String lowerWord = word.toLowerCase();
-            String lowerPrefix = prefix.toLowerCase();
 
-            if (lowerWord.startsWith(lowerPrefix) && !word.equals(prefix)) {
+            if (lowerWord.startsWith(lowerPrefix)) {
                 priorityList.add(word);
-            } else if (lowerWord.contains(lowerPrefix) && !word.equals(prefix)) {
+            } else if (lowerWord.contains(lowerPrefix)) {
                 containsList.add(word);
             }
         }
@@ -3102,9 +3133,6 @@ public class EditView extends View {
                         mIsMagnifierActive = true;
                         showMagnifier(selectHandleRightX, selectHandleRightY);
                     }
-
-                    // Show what was selected (for debugging)
-                    Log.d(TAG, "Double tap selected: '" + selectWord + "'");
                 }
             }
             postInvalidate();
@@ -3296,6 +3324,14 @@ public class EditView extends View {
                 mLastCommittedText = text.toString();
                 mLastInputTime = currentTime;
 
+                // Clear composing region if active
+                if (mComposingStart >= 0 && mComposingEnd > mComposingStart) {
+                    mGapBuffer.delete(mComposingStart, mComposingEnd, true);
+                    mCursorIndex = mComposingStart;
+                    mComposingStart = -1;
+                    mComposingEnd = -1;
+                }
+
                 // Call insert to handle the text and trigger auto-complete
                 insert(text.toString());
 
@@ -3312,40 +3348,46 @@ public class EditView extends View {
 
         @Override
         public boolean setComposingText(CharSequence text, int newCursorPosition) {
-            Log.d(TAG, "setComposingText: '" + text + "', newCursor=" + newCursorPosition);
+            // Remove any existing composing region first
+            if (mComposingStart >= 0 && mComposingEnd > mComposingStart) {
+                mGapBuffer.delete(mComposingStart, mComposingEnd, true);
+                mCursorIndex = mComposingStart;
+            }
 
-            // For composing text, we still want to handle it but not debounce
             if (text != null && text.length() > 0) {
-                mProcessingInput = true;
-                insert(text.toString());
-                postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mProcessingInput = false;
-                    }
-                }, INPUT_DEBOUNCE_DELAY);
+                mComposingStart = mCursorIndex;
+                mGapBuffer.insert(mCursorIndex, text.toString(), true);
+                mComposingEnd = mCursorIndex + text.length();
+                mCursorIndex = mComposingEnd;
+                mCursorLine = getOffsetLine(mCursorIndex);
+                adjustCursorPosition();
+                onTextChanged();
+                scrollToVisable();
+                postInvalidate();
+                return true;
+            } else {
+                mComposingStart = -1;
+                mComposingEnd = -1;
                 return true;
             }
-            return super.setComposingText(text, newCursorPosition);
         }
 
         @Override
         public boolean deleteSurroundingText(int beforeLength, int afterLength) {
-            Log.d(TAG, "deleteSurroundingText: before=" + beforeLength + ", after=" + afterLength);
-
             if (mProcessingInput) {
-                Log.d(TAG, "Skipping delete - processing input");
                 return true;
             }
 
-            if (beforeLength > 0) {
+            if (beforeLength > 0 || afterLength > 0) {
+                mGapBuffer.beginBatchEdit();
                 for (int i = 0; i < beforeLength; i++) {
                     delete();
                 }
-                return true;
-            } else if (afterLength > 0) {
                 for (int i = 0; i < afterLength; i++) {
                     handleForwardDelete();
+                }
+                if (mGapBuffer.isBatchEdit()) {
+                    mGapBuffer.endBatchEdit();
                 }
                 return true;
             }
@@ -3354,17 +3396,13 @@ public class EditView extends View {
 
         @Override
         public boolean deleteSurroundingTextInCodePoints(int beforeLength, int afterLength) {
-            Log.d(TAG, "deleteSurroundingTextInCodePoints: before=" + beforeLength + ", after=" + afterLength);
             return deleteSurroundingText(beforeLength, afterLength);
         }
 
         @Override
         public boolean sendKeyEvent(KeyEvent event) {
-            Log.d(TAG, "sendKeyEvent: " + event.getKeyCode() + ", action=" + event.getAction());
-
             // Skip key events if we're already processing input to avoid duplicates
             if (mProcessingInput && event.getAction() == KeyEvent.ACTION_DOWN) {
-                Log.d(TAG, "Skipping key event - processing input");
                 return true;
             }
 
@@ -3398,7 +3436,17 @@ public class EditView extends View {
 
         @Override
         public boolean finishComposingText() {
-            Log.d(TAG, "finishComposingText");
+            // Clear composing region without committing (just dismiss the composition)
+            if (mComposingStart >= 0 && mComposingEnd > mComposingStart) {
+                mGapBuffer.delete(mComposingStart, mComposingEnd, true);
+                mCursorIndex = mComposingStart;
+                mCursorLine = getOffsetLine(mCursorIndex);
+                adjustCursorPosition();
+                mComposingStart = -1;
+                mComposingEnd = -1;
+                onTextChanged();
+                postInvalidate();
+            }
             return true;
         }
 
@@ -3406,11 +3454,8 @@ public class EditView extends View {
         public CharSequence getTextBeforeCursor(int length, int flags) {
             try {
                 int start = Math.max(0, mCursorIndex - length);
-                String text = mGapBuffer.substring(start, mCursorIndex);
-                Log.d(TAG, "getTextBeforeCursor: " + text);
-                return text;
+                return mGapBuffer.substring(start, mCursorIndex);
             } catch (Exception e) {
-                Log.e(TAG, "Error in getTextBeforeCursor", e);
                 return "";
             }
         }
@@ -3419,19 +3464,18 @@ public class EditView extends View {
         public CharSequence getTextAfterCursor(int length, int flags) {
             try {
                 int end = Math.min(mGapBuffer.length(), mCursorIndex + length);
-                String text = mGapBuffer.substring(mCursorIndex, end);
-                Log.d(TAG, "getTextAfterCursor: " + text);
-                return text;
+                return mGapBuffer.substring(mCursorIndex, end);
             } catch (Exception e) {
-                Log.e(TAG, "Error in getTextAfterCursor", e);
                 return "";
             }
         }
 
         @Override
         public int getCursorCapsMode(int reqModes) {
-            // This helps with auto-capitalization
-            return TextUtils.getCapsMode(mGapBuffer.toString(), mCursorIndex, reqModes);
+            // Only look at text before cursor, not the entire buffer
+            int start = Math.max(0, mCursorIndex - 500); // last 500 chars for context
+            String textBeforeCursor = mGapBuffer.substring(start, mCursorIndex);
+            return TextUtils.getCapsMode(textBeforeCursor, textBeforeCursor.length(), reqModes);
         }
     }
 }

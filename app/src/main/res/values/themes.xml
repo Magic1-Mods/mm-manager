@@ -266,11 +266,6 @@
         <item name="buttonTint">#00695C</item>
     </style>
 
-    <!-- Editor Preferences Dialog -->
-    <style name="EditorPreferencesDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
-        <item name="dialogCornerRadius">12dp</item>
-        <item name="android:windowBackground">@color/white</item>
-    </style>
     
     <style name="ToolbarTitleStyle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
         <item name="android:textSize">20sp</item>

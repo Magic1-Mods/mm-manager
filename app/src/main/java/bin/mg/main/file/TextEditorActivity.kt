@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
+import android.view.WindowManager
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -24,7 +25,6 @@ import androidx.recyclerview.widget.RecyclerView
 import bin.mg.main.R
 import bin.mg.main.utils.theme.ThemeManager
 import modder.hub.editor.EditView
-import modder.hub.editor.GapBuffer
 import modder.hub.editor.OnTextChangedListener
 import java.io.BufferedReader
 import java.io.File
@@ -37,12 +37,11 @@ import java.util.concurrent.Executors
 import org.mozilla.universalchardet.UniversalDetector
 
 class TextEditorActivity : AppCompatActivity(),
-    EditorPreferencesFragment.OnPreferencesAppliedListener,
     SyntaxSelectorFragment.OnSyntaxSelectedListener {
 
     // ─── Views ────────────────────────────────────────────────────────────────
     private var codeEditor: EditView? = null
-    private var symbolInput: LinearLayout? = null
+    private var symbolPanel: SymbolPanel? = null
     private var filenameText: TextView? = null
     private var lineNoEncodingText: TextView? = null
     private var searchBar: LinearLayout? = null
@@ -84,11 +83,15 @@ class TextEditorActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_file_editor)
 
+        // Keep keyboard from pushing content up; we handle symbol panel ourselves
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+
         initViews()
         applyTheme()
         setupDrawer()
         setupToolbar()
         setupSearchBar()
+        setupSymbolPanel()
 
         val intentPath = intent.getStringExtra("file_path")
         if (intentPath != null && File(intentPath).exists()) {
@@ -138,7 +141,7 @@ class TextEditorActivity : AppCompatActivity(),
             findViewById<ImageView>(id)?.setColorFilter(searchIconTint)
         }
 
-        findViewById<LinearLayout>(R.id.symbol_bar)?.setBackgroundColor(symbolBarBg)
+        symbolPanel?.setBackgroundColor(symbolBarBg)
 
         findViewById<LinearLayout>(R.id.editor_drawer)?.setBackgroundColor(drawerBg)
         findViewById<LinearLayout>(R.id.drawer_header)?.setBackgroundColor(toolbarBg)
@@ -154,7 +157,7 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun initViews() {
         codeEditor = findViewById(R.id.code_editor)
-        symbolInput = findViewById(R.id.symbol_input)
+        symbolPanel = findViewById(R.id.symbol_panel)
         filenameText = findViewById(R.id.textview_filename)
         lineNoEncodingText = findViewById(R.id.textview_lineno_encoding)
         searchBar = findViewById(R.id.search_bar)
@@ -164,7 +167,6 @@ class TextEditorActivity : AppCompatActivity(),
         openFilesRecycler = findViewById(R.id.recycler_open_files)
 
         applyEditorSettings()
-        setupSymbolBar()
 
         codeEditor?.setOnTextChangedListener(object : OnTextChangedListener {
             override fun onTextChanged() {
@@ -187,202 +189,33 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun applyEditorSettings() {
         val editor = codeEditor ?: return
+
+        // Font
+        val fontStyle = prefs.getString("font_style", "monospace") ?: "monospace"
+        val typeface = if (fontStyle == "monospace") Typeface.MONOSPACE else Typeface.DEFAULT
+        editor.setTypeface(typeface)
+
+        // Font size
         editor.setTextSize(prefs.getInt("font_size", 14).toFloat())
-        editor.setTypeface(Typeface.MONOSPACE)
+
+        // Function toggles
+        editor.setWordWrap(prefs.getBoolean("soft_wrap", false))
+        editor.setReadOnly(prefs.getBoolean("read_only", false))
+        editor.setSmoothScrollEnabled(prefs.getBoolean("smooth_mode", true))
+        editor.setAutoCompleteEnabled(prefs.getBoolean("code_completion", true))
+        editor.setMagnifierEnabled(prefs.getBoolean("enable_magnifier", true))
+        editor.setAutoIndentEnabled(prefs.getBoolean("auto_indent", true))
     }
 
-    // ─── Symbol bar (bottom bar with keyboard awareness) ──────────────────────
+    // ─── Symbol Panel ────────────────────────────────────────────────────────
 
-    private var symbolBarExpanded = false
-    private var isKeyboardVisible = false
-    private lateinit var symbolRow1: LinearLayout
-    private lateinit var symbolRow2: LinearLayout
-    private lateinit var symbolRow3: LinearLayout
-    private lateinit var symbolBarContainer: LinearLayout
-    private var symbolDragStartY = 0f
-
-    private fun setupSymbolBar() {
-        val container = symbolInput ?: return
-        container.removeAllViews()
-
-        val isDark = ThemeManager.isDarkMode(this)
-        val textColor = if (isDark) 0xFFCCCCCC.toInt() else 0xFF333333.toInt()
-        val bgColor = if (isDark) 0xFF1A1A1A.toInt() else 0xFFE8E8E8.toInt()
-        val dividerColor = if (isDark) 0xFF333333.toInt() else 0xFFCCCCCC.toInt()
-        val handleColor = if (isDark) 0xFF666666.toInt() else 0xFF999999.toInt()
-
-        // Main vertical container
-        symbolBarContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(bgColor)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-        container.addView(symbolBarContainer)
-
-        // Drag handle area at top (only used when keyboard is hidden to expand)
-        val handleArea = View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                (12 * resources.displayMetrics.density).toInt()
-            )
-            setOnTouchListener { _, event ->
-                when (event.action) {
-                    android.view.MotionEvent.ACTION_DOWN -> {
-                        symbolDragStartY = event.rawY
-                        true
-                    }
-                    android.view.MotionEvent.ACTION_UP -> {
-                        val dy = symbolDragStartY - event.rawY
-                        if (dy > 40 && !symbolBarExpanded && !isKeyboardVisible) {
-                            expandSymbolBar()
-                        } else if (dy < -40 && symbolBarExpanded) {
-                            collapseSymbolBar()
-                        }
-                        true
-                    }
-                    else -> false
-                }
+    private fun setupSymbolPanel() {
+        symbolPanel?.setOnSymbolClickListener(object : SymbolPanel.OnSymbolClickListener {
+            override fun onSymbolClick(symbol: String) {
+                codeEditor?.insertText(symbol)
+                codeEditor?.requestFocus()
             }
-        }
-        symbolBarContainer.addView(handleArea)
-
-        // Handle bar visual (small line indicator)
-        val handleBar = View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                (40 * resources.displayMetrics.density).toInt(),
-                (3 * resources.displayMetrics.density).toInt()
-            ).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-                topMargin = (4 * resources.displayMetrics.density).toInt()
-                bottomMargin = (4 * resources.displayMetrics.density).toInt()
-            }
-            background = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                setColor(handleColor)
-                cornerRadius = (2 * resources.displayMetrics.density)
-            }
-        }
-        symbolBarContainer.addView(handleBar)
-
-        // Row 1: → / + - * = <   (always visible)
-        val row1Symbols = arrayOf("\u2192", "/", "+", "-", "*", "=", "<")
-        val row1Inserts = arrayOf("\t", "/", "+", "-", "*", "=", "<")
-        symbolRow1 = createSymbolRow(row1Symbols, row1Inserts, textColor, dividerColor)
-        symbolBarContainer.addView(symbolRow1)
-
-        // Row 2: > " ' ; | \ -   (visible when keyboard open or expanded)
-        val row2Symbols = arrayOf(">", "\"", "'", ";", "|", "\\", "-")
-        val row2Inserts = arrayOf(">", "\"", "'", ";", "|", "\\", "-")
-        symbolRow2 = createSymbolRow(row2Symbols, row2Inserts, textColor, dividerColor)
-        symbolRow2.visibility = View.GONE
-        symbolBarContainer.addView(symbolRow2)
-
-        // Row 3: () [] {} ...     (visible when keyboard open or expanded)
-        val row3Symbols = arrayOf("()", "[]", "{}", "...")
-        val row3Inserts = arrayOf("()", "[]", "{}", "...")
-        symbolRow3 = createSymbolRow(row3Symbols, row3Inserts, textColor, dividerColor)
-        symbolRow3.visibility = View.GONE
-        symbolBarContainer.addView(symbolRow3)
-
-        // Watch keyboard visibility
-        setupKeyboardListener()
-    }
-
-    private fun setupKeyboardListener() {
-        val rootView = findViewById<View>(android.R.id.content)
-        rootView.viewTreeObserver.addOnGlobalLayoutListener {
-            val rect = android.graphics.Rect()
-            rootView.getWindowVisibleDisplayFrame(rect)
-            val screenHeight = rootView.rootView.height
-            val visibleHeight = rect.height()
-            val heightDiff = screenHeight - visibleHeight
-            val keyboardVisible = heightDiff > screenHeight * 0.15
-
-            if (keyboardVisible != isKeyboardVisible) {
-                isKeyboardVisible = keyboardVisible
-                updateSymbolBarForKeyboard()
-            }
-        }
-    }
-
-    private fun updateSymbolBarForKeyboard() {
-        if (isKeyboardVisible) {
-            // Keyboard visible: show all 3 rows above keyboard
-            symbolRow2.visibility = View.VISIBLE
-            symbolRow3.visibility = View.VISIBLE
-        } else {
-            // Keyboard hidden: show row 1, optionally rows 2 and 3 if expanded
-            symbolRow2.visibility = if (symbolBarExpanded) View.VISIBLE else View.GONE
-            symbolRow3.visibility = if (symbolBarExpanded) View.VISIBLE else View.GONE
-        }
-    }
-
-    private fun expandSymbolBar() {
-        if (symbolBarExpanded) return
-        symbolBarExpanded = true
-        symbolRow2.visibility = View.VISIBLE
-        symbolRow3.visibility = View.VISIBLE
-    }
-
-    private fun collapseSymbolBar() {
-        if (!symbolBarExpanded) return
-        symbolBarExpanded = false
-        symbolRow2.visibility = View.GONE
-        symbolRow3.visibility = View.GONE
-    }
-
-    private fun createSymbolRow(
-        symbols: Array<String>,
-        insertTexts: Array<String>,
-        textColor: Int,
-        dividerColor: Int
-    ): LinearLayout {
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                (44 * resources.displayMetrics.density).toInt()
-            )
-        }
-
-        for ((index, sym) in symbols.withIndex()) {
-            val btn = TextView(this).apply {
-                text = sym
-                setTextColor(textColor)
-                textSize = 15f
-                typeface = Typeface.MONOSPACE
-                gravity = Gravity.CENTER
-                layoutParams = LinearLayout.LayoutParams(
-                    0,
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    1f
-                )
-                isClickable = true
-                isFocusable = true
-                setBackgroundResource(android.R.drawable.list_selector_background)
-                setOnClickListener {
-                    codeEditor?.insertText(insertTexts[index])
-                    codeEditor?.requestFocus()
-                }
-            }
-            row.addView(btn)
-
-            if (index < symbols.size - 1) {
-                val divider = View(this).apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        1,
-                        LinearLayout.LayoutParams.MATCH_PARENT
-                    )
-                    setBackgroundColor(dividerColor)
-                }
-                row.addView(divider)
-            }
-        }
-
-        return row
+        })
     }
 
     // ─── Drawer ───────────────────────────────────────────────────────────────
@@ -484,24 +317,27 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun showEditMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
-        // Line operations
-        popup.menu.add(0, 10, 0, "Copy line")
-        popup.menu.add(0, 11, 1, "Cut line")
-        popup.menu.add(0, 12, 2, "Delete line")
-        popup.menu.add(0, 13, 3, "Empty line")
-        popup.menu.add(0, 14, 4, "Replace line")
-        popup.menu.add(0, 15, 5, "Duplicate line")
+        // Line operations with icons
+        addMenuItem(popup, 10, "Copy line", R.drawable.ic_copy_line)
+        addMenuItem(popup, 11, "Cut line", R.drawable.ic_cut_line)
+        addMenuItem(popup, 12, "Delete line", R.drawable.ic_delete_line)
+        addMenuItem(popup, 13, "Empty line", R.drawable.ic_empty_line)
+        addMenuItem(popup, 14, "Replace line", R.drawable.ic_replace_line)
+        addMenuItem(popup, 15, "Duplicate line", R.drawable.ic_duplicate_line)
         // Case conversion
-        popup.menu.add(0, 20, 6, "Convert to uppercase")
-        popup.menu.add(0, 21, 7, "Convert to lowercase")
+        addMenuItem(popup, 20, "Convert to uppercase", R.drawable.ic_uppercase)
+        addMenuItem(popup, 21, "Convert to lowercase", R.drawable.ic_lowercase)
         // Indentation
-        popup.menu.add(0, 30, 8, "Increase indent")
-        popup.menu.add(0, 31, 9, "Decrease indent")
+        addMenuItem(popup, 30, "Increase indent", R.drawable.ic_indent_increase)
+        addMenuItem(popup, 31, "Decrease indent", R.drawable.ic_indent_decrease)
         // Comment
-        popup.menu.add(0, 40, 10, "Toggle comment")
+        addMenuItem(popup, 40, "Toggle comment", R.drawable.ic_toggle_comment)
+        // Code formatting
+        addMenuItem(popup, 41, "Reformat code", R.drawable.ic_reformat_code)
         // Classic clipboard
-        popup.menu.add(0, 50, 11, "Select all")
-        popup.menu.add(0, 51, 12, "Paste")
+        addMenuItem(popup, 50, "Select all", null)
+        addMenuItem(popup, 51, "Paste", null)
+
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 10 -> { codeEditor?.copyLine(); true }
@@ -515,6 +351,7 @@ class TextEditorActivity : AppCompatActivity(),
                 30 -> { codeEditor?.increaseIndent(); true }
                 31 -> { codeEditor?.decreaseIndent(); true }
                 40 -> { codeEditor?.toggleComment(getCommentPrefixForSyntax(currentSyntax)); true }
+                41 -> { Toast.makeText(this, "Reformat (TODO)", Toast.LENGTH_SHORT).show(); true }
                 50 -> { codeEditor?.selectAll(); true }
                 51 -> { codeEditor?.paste(); true }
                 else -> false
@@ -523,47 +360,68 @@ class TextEditorActivity : AppCompatActivity(),
         popup.show()
     }
 
+    private fun addMenuItem(popup: PopupMenu, id: Int, title: String, iconRes: Int?) {
+        val item = popup.menu.add(0, id, Menu.NONE, title)
+        if (iconRes != null) {
+            item.setIcon(iconRes)
+        }
+    }
+
     /** Returns the appropriate single-line comment prefix for the current syntax. */
     private fun getCommentPrefixForSyntax(syntax: String): String = when (syntax) {
         "java", "xml", "smali" -> "//"
         "python", "smali" -> "#"
-        "html" -> "<!--"   // simplified — block comments in HTML, kept short
+        "html" -> "<!--"
         else -> "//"
     }
 
     private fun showOverflowMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
-        popup.menu.add(0, 1, 0, "Search")
-        popup.menu.add(0, 2, 1, "Syntax")
-        val prevLabel = "Previous position"
-        val nextLabel = "Next position"
-        popup.menu.add(0, 3, 2, prevLabel).isEnabled = positionIndex > 0
-        popup.menu.add(0, 4, 3, nextLabel).isEnabled = positionIndex < positionHistory.size - 1
-        popup.menu.add(0, 5, 4, "Jump to line")
-        // Toggle items — show current state in title
-        val wrapState  = if (codeEditor?.isWordWrapEnabled == true) "✓" else " "
-        val roState    = if (codeEditor?.isReadOnly == true)        "✓" else " "
-        val smoothState = if (codeEditor?.isSmoothScrollEnabled == true) "✓" else " "
-        val acState    = if (codeEditor?.isAutoCompleteEnabled == true)  "✓" else " "
-        popup.menu.add(0, 6,  5, "[$wrapState]  Soft wrap")
-        popup.menu.add(0, 7,  6, "[$roState]    Read-only mode")
-        popup.menu.add(0, 8,  7, "[$smoothState] Smooth mode")
-        popup.menu.add(0, 9,  8, "[$acState]    Code completion")
-        popup.menu.add(0, 10, 9, "Preferences")
-        popup.menu.add(0, 11, 10, "Close file")
+        // File submenu
+        val fileSubmenu = popup.menu.addSubMenu(0, 100, 0, "File")
+        fileSubmenu.add(0, 101, 0, "Save")
+
+        // Actions
+        addMenuItem(popup, 2, "Search", R.drawable.ic_search)
+        addMenuItem(popup, 3, "Syntax", R.drawable.ic_syntax)
+        addMenuItem(popup, 4, "Previous position", R.drawable.ic_navigate_before)
+        addMenuItem(popup, 5, "Next position", R.drawable.ic_navigate_next)
+        addMenuItem(popup, 6, "Jump to line", R.drawable.ic_jump_to_line)
+
+        // Toggle items with check marks
+        val softWrapItem = popup.menu.add(0, 7, 7, "Soft wrap")
+        softWrapItem.setCheckable(true)
+        softWrapItem.setChecked(codeEditor?.isWordWrapEnabled == true)
+
+        val readOnlyItem = popup.menu.add(0, 8, 8, "Read-only mode")
+        readOnlyItem.setCheckable(true)
+        readOnlyItem.setChecked(codeEditor?.isReadOnly == true)
+
+        val smoothItem = popup.menu.add(0, 9, 9, "Smooth mode")
+        smoothItem.setCheckable(true)
+        smoothItem.setChecked(codeEditor?.isSmoothScrollEnabled == true)
+
+        val codeCompItem = popup.menu.add(0, 10, 10, "Code completion")
+        codeCompItem.setCheckable(true)
+        codeCompItem.setChecked(codeEditor?.isAutoCompleteEnabled == true)
+
+        addMenuItem(popup, 11, "Preferences", R.drawable.ic_settings)
+        addMenuItem(popup, 12, "Close file", R.drawable.ic_close_file)
+
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                1  -> { toggleSearchBar(); true }
-                2  -> { showSyntaxSelector(); true }
-                3  -> { navigatePositionBack(); true }
-                4  -> { navigatePositionForward(); true }
-                5  -> { showJumpToLineDialog(); true }
-                6  -> { toggleWordWrap(); true }
-                7  -> { toggleReadOnly(); true }
-                8  -> { toggleSmoothMode(); true }
-                9  -> { toggleCodeCompletion(); true }
-                10 -> { showPreferencesDialog(); true }
-                11 -> { confirmClose(); true }
+                101 -> { saveFile(); true }
+                2  -> { toggleSearchBar(); true }
+                3  -> { showSyntaxSelector(); true }
+                4  -> { navigatePositionBack(); true }
+                5  -> { navigatePositionForward(); true }
+                6  -> { showJumpToLineDialog(); true }
+                7  -> { toggleWordWrap(); true }
+                8  -> { toggleReadOnly(); true }
+                9  -> { toggleSmoothMode(); true }
+                10 -> { toggleCodeCompletion(); true }
+                11 -> { showPreferences(); true }
+                12 -> { confirmClose(); true }
                 else -> false
             }
         }
@@ -575,28 +433,27 @@ class TextEditorActivity : AppCompatActivity(),
     private fun toggleWordWrap() {
         val enabled = codeEditor?.isWordWrapEnabled != true
         codeEditor?.setWordWrap(enabled)
-        Toast.makeText(this, if (enabled) "Soft wrap ON" else "Soft wrap OFF", Toast.LENGTH_SHORT).show()
+        prefs.edit().putBoolean("soft_wrap", enabled).apply()
     }
 
     private fun toggleReadOnly() {
         val readOnly = codeEditor?.isReadOnly != true
         codeEditor?.setReadOnly(readOnly)
         isReadOnly = readOnly
-        // Dim the save/edit buttons when in read-only mode
+        prefs.edit().putBoolean("read_only", readOnly).apply()
         handleUndoRedoState()
-        Toast.makeText(this, if (readOnly) "Read-only ON" else "Read-only OFF", Toast.LENGTH_SHORT).show()
     }
 
     private fun toggleSmoothMode() {
         val smooth = codeEditor?.isSmoothScrollEnabled != true
         codeEditor?.setSmoothScrollEnabled(smooth)
-        Toast.makeText(this, if (smooth) "Smooth mode ON" else "Smooth mode OFF", Toast.LENGTH_SHORT).show()
+        prefs.edit().putBoolean("smooth_mode", smooth).apply()
     }
 
     private fun toggleCodeCompletion() {
         val enabled = codeEditor?.isAutoCompleteEnabled != true
         codeEditor?.setAutoCompleteEnabled(enabled)
-        Toast.makeText(this, if (enabled) "Code completion ON" else "Code completion OFF", Toast.LENGTH_SHORT).show()
+        prefs.edit().putBoolean("code_completion", enabled).apply()
     }
 
     // ─── Position history navigation ─────────────────────────────────────────
@@ -604,7 +461,6 @@ class TextEditorActivity : AppCompatActivity(),
     private fun pushCurrentPosition() {
         val line = codeEditor?.getCursorLine() ?: return
         val col  = codeEditor?.getCursorColumn() ?: return
-        // Trim forward history on new push
         if (positionIndex < positionHistory.size - 1) {
             positionHistory = positionHistory.subList(0, positionIndex + 1).toMutableList()
         }
@@ -646,12 +502,14 @@ class TextEditorActivity : AppCompatActivity(),
         else -> null
     }
 
-    private fun showPreferencesDialog() { EditorPreferencesFragment().show(supportFragmentManager, "prefs") }
+    private fun showPreferences() {
+        startActivity(Intent(this, PreferencesActivity::class.java))
+    }
 
-    override fun onPreferencesApplied(
-        fontSize: Int, wordWrap: Boolean, lineNumbers: Boolean,
-        autoSave: Boolean, autoIndent: Boolean, syntaxHighlighting: Boolean
-    ) { applyEditorSettings() }
+    override fun onResume() {
+        super.onResume()
+        applyEditorSettings()
+    }
 
     private fun showJumpToLineDialog() {
         val input = EditText(this)
@@ -663,9 +521,9 @@ class TextEditorActivity : AppCompatActivity(),
             .setPositiveButton("Go") { _, _ ->
                 input.text.toString().toIntOrNull()?.let { line ->
                     if (line > 0) {
-                        pushCurrentPosition()   // remember where we came from
+                        pushCurrentPosition()
                         codeEditor?.gotoLine(line - 1)
-                        pushCurrentPosition()   // record the destination too
+                        pushCurrentPosition()
                     }
                 }
             }
@@ -838,7 +696,7 @@ class TextEditorActivity : AppCompatActivity(),
     // ─── Static helpers ───────────────────────────────────────────────────────
 
     companion object {
-        private const val MAX_FILE_SIZE_BYTES = 2L * 1024 * 1024
+        private const val MAX_FILE_SIZE_BYTES = 3L * 1024 * 1024
 
         @JvmStatic
         fun start(context: Activity, filePath: String) {
