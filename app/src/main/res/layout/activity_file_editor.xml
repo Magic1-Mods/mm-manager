@@ -205,12 +205,19 @@
             android:focusableInTouchMode="true" />
 
         <!-- ── Symbol Panel (draggable bottom sheet) ── -->
-        <bin.mg.main.file.SymbolPanel
-            android:id="@+id/symbol_panel"
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#1A1A1A"
-            android:elevation="4dp" />
+            android:layout_height="wrap_content">
+
+            <bin.mg.main.file.SymbolPanel
+                android:id="@+id/symbol_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#1A1A1A"
+                android:elevation="4dp"
+                app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior" />
+
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     </LinearLayout>
 
