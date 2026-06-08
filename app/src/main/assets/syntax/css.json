@@ -1,0 +1,20 @@
+{
+  "name": ["CSS", ".css", ".scss", ".less", ".sass"],
+  "comment": [
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "number", "regex": "\\b\\d+(?:\\.\\d+)?(?:px|em|rem|vh|vw|vmin|vmax|%|cm|mm|in|pt|pc|ch|ex|deg|rad|grad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx)?\\b" },
+    { "type": "number", "regex": "(?<![;&])#(?:[A-Fa-f0-9]{3}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})\\b" },
+    { "type": "keyword", "keywords": ["important", "inherit", "initial", "unset", "revert", "none", "auto", "transparent", "currentColor", "!important"] },
+    { "type": "keyword", "regex": "@\\w+(?:-\\w+)*" },
+    { "type": "keyword", "regex": "\\b(?:color|background|margin|padding|border|font|text|display|position|width|height|top|right|bottom|left|flex|grid|align|justify|transform|transition|animation|box-shadow|opacity|overflow|z-index|float|clear|list-style|outline|visibility|cursor|content|white-space|word-break|overflow-wrap|object-fit|object-position|gap|row-gap|column-gap|order|flex-grow|flex-shrink|flex-basis|grid-template|grid-column|grid-row|grid-area)\\b(?=\\s*:)" },
+    { "type": "constant", "regex": "\\.[A-Za-z0-9_-]+" },
+    { "type": "constant", "regex": "#[A-Za-z0-9_-]+" },
+    { "type": "operator", "regex": "[{}();,:>~+*=]" },
+    { "type": "default", "regex": "." }
+  ]
+}

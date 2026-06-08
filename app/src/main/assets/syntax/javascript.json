@@ -1,0 +1,20 @@
+{
+  "name": ["JavaScript", ".js", ".jsx", ".mjs", ".cjs"],
+  "comment": [
+    { "startsWith": "//" },
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "//.*" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "`(?:\\\\.|[^`])*`" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "string", "regex": "/(?:\\\\.|[^/])+/[gimsuy]*" },
+    { "type": "number", "regex": "\\b(?:0[xXoObB][0-9a-fA-F]+|\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)\\b" },
+    { "type": "keyword", "keywords": ["abstract", "arguments", "async", "await", "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "from", "function", "get", "if", "implements", "import", "in", "instanceof", "interface", "let", "new", "null", "of", "package", "private", "protected", "public", "return", "set", "static", "super", "switch", "target", "this", "throw", "true", "try", "typeof", "undefined", "var", "void", "while", "with", "yield"] },
+    { "type": "constant", "regex": "\\b(?:NaN|Infinity|null|undefined)\\b" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|===|!==|=>|\\.\\.\\.|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]" },
+    { "type": "default", "regex": "." }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": ["Shell", ".sh", ".bash", ".zsh", ".fish", ".ksh"],
+  "comment": { "startsWith": "#" },
+  "rules": [
+    { "type": "comment", "regex": "#.*$" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "string", "regex": "`[^`]*`" },
+    { "type": "number", "regex": "\\b\\d+(?:\\.\\d+)?\\b" },
+    { "type": "keyword", "keywords": ["if", "then", "else", "elif", "fi", "case", "esac", "for", "while", "until", "do", "done", "in", "function", "return", "exit", "break", "continue", "select", "time", "declare", "local", "export", "readonly", "unset", "set", "unset", "shift", "source", "trap", "exec", "eval", "let", "read", "echo", "printf", "test", "true", "false", "type", "command", "builtin", "enable", "alias", "unalias", "bg", "fg", "jobs", "kill", "wait", "suspend", "cd", "pwd", "pushd", "popd", "dirs", "umask", "ulimit", "times", "history"] },
+    { "type": "variable", "regex": "\\$\\{[^}]+\\}" },
+    { "type": "variable", "regex": "\\$[A-Za-z_][A-Za-z0-9_]*" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~]+|==|!=|<=|>=|&&|\\|\\||<<|>>|\\|&|;|&|\\$\\(" },
+    { "type": "default", "regex": "." }
+  ]
+}

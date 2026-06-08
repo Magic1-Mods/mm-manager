@@ -1,0 +1,15 @@
+{
+  "name": ["R", ".r", ".R", ".rmd", ".Rmd"],
+  "comment": { "startsWith": "#" },
+  "rules": [
+    { "type": "comment", "regex": "#.*$" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "string", "regex": "`[^`]*`" },
+    { "type": "number", "regex": "\\b(?:0[xX][0-9a-fA-F]+|\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?[iL]?)\\b" },
+    { "type": "keyword", "keywords": ["if", "else", "repeat", "while", "function", "for", "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_", "return", "switch", "tryCatch", "stop", "warning", "message", "require", "library", "source", "setwd", "getwd", "list.files", "dir", "file.path", "install.packages", "data.frame", "list", "matrix", "array", "factor", "c", "seq", "rep", "paste", "paste0", "sprintf", "cat", "print", "summary", "head", "tail", "str", "dim", "nrow", "ncol", "length", "names", "rownames", "colnames", "lapply", "sapply", "vapply", "tapply", "apply", "mapply", "aggregate", "merge", "cbind", "rbind", "subset", "transform", "with", "within", "attach", "detach"] },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_.]+\\b" },
+    { "type": "operator", "regex": "[+\\-*/^%=&|!<>~]+|==|!=|<=|>=|&&|\\|\\||<<|>>|%%.*%%|%/%|%*%|:::|::|\\.\\.\\.|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\[\\]|\\[\\[|\\$|@" },
+    { "type": "default", "regex": "." }
+  ]
+}

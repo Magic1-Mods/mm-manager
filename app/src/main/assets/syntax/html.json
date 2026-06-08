@@ -1,0 +1,28 @@
+{
+  "name": ["HTML", ".html", ".htm", ".xhtml"],
+  "comment": { "startsWith": "<!--", "endsWith": "-->" },
+  "rules": [
+    { "type": "comment", "regex": "<!--[\\s\\S]*?-->" },
+    { "type": "comment", "regex": "<!DOCTYPE[^>]*>" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    {
+      "regex": "(<\\s*)(/?[A-Za-z_][A-Za-z0-9:_\\-]*)",
+      "groupStyles": { "1": "operator", "2": "tagName" }
+    },
+    {
+      "regex": "(</\\s*)([A-Za-z_][A-Za-z0-9:_\\-]*)(\\s*>)",
+      "groupStyles": { "1": "operator", "2": "tagName", "3": "operator" }
+    },
+    {
+      "regex": "(?:([A-Za-z0-9_\\-]+):)?([A-Za-z0-9_\\-]+)(?=\\s*=)",
+      "groupStyles": { "1": "namespace", "2": "attrName" }
+    },
+    { "type": "operator", "regex": "=" },
+    { "type": "number", "regex": "(?<![;&])#(?:[A-Fa-f0-9]{3}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})\\b" },
+    { "type": "constant", "regex": "&[A-Za-z]+;" },
+    { "type": "operator", "regex": "</?|/?>|:|\\?" },
+    { "type": "keyword", "keywords": ["&amp;", "&lt;", "&gt;", "&quot;", "&apos;", "&nbsp;"] },
+    { "type": "default", "regex": "." }
+  ]
+}

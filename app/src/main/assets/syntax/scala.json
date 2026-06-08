@@ -1,0 +1,22 @@
+{
+  "name": ["Scala", ".scala", ".sc"],
+  "comment": [
+    { "startsWith": "//" },
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "//.*" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "\"\"\"[\\s\\S]*?\"\"\"" },
+    { "type": "string", "regex": "[fsc]\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])'" },
+    { "type": "number", "regex": "\\b\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?[fFdDlL]?\\b" },
+    { "type": "keyword", "keywords": ["abstract", "case", "catch", "class", "def", "do", "else", "enum", "export", "extends", "false", "final", "finally", "for", "forSome", "given", "if", "implicit", "import", "infix", "inline", "lazy", "macro", "match", "new", "null", "object", "open", "override", "package", "private", "protected", "public", "return", "sealed", "super", "then", "throw", "trait", "transparent", "true", "try", "type", "using", "val", "var", "while", "with", "yield"] },
+    { "type": "keyword2", "keywords": ["Int", "Long", "Float", "Double", "Short", "Byte", "Char", "Boolean", "Unit", "String", "Nothing", "Any", "AnyVal", "AnyRef", "Option", "Some", "None", "Either", "Left", "Right", "Try", "Success", "Failure", "Future", "Promise", "List", "Set", "Map", "Seq", "Array", "Vector", "Range", "Tuple", "Iterator", "Iterable", "PartialFunction", "Function"] },
+    { "type": "meta", "regex": "@\\w+(?:\\.\\w+)*" },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|==|!=|<=|>=|&&|\\|\\||<<|>>|::|::|#|::|<:<|<%|<:>:|>:|⇒|→|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]" },
+    { "type": "default", "regex": "." }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": ["Gradle", ".gradle", ".gradle.kts"],
+  "comment": [
+    { "startsWith": "//" },
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "//.*" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "number", "regex": "\\b\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?\\b" },
+    { "type": "keyword", "keywords": ["apply", "artifact", "artifacts", "buildscript", "classpath", "configurations", "dependencies", "distributionManagement", "fileTree", "files", "from", "project", "publishing", "repositories", "repository", "sourceSets", "sourceCompatibility", "targetCompatibility", "tasks", "test", "useJUnit", "useTestNG", "android", "compileSdk", "minSdk", "targetSdk", "buildToolsVersion", "defaultConfig", "buildTypes", "debug", "release", "lintOptions", "compileOptions", "packagingOptions", "signingConfigs", "productFlavors", "flavorDimensions", "implementation", "api", "compileOnly", "runtimeOnly", "testImplementation", "androidTestImplementation", "debugImplementation", "kapt", "annotationProcessor", "ksp", "compose", "composeOptions", "kotlinOptions", "java", "withType", "forEach", "findByPath", "allprojects", "subprojects", "ext", "extra", "tasks", "register", "named", "configure", "afterEvaluate", "beforeEvaluate", "plugins", "id", "version", "group", "description", "java", "groovy", "kotlin", "scala", "war", "ear", "application", "library", "distribution", "maven", "idea", "eclipse", "signing", "checkstyle", "pmd", "findbugs", "jacoco", "sonarqube", "coveralls", "bintray", "publishing", "mavenPom", "uploadArchives", "install"] },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|==|!=|<=|>=|&&|\\|\\||<<|>>|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]|->|=>" },
+    { "type": "default", "regex": "." }
+  ]
+}

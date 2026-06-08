@@ -1,0 +1,21 @@
+{
+  "name": ["Perl", ".pl", ".pm", ".t", ".pod"],
+  "comment": { "startsWith": "#" },
+  "rules": [
+    { "type": "comment", "regex": "#.*$" },
+    { "type": "comment", "regex": "^=head[\\s\\S]*?^=cut" },
+    { "type": "string", "regex": "q[qQwWrRx]?\\([^)]*\\)" },
+    { "type": "string", "regex": "q[qQwWrRx]?\\{[^}]*\\}" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "string", "regex": "`(?:\\\\.|[^`])*`" },
+    { "type": "number", "regex": "\\b(?:0[xXoObB][0-9a-fA-F_]+|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d[\\d_]*)?)\\b" },
+    { "type": "keyword", "keywords": ["if", "unless", "else", "elsif", "while", "until", "for", "foreach", "do", "my", "our", "local", "state", "sub", "package", "use", "require", "no", "BEGIN", "END", "CHECK", "INIT", "UNITCHECK", "return", "last", "next", "redo", "goto", "continue", "eval", "die", "warn", "exit", "caller", "defined", "undef", "ref", "bless", "tie", "untie", "tied", "wantarray", "scalar", "prototype", "format", "formline", "map", "grep", "sort", "push", "pop", "shift", "unshift", "splice", "split", "join", "keys", "values", "each", "exists", "delete", "open", "close", "print", "printf", "say", "read", "write", "seek", "tell", "flock", "binmode", "sysopen", "sysread", "syswrite", "accept", "bind", "connect", "listen", "recv", "send", "socket", "socketpair", "shutdown", "glob", "link", "unlink", "rename", "symlink", "readlink", "mkdir", "rmdir", "chmod", "chown", "utime", "stat", "lstat", "filetest", "opendir", "readdir", "telldir", "seekdir", "rewinddir", "closedir", "pipe", "fork", "exec", "system", "kill", "wait", "waitpid", "sleep", "alarm", "times", "gmtime", "localtime", "time", "study", "pos", "reset", "pack", "unpack"] },
+    { "type": "variable", "regex": "[@%$][A-Za-z_][A-Za-z0-9_]*" },
+    { "type": "variable", "regex": "\\$\\^[A-Z]" },
+    { "type": "variable", "regex": "\\$[!@#%^&*()_+={}\\[\\]|;':\",./<>?`~-]" },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|==|!=|<=>|<=|>=|&&|\\|\\||<<|>>|\\.\\.|\\.|=>|->|,|;|\\(|\\)|\\{|\\}|\\[|\\]" },
+    { "type": "default", "regex": "." }
+  ]
+}

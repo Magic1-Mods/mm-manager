@@ -1,0 +1,24 @@
+{
+  "name": ["PHP", ".php", ".phtml", ".php3", ".php4", ".php5", ".php7", ".php8"],
+  "comment": [
+    { "startsWith": "//" },
+    { "startsWith": "/*", "endsWith": "*/" },
+    { "startsWith": "#" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "//.*" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "comment", "regex": "#.*$" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "string", "regex": "`(?:\\\\.|[^`])*`" },
+    { "type": "number", "regex": "\\b\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?\\b" },
+    { "type": "number", "regex": "\\b0[xX][0-9a-fA-F]+\\b" },
+    { "type": "keyword", "keywords": ["abstract", "and", "array", "as", "break", "callable", "case", "catch", "class", "clone", "const", "continue", "declare", "default", "die", "do", "echo", "else", "elseif", "empty", "enddeclare", "endfor", "endforeach", "endif", "endswitch", "endwhile", "enum", "eval", "exit", "extends", "false", "final", "finally", "fn", "for", "foreach", "function", "global", "goto", "if", "implements", "include", "include_once", "instanceof", "insteadof", "interface", "isset", "list", "match", "mixed", "namespace", "new", "null", "or", "print", "private", "protected", "public", "readonly", "require", "require_once", "return", "static", "switch", "throw", "trait", "true", "try", "unset", "use", "var", "while", "xor", "yield", "int", "float", "bool", "string", "void", "never", "self", "parent", "array", "callable", "iterable", "object", "mixed", "never", "void"] },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "variable", "regex": "\\$[A-Za-z_][A-Za-z0-9_]*" },
+    { "type": "meta", "regex": "#\\[.*?\\]" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|===|!==|==|!=|<=>|<=|>=|&&|\\|\\||<<|>>|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]|->|=>" },
+    { "type": "default", "regex": "." }
+  ]
+}

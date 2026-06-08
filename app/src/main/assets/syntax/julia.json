@@ -1,0 +1,22 @@
+{
+  "name": ["Julia", ".jl"],
+  "comment": [
+    { "startsWith": "#" },
+    { "startsWith": "#=", "endsWith": "=#" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "#=[\\s\\S]*?=#" },
+    { "type": "comment", "regex": "#.*$" },
+    { "type": "string", "regex": "\"\"\"[\\s\\S]*?\"\"\"" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])'" },
+    { "type": "string", "regex": "`[^`]*`" },
+    { "type": "number", "regex": "\\b(?:0[xXoObB][0-9a-fA-F_]+|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eEfF][+-]?\\d[\\d_]*)?(?:im\\b)?)\\b" },
+    { "type": "keyword", "keywords": ["abstract", "as", "baremodule", "begin", "break", "catch", "ccall", "const", "continue", "do", "else", "elseif", "end", "enum", "export", "false", "finally", "for", "function", "global", "if", "import", "in", "let", "local", "macro", "module", "mutable", "primitive", "quote", "return", "struct", "true", "try", "type", "using", "where", "while"] },
+    { "type": "keyword2", "keywords": ["abstract", "Array", "Bool", "Char", "Complex", "Dict", "Float64", "Float32", "Float16", "Function", "Int64", "Int32", "Int16", "Int8", "Matrix", "Nothing", "Number", "Real", "Signed", "String", "Symbol", "Tuple", "Type", "UInt64", "UInt32", "UInt16", "UInt8", "Unsigned", "Vector", "nothing", "missing", "undef", "π", "Inf", "NaN", "Inf32", "NaN32", "nothing", "missing", "undef"] },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "meta", "regex": "@\\w+" },
+    { "type": "operator", "regex": "[+\\-*/^%=&|!<>~]+|===|!==|==|!=|<=|>=|&&|\\|\\||<<|>>|\\.\\.\\.|\\.\\.|\\.+|::|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]|=>|-->|<--|->|<:" },
+    { "type": "default", "regex": "." }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": ["SQL", ".sql", ".ddl", ".dml", ".mysql", ".pgsql"],
+  "comment": [
+    { "startsWith": "--" },
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "--.*$" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "string", "regex": "`[^`]*`" },
+    { "type": "number", "regex": "\\b\\d+(?:\\.\\d+)?\\b" },
+    { "type": "keyword", "keywords": ["SELECT", "FROM", "WHERE", "INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP", "TABLE", "INDEX", "VIEW", "INTO", "VALUES", "SET", "AND", "OR", "NOT", "IN", "IS", "NULL", "AS", "ON", "JOIN", "INNER", "LEFT", "RIGHT", "OUTER", "FULL", "CROSS", "NATURAL", "ORDER", "BY", "ASC", "DESC", "GROUP", "HAVING", "LIMIT", "OFFSET", "UNION", "ALL", "DISTINCT", "EXISTS", "BETWEEN", "LIKE", "CASE", "WHEN", "THEN", "ELSE", "END", "BEGIN", "COMMIT", "ROLLBACK", "PRIMARY", "KEY", "FOREIGN", "REFERENCES", "CONSTRAINT", "AUTO_INCREMENT", "DEFAULT", "CHECK", "UNIQUE", "CASCADE", "RESTRICT", "TRIGGER", "PROCEDURE", "FUNCTION", "RETURNS", "DECLARE", "CURSOR", "FETCH", "CLOSE", "IF", "ELSE", "WHILE", "BREAK", "CONTINUE", "PRINT", "EXEC", "EXECUTE", "WITH", "RECURSIVE", "EXCEPT", "INTERSECT", "MINUS", "ANY", "SOME", "COUNT", "SUM", "AVG", "MIN", "MAX", "TOP", "FETCH", "NEXT", "ROWS", "ONLY", "TIES", "PERCENT", "WITHIN", "ARRAY", "ROW", "TYPE", "OF", "RETURNING", "UPSERT", "MERGE"] },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~]+|==|!=|<=|>=|\\|\\||\\.|,|;|\\(|\\)" },
+    { "type": "default", "regex": "." }
+  ]
+}

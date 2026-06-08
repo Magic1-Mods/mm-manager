@@ -1,0 +1,22 @@
+{
+  "name": ["Dart", ".dart"],
+  "comment": [
+    { "startsWith": "//" },
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "//.*" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "'''[\\s\\S]*?'''" },
+    { "type": "string", "regex": "\"\"\"[\\s\\S]*?\"\"\"" },
+    { "type": "string", "regex": "[rR]?\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "[rR]?'(?:\\\\.|[^'])*'" },
+    { "type": "number", "regex": "\\b(?:0[xX][0-9a-fA-F]+|\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)\\b" },
+    { "type": "keyword", "keywords": ["abstract", "as", "assert", "async", "await", "break", "case", "catch", "class", "const", "continue", "covariant", "default", "deferred", "defer", "do", "dynamic", "else", "enum", "export", "extends", "extension", "external", "factory", "false", "final", "finally", "for", "Function", "get", "hide", "if", "implements", "import", "in", "interface", "is", "late", "library", "mixin", "new", "null", "on", "operator", "optional", "part", "rethrow", "return", "set", "show", "static", "super", "switch", "sync", "this", "throw", "true", "try", "typedef", "var", "void", "while", "with", "yield"] },
+    { "type": "keyword2", "keywords": ["int", "double", "num", "String", "bool", "Object", "Never", "Null", "dynamic", "void", "List", "Map", "Set", "Record", "Symbol", "Type", "Comparable", "Iterable", "Future", "Stream", "Error", "Exception", "StackOverflowError", "RangeError", "ArgumentError", "TypeError", "print", "identical", "runtimeType", "toString", "fromEnvironment", "hasEnvironment"] },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "meta", "regex": "@\\w+" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|\\+\\+|--|==|!=|<=|>=|&&|\\|\\||<<|>>|\\.\\.|\\.\\.\\.|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]|=>|\\?\\." },
+    { "type": "default", "regex": "." }
+  ]
+}

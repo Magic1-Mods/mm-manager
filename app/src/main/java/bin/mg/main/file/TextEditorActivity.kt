@@ -339,9 +339,12 @@ class TextEditorActivity : AppCompatActivity(),
     }
 
     private fun getCommentPrefixForSyntax(syntax: String): String = when (syntax) {
-        "java", "xml", "smali" -> "//"
-        "python", "smali" -> "#"
-        "html" -> "<!--"
+        "java", "kotlin", "javascript", "typescript", "c", "cpp", "rust",
+        "go", "swift", "dart", "scala", "groovy", "gradle",
+        "css", "php" -> "//"
+        "python", "ruby", "perl", "r", "julia", "shell", "yaml", "toml",
+        "sql", "lua", "smali" -> if (syntax == "lua") "--" else "#"
+        "html", "xml" -> "<!--"
         else -> "//"
     }
 
@@ -457,9 +460,36 @@ class TextEditorActivity : AppCompatActivity(),
     }
 
     private fun syntaxToFileName(syntax: String): String? = when (syntax) {
-        "smali" -> "smali.json"
-        "xml" -> "xml.json"
         "java" -> "java.json"
+        "xml" -> "xml.json"
+        "smali" -> "smali.json"
+        "kotlin" -> "kotlin.json"
+        "python" -> "python.json"
+        "javascript" -> "javascript.json"
+        "typescript" -> "typescript.json"
+        "html" -> "html.json"
+        "css" -> "css.json"
+        "json" -> "json.json"
+        "yaml" -> "yaml.json"
+        "toml" -> "toml.json"
+        "shell" -> "shell.json"
+        "sql" -> "sql.json"
+        "markdown" -> "markdown.json"
+        "c" -> "c.json"
+        "cpp" -> "cpp.json"
+        "rust" -> "rust.json"
+        "go" -> "go.json"
+        "swift" -> "swift.json"
+        "lua" -> "lua.json"
+        "dart" -> "dart.json"
+        "php" -> "php.json"
+        "ruby" -> "ruby.json"
+        "perl" -> "perl.json"
+        "scala" -> "scala.json"
+        "groovy" -> "groovy.json"
+        "r" -> "r.json"
+        "julia" -> "julia.json"
+        "gradle" -> "gradle.json"
         else -> null
     }
 
@@ -620,9 +650,35 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun detectSyntaxForFile(path: String): String {
         return when (path.substringAfterLast(".", "").lowercase()) {
-            "smali" -> "smali"
-            "xml", "html", "htm" -> "xml"
-            "java" -> "java"
+            "smali", "class" -> "smali"
+            "xml", "html", "htm", "xhtml", "plist", "kml" -> "xml"
+            "java", "jsp" -> "java"
+            "kt", "kts", "ktm" -> "kotlin"
+            "py", "pyw", "pyx", "pyi" -> "python"
+            "js", "jsx", "mjs", "cjs" -> "javascript"
+            "ts", "tsx", "mts", "cts" -> "typescript"
+            "css", "scss", "less", "sass" -> "css"
+            "json", "jsonc", "json5" -> "json"
+            "yaml", "yml" -> "yaml"
+            "toml" -> "toml"
+            "sh", "bash", "zsh", "fish", "ksh" -> "shell"
+            "sql", "ddl", "dml" -> "sql"
+            "md", "markdown", "mdown" -> "markdown"
+            "c", "h", "i" -> "c"
+            "cpp", "cc", "cxx", "c++", "hpp", "hh", "hxx", "h++", "ipp" -> "cpp"
+            "rs", "rlib" -> "rust"
+            "go" -> "go"
+            "swift" -> "swift"
+            "lua", "luac" -> "lua"
+            "dart" -> "dart"
+            "php", "phtml", "php3", "php4", "php5", "php7", "php8" -> "php"
+            "rb", "ruby", "erb", "rake" -> "ruby"
+            "pl", "pm", "t" -> "perl"
+            "scala", "sc" -> "scala"
+            "groovy", "gvy", "gy", "gsh" -> "groovy"
+            "r", "R", "rmd", "Rmd" -> "r"
+            "jl" -> "julia"
+            "gradle" -> "gradle"
             else -> "text"
         }
     }

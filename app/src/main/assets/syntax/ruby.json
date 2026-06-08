@@ -1,0 +1,21 @@
+{
+  "name": ["Ruby", ".rb", ".ruby", ".erb", ".rake", ".gemspec"],
+  "comment": { "startsWith": "#" },
+  "rules": [
+    { "type": "comment", "regex": "#.*$" },
+    { "type": "comment", "regex": "=begin[\\s\\S]*?=end" },
+    { "type": "string", "regex": "%[qQwWrRx]?\\([^)]*\\)" },
+    { "type": "string", "regex": "%[qQwWrRx]?\\{[^}]*\\}" },
+    { "type": "string", "regex": "%[qQwWrRx]?\\[[^\\]]*\\]" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "string", "regex": "`(?:\\\\.|[^`])*`" },
+    { "type": "number", "regex": "\\b(?:0[xXoObB][0-9a-fA-F_]+|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d[\\d_]*)?[rRiI]?)\\b" },
+    { "type": "keyword", "keywords": ["BEGIN", "END", "alias", "and", "begin", "break", "case", "class", "def", "defined?", "do", "else", "elsif", "end", "ensure", "false", "for", "if", "in", "module", "next", "nil", "not", "or", "redo", "rescue", "retry", "return", "self", "super", "then", "true", "undef", "unless", "until", "when", "while", "yield"] },
+    { "type": "constant", "regex": "\\b[A-Z][A-Za-z0-9_]+\\b" },
+    { "type": "variable", "regex": "@@?[A-Za-z_][A-Za-z0-9_]*" },
+    { "type": "variable", "regex": "\\$[A-Za-z_][A-Za-z0-9_]*" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|===|==|!=|<=>|<=|>=|&&|\\|\\||<<|>>|\\.\\.(?:\.)?|::|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]|->|=>" },
+    { "type": "default", "regex": "." }
+  ]
+}

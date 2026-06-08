@@ -1,0 +1,15 @@
+{
+  "name": ["YAML", ".yaml", ".yml"],
+  "comment": { "startsWith": "#" },
+  "rules": [
+    { "type": "comment", "regex": "#.*$" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "number", "regex": "\\b\\d+(?:\\.\\d+)?\\b" },
+    { "type": "number", "regex": "\\b(?:true|false|yes|no|on|off)\\b" },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "keyword", "regex": "^\\s*[A-Za-z_][A-Za-z0-9_]*\\s*(?=:)" },
+    { "type": "operator", "regex": "[-:]|>\\s*$|\\|\\s*$|---|\\.\\.\\.|&|\\*" },
+    { "type": "default", "regex": "." }
+  ]
+}

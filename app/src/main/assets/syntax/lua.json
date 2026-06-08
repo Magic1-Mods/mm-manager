@@ -1,0 +1,19 @@
+{
+  "name": ["Lua", ".lua", ".luac"],
+  "comment": [
+    { "startsWith": "--" },
+    { "startsWith": "--[[", "endsWith": "]]" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "--\\[\\[[\\s\\S]*?\\]\\]" },
+    { "type": "comment", "regex": "--.*$" },
+    { "type": "string", "regex": "\\[\\[[\\s\\S]*?\\]\\]" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "number", "regex": "\\b(?:0[xX][0-9a-fA-F]+(?:\\.[0-9a-fA-F]+)?[pP][+-]?\\d+|-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)\\b" },
+    { "type": "keyword", "keywords": ["and", "break", "do", "else", "elseif", "end", "false", "for", "function", "goto", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"] },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "operator", "regex": "[+\\-*/^%=&|!<>~#]+|==|~=|<=|>=|\\.\\.|::|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]" },
+    { "type": "default", "regex": "." }
+  ]
+}

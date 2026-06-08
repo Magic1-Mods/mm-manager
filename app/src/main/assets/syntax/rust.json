@@ -1,0 +1,24 @@
+{
+  "name": ["Rust", ".rs", ".rlib"],
+  "comment": [
+    { "startsWith": "//" },
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "//.*" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "r#\"[^\"]*\"#" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])'" },
+    { "type": "string", "regex": "b\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "b'(?:\\\\.|[^'])'" },
+    { "type": "number", "regex": "\\b(?:0[xXoObB]_?[0-9a-fA-F_]+|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d[\\d_]*)?[fFiIuU]?(?:8|16|32|64|128|size)?)\\b" },
+    { "type": "meta", "regex": "#\\!\\[.*?\\]" },
+    { "type": "meta", "regex": "#\\[.*?\\]" },
+    { "type": "keyword", "keywords": ["as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true", "type", "union", "unsafe", "use", "where", "while", "yield"] },
+    { "type": "keyword2", "keywords": ["i8", "i16", "i32", "i64", "i128", "isize", "u8", "u16", "u32", "u64", "u128", "usize", "f32", "f64", "bool", "char", "str", "String", "Vec", "Option", "Result", "Box", "Rc", "Arc", "Cell", "RefCell", "HashMap", "HashSet", "BTreeMap", "BTreeSet", "Iterator", "IntoIterator", "Clone", "Copy", "Debug", "Display", "Eq", "PartialEq", "Ord", "PartialOrd", "Hash", "Default", "From", "Into", "TryFrom", "TryInto"] },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|\\+\\+|--|==|!=|<=|>=|&&|\\|\\||<<|>>|->|\\.\\.(?:=|.)?|::|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]|=>|@|_" },
+    { "type": "default", "regex": "." }
+  ]
+}

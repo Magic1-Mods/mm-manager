@@ -1,0 +1,16 @@
+{
+  "name": ["JSON", ".json", ".jsonc", ".json5"],
+  "comment": [
+    { "startsWith": "//" },
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "//.*" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "number", "regex": "\\b-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?\\b" },
+    { "type": "keyword", "keywords": ["null", "true", "false"] },
+    { "type": "operator", "regex": "[{}[\\],:]" },
+    { "type": "default", "regex": "." }
+  ]
+}

@@ -259,9 +259,14 @@ public class MHSyntaxHighlightEngine {
         }
     }
 
-    /** Reads a file from the assets directory as UTF-8 text. */
+    /** Reads a file from the assets directory as UTF-8 text. Tries syntax/ subdir first. */
     private String loadAsset(Context ctx, String name) throws Exception {
-        InputStream is = ctx.getAssets().open(name);
+        InputStream is;
+        try {
+            is = ctx.getAssets().open("syntax/" + name);
+        } catch (Exception e) {
+            is = ctx.getAssets().open(name);
+        }
         byte[] b = new byte[is.available()];
         is.read(b);
         is.close();

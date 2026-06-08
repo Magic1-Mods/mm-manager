@@ -1,0 +1,18 @@
+{
+  "name": ["TOML", ".toml"],
+  "comment": { "startsWith": "#" },
+  "rules": [
+    { "type": "comment", "regex": "#.*$" },
+    { "type": "string", "regex": "\"\"\"[\\s\\S]*?\"\"\"" },
+    { "type": "string", "regex": "'''[\\s\\S]*?'''" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])*'" },
+    { "type": "number", "regex": "\\b(?:0[xXoObB][0-9a-fA-F_]+|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d[\\d_]*)?)\\b" },
+    { "type": "number", "regex": "\\b(?:true|false)\\b" },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "keyword", "regex": "^\\[\\[?[A-Za-z0-9._-]+\\]\\]?\\s*$" },
+    { "type": "keyword", "regex": "^\\s*[A-Za-z_][A-Za-z0-9._-]*\\s*(?=\\s*=)" },
+    { "type": "operator", "regex": "=" },
+    { "type": "default", "regex": "." }
+  ]
+}

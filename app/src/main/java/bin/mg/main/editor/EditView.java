@@ -77,6 +77,8 @@ import android.widget.ListView;
 import android.widget.Magnifier;
 import android.widget.OverScroller;
 import android.widget.TextView;
+
+import bin.mg.main.editor.complete.XmlCompletionProvider;
 import bin.mg.main.R;
 import bin.mg.main.editor.ScreenUtils;
 import bin.mg.main.editor.component.ClipboardPanel;
@@ -173,6 +175,7 @@ public class EditView extends View {
 
     private MHSyntaxHighlightEngine mHighlighter;
     private boolean isSyntaxDarkMode = false;
+    private String mLanguageMode = "text";
 
     // Auto-complete
     private Set<String> mWordSet = new HashSet<>();
@@ -1362,6 +1365,15 @@ public class EditView extends View {
     // Syntax Helpers
     public void setSyntaxLanguageFileName(String languageFile) {
         mHighlighter = new MHSyntaxHighlightEngine(getContext(), mTextPaint, languageFile, isSyntaxDarkMode);
+        if (languageFile != null && languageFile.endsWith(".json")) {
+            mLanguageMode = languageFile.substring(0, languageFile.lastIndexOf('.'));
+        } else {
+            mLanguageMode = "text";
+        }
+        if ("xml".equals(mLanguageMode) || "html".equals(mLanguageMode)) {
+            removeCallbacks(mWordUpdateRunnable);
+            postDelayed(mWordUpdateRunnable, WORD_UPDATE_DELAY);
+        }
     }
 
     public void setSyntaxDarkMode(boolean isDark) {
@@ -1484,6 +1496,14 @@ public class EditView extends View {
         if (!text.trim().isEmpty()) {
             if (!mCurrentPrefix.isEmpty()) {
                 filterAndShowSuggestions(mCurrentPrefix + text);
+            } else if ("xml".equals(mLanguageMode) || "html".equals(mLanguageMode)) {
+                boolean isTagTrigger = "<".equals(text) || "</".equals(text) ||
+                    ("/".equals(text) && mCursorIndex > 0 && mGapBuffer.charAt(mCursorIndex - 1) == '<');
+                if (isTagTrigger) {
+                    filterAndShowSuggestions("");
+                } else {
+                    dismissAutoComplete();
+                }
             } else {
                 dismissAutoComplete();
             }
@@ -2299,6 +2319,45 @@ public class EditView extends View {
                     }
                 }
 
+                // Add XML/HTML tag and attribute completions for XML mode
+                if ("xml".equals(mLanguageMode) || "html".equals(mLanguageMode)) {
+                    XmlCompletionProvider xcp = XmlCompletionProvider.getInstance();
+                    for (String tag : xcp.getTagNames()) {
+                        words.add(tag);
+                    }
+                    // Also add common attribute prefixes to trigger on attribute typing
+                    words.add("android:layout_width");
+                    words.add("android:layout_height");
+                    words.add("android:layout_gravity");
+                    words.add("android:orientation");
+                    words.add("android:gravity");
+                    words.add("android:text");
+                    words.add("android:textSize");
+                    words.add("android:textColor");
+                    words.add("android:background");
+                    words.add("android:padding");
+                    words.add("android:visibility");
+                    words.add("android:id");
+                    words.add("android:name");
+                    words.add("android:src");
+                    words.add("android:checked");
+                    words.add("android:clickable");
+                    words.add("android:focusable");
+                    words.add("android:enabled");
+                    words.add("android:inputType");
+                    words.add("android:hint");
+                    words.add("android:style");
+                    words.add("android:theme");
+                    words.add("android:value");
+                    words.add("android:type");
+                    words.add("android:exported");
+                    words.add("app:cardCornerRadius");
+                    words.add("app:cardElevation");
+                    words.add("app:tabMode");
+                    words.add("app:icon");
+                    words.add("app:backgroundTint");
+                }
+
                 post(new Runnable() {
                     @Override
                     public void run() {
@@ -2339,7 +2398,14 @@ public class EditView extends View {
     // Filter word set and show suggestions
     private void filterAndShowSuggestions(String prefix) {
         if (prefix.isEmpty()) {
-            dismissAutoComplete();
+            // For XML mode, show all tags when < is typed
+            if ("xml".equals(mLanguageMode) || "html".equals(mLanguageMode)) {
+                XmlCompletionProvider xcp = XmlCompletionProvider.getInstance();
+                List<String> allTags = xcp.getTagNames();
+                if (!allTags.isEmpty()) {
+                    showAutoComplete("", allTags);
+                }
+            }
             return;
         }
 
@@ -2347,14 +2413,32 @@ public class EditView extends View {
         List<String> priorityList = new ArrayList<>();
         List<String> containsList = new ArrayList<>();
 
+        // Add XML-specific completions when in XML mode
+        if ("xml".equals(mLanguageMode) || "html".equals(mLanguageMode)) {
+            XmlCompletionProvider xcp = XmlCompletionProvider.getInstance();
+            for (String tag : xcp.getTagCompletions(prefix)) {
+                if (!tag.equals(prefix)) {
+                    if (tag.toLowerCase().startsWith(lowerPrefix)) {
+                        priorityList.add(tag);
+                    } else {
+                        containsList.add(tag);
+                    }
+                }
+            }
+        }
+
         for (String word : mWordSet) {
             if (word.equals(prefix)) continue;
             String lowerWord = word.toLowerCase();
 
             if (lowerWord.startsWith(lowerPrefix)) {
-                priorityList.add(word);
+                if (!priorityList.contains(word)) {
+                    priorityList.add(word);
+                }
             } else if (lowerWord.contains(lowerPrefix)) {
-                containsList.add(word);
+                if (!containsList.contains(word)) {
+                    containsList.add(word);
+                }
             }
         }
 
@@ -2417,6 +2501,42 @@ public class EditView extends View {
         mAutoCompletePopup.setVerticalOffset(cursorRect.bottom + (int) (getLineHeight() * 0.6f));
 
         mAutoCompletePopup.show();
+        mCurrentPrefix = prefix;
+    }
+
+   // Show the autocomplete popup with a pre-populated list of suggestions
+    private void showAutoComplete(String prefix, List<String> suggestions) {
+        if (suggestions == null || suggestions.isEmpty()) {
+            dismissAutoComplete();
+            return;
+        }
+
+        Rect cursorRect = getBoundingBox(mCursorIndex);
+        hideTextSelectionWindow();
+
+        mAutoCompleteAdapter.clear();
+        mAutoCompleteAdapter.addAll(suggestions);
+        mAutoCompleteAdapter.notifyDataSetChanged();
+
+        int margin = (int) (getResources().getDisplayMetrics().density * 8);
+        int popupWidth = getWidth() - (margin * 2);
+        int itemHeight = (int) (getResources().getDisplayMetrics().density * 40);
+        int visibleCount = Math.min(mAutoCompleteAdapter.getCount(), 6);
+        int popupHeight = itemHeight * visibleCount;
+
+        mAutoCompletePopup.setWidth(popupWidth);
+        mAutoCompletePopup.setHeight(popupHeight);
+        mAutoCompletePopup.setAnchorView(this);
+        mAutoCompletePopup.setModal(false);
+        mAutoCompletePopup.setBackgroundDrawable(
+                getResources().getDrawable(android.R.drawable.dialog_holo_light_frame)
+        );
+        mAutoCompletePopup.setHorizontalOffset(margin);
+        mAutoCompletePopup.setVerticalOffset(cursorRect.bottom + (int) (getLineHeight() * 0.6f));
+
+        if (!mAutoCompletePopup.isShowing()) {
+            mAutoCompletePopup.show();
+        }
         mCurrentPrefix = prefix;
     }
 

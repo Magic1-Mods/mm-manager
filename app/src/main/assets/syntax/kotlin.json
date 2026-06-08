@@ -1,0 +1,22 @@
+{
+  "name": ["Kotlin", ".kt", ".kts", ".ktm"],
+  "comment": [
+    { "startsWith": "//" },
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "//.*" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "\"\"\"[\\s\\S]*?\"\"\"" },
+    { "type": "string", "regex": "\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "'(?:\\\\.|[^'])'" },
+    { "type": "number", "regex": "\\b\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?[fFLluU]?\\b" },
+    { "type": "number", "regex": "\\b0[xX][0-9a-fA-F]+[uUlL]?\\b" },
+    { "type": "number", "regex": "\\b0[bB][01]+[uUlL]?\\b" },
+    { "type": "meta", "regex": "@\\w+(?:\\.\\w+)*" },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "keyword", "keywords": ["abstract", "actual", "annotation", "as", "assert", "break", "by", "catch", "class", "companion", "const", "constructor", "continue", "crossinline", "data", "delegate", "do", "dynamic", "else", "enum", "expect", "external", "false", "field", "file", "final", "finally", "for", "fun", "get", "if", "import", "in", "infix", "init", "inline", "inner", "interface", "internal", "is", "it", "lateinit", "lazy", "noinline", "null", "object", "open", "operator", "out", "override", "package", "param", "private", "property", "protected", "public", "receiver", "reified", "return", "sealed", "set", "super", "suspend", "tailrec", "this", "throw", "true", "try", "typealias", "val", "var", "vararg", "when", "where", "while", "yield"] },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|===|!==|\\.\\.|<[A-Za-z]+>|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]" },
+    { "type": "default", "regex": "." }
+  ]
+}

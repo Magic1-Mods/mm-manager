@@ -1,0 +1,23 @@
+{
+  "name": ["C++", ".cpp", ".cc", ".cxx", ".c++", ".hpp", ".hh", ".hxx", ".h++", ".ipp"],
+  "comment": [
+    { "startsWith": "//" },
+    { "startsWith": "/*", "endsWith": "*/" }
+  ],
+  "rules": [
+    { "type": "comment", "regex": "//.*" },
+    { "type": "comment", "regex": "/\\*[\\s\\S]*?\\*/" },
+    { "type": "string", "regex": "[uUL]?\"(?:\\\\.|[^\"])*\"" },
+    { "type": "string", "regex": "[uUL]?'(?:\\\\.|[^'])'" },
+    { "type": "string", "regex": "R\"\\([^()]*\\)\"" },
+    { "type": "string", "regex": "\"\"\"[\\s\\S]*?\"\"\"" },
+    { "type": "number", "regex": "\\b(?:0[xX][0-9a-fA-F]+(?:'[0-9a-fA-F]+)*[uUlLzZ]*|0[0-7]+[uUlL]*|\\d+(?:'\\d+)*(?:\\.\\d+(?:'\\d+)*(?:[eE][+-]?\\d+(?:'\\d+)*)?)?[fFlL]?[uU]?)\\b" },
+    { "type": "meta", "regex": "#\\s*(?:include|define|ifdef|ifndef|if|else|elif|endif|pragma|error|warning|undef|line|import|once)\\b" },
+    { "type": "meta", "regex": "#\\s*include\\s*[<\"][^>\"]+[>\"]" },
+    { "type": "keyword", "keywords": ["alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break", "case", "catch", "char", "char8_t", "char16_t", "char32_t", "class", "co_await", "co_return", "co_yield", "compl", "concept", "const", "consteval", "constexpr", "constinit", "continue", "decltype", "default", "delete", "do", "double", "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", "float", "for", "friend", "goto", "if", "inline", "int", "long", "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr", "operator", "or", "or_eq", "override", "private", "protected", "public", "register", "reinterpret_cast", "requires", "return", "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "template", "this", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using", "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq"] },
+    { "type": "keyword2", "regex": "\\bstring|vector|map|set|list|pair|array|shared_ptr|unique_ptr|weak_ptr|optional|variant|any|tuple|span|string_view|initializer_list|function|regex|thread|mutex|fstream|ifstream|ofstream|cout|cin|cerr|clog|endl|make_shared|make_unique|make_pair|make_tuple)\\b" },
+    { "type": "constant", "regex": "\\b[A-Z][A-Z0-9_]+\\b" },
+    { "type": "operator", "regex": "[+\\-*/%=&|!<>^~?:]+|\\+\\+|--|==|!=|<=|>=|&&|\\|\\||<<|>>|->|\\.\\*|->\\*|::|\\.|,|;|\\(|\\)|\\{|\\}|\\[|\\]" },
+    { "type": "default", "regex": "." }
+  ]
+}

@@ -12,13 +12,23 @@ class SyntaxSelectorFragment : DialogFragment() {
     }
 
     private val syntaxNames = arrayOf(
-        "Plain Text", "Java", "Kotlin", "Python", "JavaScript",
-        "HTML", "CSS", "XML", "JSON", "Shell", "Smali"
+        "Plain Text", "Java", "Kotlin", "Python", "JavaScript", "TypeScript",
+        "HTML", "CSS", "XML", "JSON", "YAML", "TOML",
+        "Shell", "SQL", "Markdown",
+        "C", "C++", "Rust", "Go", "Swift",
+        "Lua", "Dart", "PHP", "Ruby", "Perl",
+        "Scala", "Groovy", "R", "Julia",
+        "Gradle", "Smali"
     )
 
     private val syntaxValues = arrayOf(
-        "text", "java", "kotlin", "python", "javascript",
-        "html", "css", "xml", "json", "shell", "smali"
+        "text", "java", "kotlin", "python", "javascript", "typescript",
+        "html", "css", "xml", "json", "yaml", "toml",
+        "shell", "sql", "markdown",
+        "c", "cpp", "rust", "go", "swift",
+        "lua", "dart", "php", "ruby", "perl",
+        "scala", "groovy", "r", "julia",
+        "gradle", "smali"
     )
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
