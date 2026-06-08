@@ -40,7 +40,6 @@ import org.mozilla.universalchardet.UniversalDetector
 class TextEditorActivity : AppCompatActivity(),
     SyntaxSelectorFragment.OnSyntaxSelectedListener {
 
-    // ─── Views ────────────────────────────────────────────────────────────────
     private var codeEditor: EditView? = null
     private var symbolPanel: SymbolPanel? = null
     private var filenameText: TextView? = null
@@ -51,7 +50,6 @@ class TextEditorActivity : AppCompatActivity(),
     private var drawerLayout: DrawerLayout? = null
     private var openFilesRecycler: RecyclerView? = null
 
-    // ─── State ────────────────────────────────────────────────────────────────
     private var currentFilePath: String? = null
     private var isModified = false
     private var isReadOnly = false
@@ -61,7 +59,6 @@ class TextEditorActivity : AppCompatActivity(),
     private var positionHistory = mutableListOf<Pair<Int, Int>>()
     private var positionIndex = -1
 
-    // Multi-file support
     private val openFiles = mutableListOf<String>()
     private var currentFileIndex = -1
     private val fileContents = mutableMapOf<String, String>()
@@ -78,13 +75,10 @@ class TextEditorActivity : AppCompatActivity(),
 
     private val prefs by lazy { getSharedPreferences("editor_prefs", MODE_PRIVATE) }
 
-    // ─── Lifecycle ────────────────────────────────────────────────────────────
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_file_editor)
 
-        // Keep keyboard from pushing content up; we handle symbol panel ourselves
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
         initViews()
@@ -102,8 +96,6 @@ class TextEditorActivity : AppCompatActivity(),
             filenameText?.text = "untitled"
         }
     }
-
-    // ─── Theme ────────────────────────────────────────────────────────────────
 
     private fun applyTheme() {
         val isDark = ThemeManager.isDarkMode(this)
@@ -150,11 +142,8 @@ class TextEditorActivity : AppCompatActivity(),
             findViewById<ImageView>(id)?.setColorFilter(toolbarIconTint)
         }
 
-        // Apply editor dark mode for syntax highlighting
         codeEditor?.setSyntaxDarkMode(isDark)
     }
-
-    // ─── View init ────────────────────────────────────────────────────────────
 
     private fun initViews() {
         codeEditor = findViewById(R.id.code_editor)
@@ -191,15 +180,12 @@ class TextEditorActivity : AppCompatActivity(),
     private fun applyEditorSettings() {
         val editor = codeEditor ?: return
 
-        // Font
         val fontStyle = prefs.getString("font_style", "monospace") ?: "monospace"
         val typeface = if (fontStyle == "monospace") Typeface.MONOSPACE else Typeface.DEFAULT
         editor.setTypeface(typeface)
 
-        // Font size
         editor.setTextSize(prefs.getInt("font_size", 14).toFloat())
 
-        // Function toggles
         editor.setWordWrap(prefs.getBoolean("soft_wrap", false))
         editor.setReadOnly(prefs.getBoolean("read_only", false))
         editor.setSmoothScrollEnabled(prefs.getBoolean("smooth_mode", true))
@@ -207,8 +193,6 @@ class TextEditorActivity : AppCompatActivity(),
         editor.setMagnifierEnabled(prefs.getBoolean("enable_magnifier", true))
         editor.setAutoIndentEnabled(prefs.getBoolean("auto_indent", true))
     }
-
-    // ─── Symbol Panel ────────────────────────────────────────────────────────
 
     private fun setupSymbolPanel() {
         symbolPanel?.setOnSymbolClickListener(object : SymbolPanel.OnSymbolClickListener {
@@ -218,8 +202,6 @@ class TextEditorActivity : AppCompatActivity(),
             }
         })
     }
-
-    // ─── Drawer ───────────────────────────────────────────────────────────────
 
     private fun setupDrawer() {
         openFileAdapter = OpenFileAdapter { index ->
@@ -259,8 +241,6 @@ class TextEditorActivity : AppCompatActivity(),
         popup.show()
     }
 
-    // ─── Toolbar ──────────────────────────────────────────────────────────────
-
     private fun setupToolbar() {
         findViewById<ImageView>(R.id.btn_menu)?.setOnClickListener { drawerLayout?.openDrawer(Gravity.START) }
         findViewById<ImageView>(R.id.btn_pin)?.setOnClickListener { toggleSearchBar() }
@@ -295,8 +275,6 @@ class TextEditorActivity : AppCompatActivity(),
         filenameText?.text = if (isModified) "*$name" else name
     }
 
-    // ─── Search bar ───────────────────────────────────────────────────────────
-
     private fun setupSearchBar() {
         findViewById<ImageView>(R.id.btn_search_prev)?.setOnClickListener {
             val query = searchInput?.text?.toString() ?: return@setOnClickListener
@@ -314,28 +292,20 @@ class TextEditorActivity : AppCompatActivity(),
         searchBar?.visibility = if (searchVisible) View.VISIBLE else View.GONE
     }
 
-    // ─── Popup menus ─────────────────────────────────────────────────────────
-
     private fun showEditMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
-        // Line operations with icons
         addMenuItem(popup, 10, "Copy line", R.drawable.ic_copy_line)
         addMenuItem(popup, 11, "Cut line", R.drawable.ic_cut_line)
         addMenuItem(popup, 12, "Delete line", R.drawable.ic_delete_line)
         addMenuItem(popup, 13, "Empty line", R.drawable.ic_empty_line)
         addMenuItem(popup, 14, "Replace line", R.drawable.ic_replace_line)
         addMenuItem(popup, 15, "Duplicate line", R.drawable.ic_duplicate_line)
-        // Case conversion
         addMenuItem(popup, 20, "Convert to uppercase", R.drawable.ic_uppercase)
         addMenuItem(popup, 21, "Convert to lowercase", R.drawable.ic_lowercase)
-        // Indentation
         addMenuItem(popup, 30, "Increase indent", R.drawable.ic_indent_increase)
         addMenuItem(popup, 31, "Decrease indent", R.drawable.ic_indent_decrease)
-        // Comment
         addMenuItem(popup, 40, "Toggle comment", R.drawable.ic_toggle_comment)
-        // Code formatting
         addMenuItem(popup, 41, "Reformat code", R.drawable.ic_reformat_code)
-        // Classic clipboard
         addMenuItem(popup, 50, "Select all", null)
         addMenuItem(popup, 51, "Paste", null)
 
@@ -368,7 +338,6 @@ class TextEditorActivity : AppCompatActivity(),
         }
     }
 
-    /** Returns the appropriate single-line comment prefix for the current syntax. */
     private fun getCommentPrefixForSyntax(syntax: String): String = when (syntax) {
         "java", "xml", "smali" -> "//"
         "python", "smali" -> "#"
@@ -378,18 +347,15 @@ class TextEditorActivity : AppCompatActivity(),
 
     private fun showOverflowMenu(anchor: View) {
         val popup = PopupMenu(this, anchor)
-        // File submenu
         val fileSubmenu = popup.menu.addSubMenu(0, 100, 0, "File")
         fileSubmenu.add(0, 101, 0, "Save")
 
-        // Actions
         addMenuItem(popup, 2, "Search", R.drawable.ic_search)
         addMenuItem(popup, 3, "Syntax", R.drawable.ic_syntax)
         addMenuItem(popup, 4, "Previous position", R.drawable.ic_navigate_before)
         addMenuItem(popup, 5, "Next position", R.drawable.ic_navigate_next)
         addMenuItem(popup, 6, "Jump to line", R.drawable.ic_jump_to_line)
 
-        // Toggle items with check marks
         val softWrapItem = popup.menu.add(0, 7, 7, "Soft wrap")
         softWrapItem.setCheckable(true)
         softWrapItem.setChecked(codeEditor?.isWordWrapEnabled == true)
@@ -429,8 +395,6 @@ class TextEditorActivity : AppCompatActivity(),
         popup.show()
     }
 
-    // ─── Editor mode toggles ──────────────────────────────────────────────────
-
     private fun toggleWordWrap() {
         val enabled = codeEditor?.isWordWrapEnabled != true
         codeEditor?.setWordWrap(enabled)
@@ -457,8 +421,6 @@ class TextEditorActivity : AppCompatActivity(),
         prefs.edit().putBoolean("code_completion", enabled).apply()
     }
 
-    // ─── Position history navigation ─────────────────────────────────────────
-
     private fun pushCurrentPosition() {
         val line = codeEditor?.getCursorLine() ?: return
         val col  = codeEditor?.getCursorColumn() ?: return
@@ -484,8 +446,6 @@ class TextEditorActivity : AppCompatActivity(),
             codeEditor?.gotoLine(line - 1)
         }
     }
-
-    // ─── Dialogs ──────────────────────────────────────────────────────────────
 
     private fun showSyntaxSelector() { SyntaxSelectorFragment().show(supportFragmentManager, "syntax") }
 
@@ -532,8 +492,6 @@ class TextEditorActivity : AppCompatActivity(),
             .show()
     }
 
-    // ─── File I/O ─────────────────────────────────────────────────────────────
-
     private fun saveFile() {
         val path = currentFilePath ?: return
         val dialog = ProgressDialog.show(this, "Saving", "Writing file…", true)
@@ -554,8 +512,6 @@ class TextEditorActivity : AppCompatActivity(),
             }
         }
     }
-
-    // ─── Multi-file management ───────────────────────────────────────────────
 
     private fun openFile(path: String) {
         val existing = openFiles.indexOf(path)
@@ -629,7 +585,6 @@ class TextEditorActivity : AppCompatActivity(),
                     return@execute
                 }
 
-                // Detect charset
                 val detectedCharset = UniversalDetector.detectCharset(file)
                 if (detectedCharset != null) {
                     mDefaultCharset = Charset.forName(detectedCharset)
@@ -672,8 +627,6 @@ class TextEditorActivity : AppCompatActivity(),
         }
     }
 
-    // ─── Close guard ─────────────────────────────────────────────────────────
-
     private fun confirmClose() {
         if (isModified) {
             AlertDialog.Builder(this)
@@ -693,8 +646,6 @@ class TextEditorActivity : AppCompatActivity(),
         if (drawerLayout?.isDrawerOpen(Gravity.START) == true) drawerLayout?.closeDrawers()
         else confirmClose()
     }
-
-    // ─── Static helpers ───────────────────────────────────────────────────────
 
     companion object {
         private const val MAX_FILE_SIZE_BYTES = 3L * 1024 * 1024

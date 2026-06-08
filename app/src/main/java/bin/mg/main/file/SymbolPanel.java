@@ -1,7 +1,7 @@
 package bin.mg.main.file;
 
-import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -14,14 +14,6 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/**
- * A draggable symbol panel that sits above the soft keyboard.
- * Matches MT Manager's symbol panel:
- * - One row visible when collapsed
- * - Drag up to expand and reveal all symbol rows
- * - Drag down to collapse back to one row
- * - Smooth animations, state preserved
- */
 public class SymbolPanel extends LinearLayout {
 
     public interface OnSymbolClickListener {
@@ -29,16 +21,17 @@ public class SymbolPanel extends LinearLayout {
     }
 
     private OnSymbolClickListener mListener;
+    private Context mContext;
 
     private static final String[][] SYMBOL_ROWS = {
         {"→", "/", "+", "-", "*", "=", "<"},
-        {">", "\"", "'", ";", "|", "\\", "-"},
+        {">", "\"", "'", ";", "|", "\\", "_"},
         {"()", "[]", "{}", "..."}
     };
 
     private static final String[][] INSERT_ROWS = {
-        {"\t", "/", "+", "-", "*", "=", "<"},
-        {">", "\"", "'", ";", "|", "\\", "-"},
+        {null, "/", "+", "-", "*", "=", "<"},
+        {">", "\"", "'", ";", "|", "\\", "_"},
         {"()", "[]", "{}", "..."}
     };
 
@@ -46,25 +39,25 @@ public class SymbolPanel extends LinearLayout {
     private boolean isExpanded = false;
     private boolean isAnimating = false;
 
-    private static final int ROW_HEIGHT_DP = 42;
-    private static final int DRAG_THRESHOLD_DP = 36;
-    private static final long ANIMATION_DURATION = 180;
-
-    private int handleTop;
-    private int handleBottom;
+    private static final int ROW_HEIGHT_DP = 40;
+    private static final int DRAG_THRESHOLD_DP = 32;
+    private static final long ANIMATION_DURATION = 160;
 
     public SymbolPanel(Context context) {
         super(context);
+        mContext = context;
         init(context);
     }
 
     public SymbolPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mContext = context;
         init(context);
     }
 
     public SymbolPanel(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        mContext = context;
         init(context);
     }
 
@@ -77,24 +70,24 @@ public class SymbolPanel extends LinearLayout {
 
         float density = getResources().getDisplayMetrics().density;
 
-        // Drag handle
         LinearLayout handleLayout = new LinearLayout(context);
         handleLayout.setOrientation(HORIZONTAL);
         handleLayout.setGravity(Gravity.CENTER_HORIZONTAL);
         handleLayout.setLayoutParams(new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
-            (int)(10 * density)
+            (int)(12 * density)
         ));
-        handleLayout.setPadding(0, (int)(3 * density), 0, (int)(2 * density));
+        handleLayout.setPadding(0, (int)(4 * density), 0, (int)(3 * density));
 
         View handle = new View(context);
-        int handleW = (int)(32 * density);
-        int handleH = (int)(3 * density);
+        LinearLayout.LayoutParams handleParams = new LinearLayout.LayoutParams(
+            (int)(28 * density), (int)(3 * density));
         GradientDrawable handleBg = new GradientDrawable();
         handleBg.setShape(GradientDrawable.RECTANGLE);
         handleBg.setColor(0xFF555555);
-        handleBg.setCornerRadius(handleH / 2f);
+        handleBg.setCornerRadius((int)(2 * density));
         handle.setBackground(handleBg);
+        handle.setLayoutParams(handleParams);
         handleLayout.addView(handle);
         addView(handleLayout);
 
@@ -105,29 +98,30 @@ public class SymbolPanel extends LinearLayout {
             LinearLayout.LayoutParams.WRAP_CONTENT
         ));
 
-        int textColor = 0xFFCCCCCC;
-        int pressedColor = 0xFF444444;
-
         for (int i = 0; i < SYMBOL_ROWS.length; i++) {
-            LinearLayout row = createSymbolRow(SYMBOL_ROWS[i], INSERT_ROWS[i], textColor, pressedColor, density);
+            View sep = new View(context);
+            LinearLayout.LayoutParams sepParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, (int)(0.8f * density));
+            sep.setLayoutParams(sepParams);
+            sep.setBackgroundColor(0xFF2C2C2C);
+            rowsContainer.addView(sep);
+
+            LinearLayout row = createSymbolRow(i, density);
             rowsContainer.addView(row);
+
             if (i > 0) {
+                sep.setVisibility(View.GONE);
                 row.setVisibility(View.GONE);
             }
         }
 
         addView(rowsContainer);
-
-        // Record handle area for drag detection
-        handleLayout.post(() -> {
-            int[] loc = new int[2];
-            getLocationOnScreen(loc);
-            handleTop = loc[1];
-            handleBottom = handleTop + handleLayout.getHeight();
-        });
     }
 
-    private LinearLayout createSymbolRow(String[] symbols, String[] inserts, int textColor, int pressedColor, float density) {
+    private LinearLayout createSymbolRow(final int rowIndex, float density) {
+        final String[] labels = SYMBOL_ROWS[rowIndex];
+        final String[] inserts = INSERT_ROWS[rowIndex];
+
         LinearLayout row = new LinearLayout(getContext());
         row.setOrientation(HORIZONTAL);
         row.setLayoutParams(new LinearLayout.LayoutParams(
@@ -135,15 +129,16 @@ public class SymbolPanel extends LinearLayout {
             (int)(ROW_HEIGHT_DP * density)
         ));
 
-        int dividerColor = 0xFF333333;
+        int textColor = 0xFFCCCCCC;
+        int pressedBg = 0x33FFFFFF;
 
-        for (int i = 0; i < symbols.length; i++) {
-            final String insertText = inserts[i];
+        for (int i = 0; i < labels.length; i++) {
+            final int idx = i;
 
             TextView btn = new TextView(getContext());
-            btn.setText(symbols[i]);
+            btn.setText(labels[i]);
             btn.setTextColor(textColor);
-            btn.setTextSize(16f);
+            btn.setTextSize(15f);
             btn.setTypeface(Typeface.MONOSPACE);
             btn.setGravity(Gravity.CENTER);
             btn.setLayoutParams(new LinearLayout.LayoutParams(
@@ -153,52 +148,53 @@ public class SymbolPanel extends LinearLayout {
             ));
             btn.setClickable(true);
             btn.setFocusable(true);
-
-            // Pressed state background
-            StateListDrawable bg = new StateListDrawable();
-            GradientDrawable pressed = new GradientDrawable();
-            pressed.setShape(GradientDrawable.RECTANGLE);
-            pressed.setColor(pressedColor);
-            GradientDrawable normal = new GradientDrawable();
-            normal.setShape(GradientDrawable.RECTANGLE);
-            normal.setColor(Color.TRANSPARENT);
-            bg.addState(new int[]{android.R.attr.state_pressed}, pressed);
-            bg.addState(new int[]{}, normal);
-            btn.setBackground(bg);
-
             btn.setMinWidth(0);
             btn.setMinimumWidth(0);
             btn.setPadding(0, 0, 0, 0);
 
+            GradientDrawable pressedShape = new GradientDrawable();
+            pressedShape.setShape(GradientDrawable.RECTANGLE);
+            pressedShape.setColor(pressedBg);
+            GradientDrawable normalShape = new GradientDrawable();
+            normalShape.setShape(GradientDrawable.RECTANGLE);
+            normalShape.setColor(Color.TRANSPARENT);
+            StateListDrawable bg = new StateListDrawable();
+            bg.addState(new int[]{android.R.attr.state_pressed}, pressedShape);
+            bg.addState(new int[]{}, normalShape);
+            btn.setBackground(bg);
+
             btn.setOnClickListener(v -> {
-                if (mListener != null) {
-                    mListener.onSymbolClick(insertText);
+                if (mListener == null) return;
+                if (rowIndex == 0 && idx == 0) {
+                    mListener.onSymbolClick(buildTabString());
+                } else {
+                    mListener.onSymbolClick(inserts[idx]);
                 }
             });
 
             row.addView(btn);
-
-            if (i < symbols.length - 1) {
-                View divider = new View(getContext());
-                divider.setLayoutParams(new LinearLayout.LayoutParams(
-                    (int)(1 * density),
-                    LinearLayout.LayoutParams.MATCH_PARENT
-                ));
-                divider.setBackgroundColor(dividerColor);
-                row.addView(divider);
-            }
         }
 
         return row;
+    }
+
+    private String buildTabString() {
+        SharedPreferences prefs = mContext.getSharedPreferences("editor_prefs", Context.MODE_PRIVATE);
+        boolean useTabs = prefs.getBoolean("use_tabs", false);
+        if (useTabs) {
+            return "\t";
+        }
+        int tabSize = prefs.getInt("tab_size", 4);
+        StringBuilder sb = new StringBuilder(tabSize);
+        for (int i = 0; i < tabSize; i++) sb.append(' ');
+        return sb.toString();
     }
 
     public void setOnSymbolClickListener(OnSymbolClickListener listener) {
         mListener = listener;
     }
 
-    public boolean isExpanded() {
-        return isExpanded;
-    }
+    public boolean isExpanded() { return isExpanded; }
 
     public void expand() {
         if (isExpanded || isAnimating) return;
@@ -213,68 +209,61 @@ public class SymbolPanel extends LinearLayout {
     }
 
     public void toggle() {
-        if (isExpanded) collapse();
-        else expand();
+        if (isExpanded) collapse(); else expand();
     }
 
     private void updateVisibility(boolean showAll) {
         isAnimating = true;
         int childCount = rowsContainer.getChildCount();
+        int animTargets = 0;
 
-        for (int i = 1; i < childCount; i++) {
-            final View row = rowsContainer.getChildAt(i);
-            final int index = i;
+        for (int i = 2; i < childCount; i++) {
+            final View child = rowsContainer.getChildAt(i);
+            final boolean isLast = (i == childCount - 1);
+            animTargets++;
             if (showAll) {
-                row.setVisibility(View.VISIBLE);
-                row.setAlpha(0f);
-                row.animate()
+                child.setVisibility(View.VISIBLE);
+                child.setAlpha(0f);
+                child.animate()
                     .alpha(1f)
                     .setDuration(ANIMATION_DURATION)
                     .setInterpolator(new DecelerateInterpolator())
-                    .withEndAction(() -> {
-                        if (index == childCount - 1) isAnimating = false;
-                    })
+                    .withEndAction(() -> { if (isLast) isAnimating = false; })
                     .start();
             } else {
-                row.animate()
+                child.animate()
                     .alpha(0f)
                     .setDuration(ANIMATION_DURATION)
                     .setInterpolator(new DecelerateInterpolator())
                     .withEndAction(() -> {
-                        row.setVisibility(View.GONE);
-                        row.setAlpha(1f);
-                        if (index == childCount - 1) isAnimating = false;
+                        child.setVisibility(View.GONE);
+                        child.setAlpha(1f);
+                        if (isLast) isAnimating = false;
                     })
                     .start();
             }
         }
 
-        if (childCount <= 1) {
-            isAnimating = false;
-        }
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        // Only intercept drags that start on the handle area
-        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-            int[] loc = new int[2];
-            getLocationOnScreen(loc);
-            float rawY = ev.getRawY();
-            // Check if touch is in the top 14dp (handle area)
-            float density = getResources().getDisplayMetrics().density;
-            float handleAreaBottom = loc[1] + 14 * density;
-            if (rawY >= loc[1] && rawY <= handleAreaBottom) {
-                dragStartRawY = ev.getRawY();
-                isDragging = false;
-                return false; // Don't intercept yet, wait for movement
-            }
-        }
-        return false;
+        if (animTargets == 0) isAnimating = false;
     }
 
     private float dragStartRawY;
     private boolean isDragging;
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            float density = getResources().getDisplayMetrics().density;
+            int[] loc = new int[2];
+            getLocationOnScreen(loc);
+            float handleBottom = loc[1] + 14 * density;
+            if (ev.getRawY() >= loc[1] && ev.getRawY() <= handleBottom) {
+                dragStartRawY = ev.getRawY();
+                isDragging = false;
+            }
+        }
+        return false;
+    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -288,20 +277,14 @@ public class SymbolPanel extends LinearLayout {
                 return true;
 
             case MotionEvent.ACTION_MOVE:
-                float dy = dragStartRawY - event.getRawY();
-                if (Math.abs(dy) > threshold) {
-                    isDragging = true;
-                }
+                if (Math.abs(dragStartRawY - event.getRawY()) > threshold) isDragging = true;
                 return true;
 
             case MotionEvent.ACTION_UP:
                 if (isDragging) {
-                    float totalDy = dragStartRawY - event.getRawY();
-                    if (totalDy > threshold && !isExpanded) {
-                        expand();
-                    } else if (totalDy < -threshold && isExpanded) {
-                        collapse();
-                    }
+                    float dy = dragStartRawY - event.getRawY();
+                    if (dy > threshold && !isExpanded) expand();
+                    else if (dy < -threshold && isExpanded) collapse();
                 }
                 isDragging = false;
                 return true;

@@ -52,7 +52,6 @@ class OpenFileAdapter(
         holder.filepath.text = file.path
 
         if (position == activeIndex) {
-            // Highlighted row — tinted background, accent text & icon
             val activeBg = if (isDark)
                 ThemeManager.lighten(primary, 0.12f).let { Color.argb(60,
                     (it shr 16) and 0xFF, (it shr 8) and 0xFF, it and 0xFF) }

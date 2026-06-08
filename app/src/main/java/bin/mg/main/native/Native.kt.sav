@@ -1,0 +1,6 @@
+/*
+* @This is the native endpoint for the android applications where all native methods are declared and called from other classes
+* @all jni methods must be declared here and other java classes calls thier needed methods from here
+*/
+
+package bin.mg.main.native
