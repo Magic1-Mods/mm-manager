@@ -11,12 +11,15 @@ import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import bin.mg.main.utils.icon.IconManager
 
 class AppMain : Application() {
 
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+        IconManager.initialize(this)
 
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
             handleCrash(t, e)
