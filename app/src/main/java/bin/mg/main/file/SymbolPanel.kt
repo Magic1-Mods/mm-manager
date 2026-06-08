@@ -26,7 +26,8 @@ class SymbolPanel @JvmOverloads constructor(
     }
 
     private var symbolClickListener: OnSymbolClickListener? = null
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<SymbolPanel>
+    private var bottomSheetBehavior: BottomSheetBehavior<SymbolPanel>? = null
+    private var behaviorInitialized = false
     private lateinit var dragHandle: BottomSheetDragHandleView
     private lateinit var rowsContainer: LinearLayout
     
@@ -51,8 +52,15 @@ class SymbolPanel @JvmOverloads constructor(
     init {
         orientation = VERTICAL
         initView()
-        setupBottomSheetBehavior()
-        setupKeyboardInsetsListener()
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (!behaviorInitialized && parent is androidx.coordinatorlayout.widget.CoordinatorLayout) {
+            behaviorInitialized = true
+            setupBottomSheetBehavior()
+            setupKeyboardInsetsListener()
+        }
     }
 
     private fun initView() {
@@ -159,7 +167,7 @@ class SymbolPanel @JvmOverloads constructor(
             isHideable = false
             isFitToContents = false
             halfExpandedRatio = EXPANDED_RATIO
-            
+
             addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
                     when (newState) {
@@ -168,9 +176,8 @@ class SymbolPanel @JvmOverloads constructor(
                         BottomSheetBehavior.STATE_COLLAPSED -> showFirstRowOnly()
                     }
                 }
-                
+
                 override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                    // slideOffset: 0 = collapsed, 1 = expanded
                     updateRowsVisibility(slideOffset)
                 }
             })
@@ -209,7 +216,7 @@ class SymbolPanel @JvmOverloads constructor(
             val bottomPadding = imeInsets.bottom - systemBarsInsets.bottom
             if (bottomPadding > 0) {
                 setPadding(paddingLeft, paddingTop, paddingRight, 0)
-                bottomSheetBehavior.peekHeight = (PEEK_HEIGHT_DP * resources.displayMetrics.density).toInt()
+                bottomSheetBehavior?.peekHeight = (PEEK_HEIGHT_DP * resources.displayMetrics.density).toInt()
             } else {
                 setPadding(paddingLeft, paddingTop, paddingRight, systemBarsInsets.bottom)
             }
@@ -223,22 +230,25 @@ class SymbolPanel @JvmOverloads constructor(
     }
 
     fun expand() {
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        bottomSheetBehavior?.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
     fun collapse() {
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        bottomSheetBehavior?.state = BottomSheetBehavior.STATE_COLLAPSED
     }
 
     fun toggle() {
-        when (bottomSheetBehavior.state) {
-            BottomSheetBehavior.STATE_COLLAPSED -> expand()
-            else -> collapse()
+        val behavior = bottomSheetBehavior
+        if (behavior != null) {
+            when (behavior.state) {
+                BottomSheetBehavior.STATE_COLLAPSED -> expand()
+                else -> collapse()
+            }
         }
     }
 
     fun isExpanded(): Boolean {
-        return bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED ||
-               bottomSheetBehavior.state == BottomSheetBehavior.STATE_HALF_EXPANDED
+        return bottomSheetBehavior?.state == BottomSheetBehavior.STATE_EXPANDED ||
+               bottomSheetBehavior?.state == BottomSheetBehavior.STATE_HALF_EXPANDED
     }
 }
