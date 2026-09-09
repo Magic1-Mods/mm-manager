@@ -59,7 +59,7 @@ jobs:
       - name: Assemble Debug
         run: |
           ./gradlew \
-            assembleDebug \
+            assembleRelease \
             --build-cache \
             --configuration-cache \
             --parallel
